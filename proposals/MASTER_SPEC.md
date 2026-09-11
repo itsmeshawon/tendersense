@@ -10,8 +10,8 @@ The canonical specification is:
 
 | Phase | Title | Plan | Status |
 |---|---|---|---|
-| 0 | Foundation | `proposals/active/phase-0-foundation/plan.md` | drafting |
-| 1 | Source ingestion | — | not started |
+| 0 | Foundation | `proposals/active/phase-0-foundation/plan.md` | **DONE** — tag `v0.1.0-phase0` (2026-09-11) |
+| 1 | Source ingestion | `proposals/active/phase-1-source-ingestion/plan.md` | drafting → awaiting approval |
 | 2 | Discovery | — | not started |
 | 3 | Matching | — | not started |
 | 4 | Assessment | — | not started |

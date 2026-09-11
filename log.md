@@ -68,6 +68,24 @@
 - MVP overall (§113 phases 0–6): **~8–10%**
 - Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet
 
+## Session 4 — 2026-09-11
+
+**Tier:** MewKing · **Plan:** Phase 0 finalize + Phase 1 draft
+**Phase:** Phase 0 → complete; Phase 1 planning
+
+### What shipped
+
+- **PR #4 — ADRs 0001–0005** (`docs/phase0-adrs`): repo layout, package manager, supabase clients, workspace creation RPC, git workflow. Merged 2026-09-11.
+- **Tag `v0.1.0-phase0`** on `main` @ `75dbc69`. Phase 0 officially closed.
+- **`proposals/active/phase-1-source-ingestion/plan.md` drafted** — 8 sections, 7 open questions, ~2–3 week phase estimate. Not approved yet.
+- **`proposals/MASTER_SPEC.md` phase index updated**: Phase 0 DONE, Phase 1 drafting.
+
+### Position vs Source of Truth
+
+- Phase 0 (foundation): **100% ✅**
+- MVP overall (§113 phases 0–6): **~14–17%** (1 of 7 phases done)
+- Definition of MVP Done (§114, 18 items): partial-complete on infra items; user-facing items 0/many
+
 ## Session 3 — 2026-09-11
 
 **Tier:** MewKing · **Plan:** `proposals/active/phase-0-foundation/plan.md`
