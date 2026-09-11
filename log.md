@@ -268,6 +268,36 @@
 
 Solo docs work is genuinely exhausted for Phase 1. Every remaining item needs either a code merge (PR #8) or human action (reconnaissance, counsel filing, reader check). Session 11 needs one of those to unstick before more can happen.
 
-- **2026-09-11 19:25** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]
+## Session 11 — 2026-09-12
 
-- **2026-09-11 19:27** — auto-wrap: session ended [auto-wrap]
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (WebFetch reconnaissance)
+
+### What shipped
+
+- **`docs/eexperience-reconnaissance-checklist.md` pre-filled** via WebFetch. ~11 of 21 questions answered without touching a browser. Human remainder drops from ~30 min to ~10 min in dev tools.
+
+### Key discoveries
+
+- Entry point confirmed: `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp` (public, no login)
+- 15 form fields identified with labels
+- Results table has 10 columns covering every field we need
+- Rich filter surface — can pre-filter Work Status=Completed for profile onboarding
+- Server-rendered form + AJAX-loaded results; pagination confirmed
+- Bilingual English/Bangla toggle
+- robots.txt broken (302→SessionTimedOut.jsp); T&C footer is the real policy source
+- Form does NOT accept GET-with-params — must POST or AJAX
+
+### Blocker candidates flagged for human step
+
+- Captcha on repeat searches
+- T&C automated-access clause
+
+### Honest observation
+
+Four consecutive sessions (7–11) have been either PR-blocked or docs-only. Vercel prod looks exactly like end of Session 3. Real docs have shipped, but nothing user-visible has moved. The two humans in the loop (Mohabbat on PR #8 review; user on eExperience 10-min recon) need to unstick before code can move again.
+
+### Position vs Source of Truth
+
+- Phase 1: **~44%**
+- MVP overall (§113 scope-reduced): **~24%**
