@@ -120,3 +120,31 @@
 - Phase 0 (foundation): **~95%** (only ADRs + tag remaining)
 - MVP overall (§113 phases 0–6): **~12–14%**
 - Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet (Phase 0 items partial)
+
+## Session 5 — 2026-09-11
+
+**Tier:** MewKing · **Plan:** SoT revision incorporation + Phase 1 replan
+**Phase:** Phase 1 planning
+
+### What shipped
+
+- **PR #5 — `docs/sot-2026-09-09-incorporation`** merged (`main` @ `a3f131e`)
+- **ADR 0006** captures the entire 2026-09-09 SoT delta in one place — no need to juggle two source docs
+- **Phase 1 plan rewritten** with the sharpened scope: WB + e-GP notices + on-demand eExperience lookup (three adapters, not four; ~2 weeks not 3-4)
+- **Individual workspace type hidden** on `/workspaces/new` (schema retained)
+- **MASTER_SPEC** now points at both `raw/` docs; phase index labels reflect scope cuts
+- **Project_Status open_questions** now carry 4 threads: PII rule, eExperience reconnaissance, data-residency counsel question, grade vocabulary sanity check
+- Vercel preview built cleanly on PR #5
+
+### Deferred to future phase plans (recorded in ADR 0006)
+
+- Phase 3: grade + decision only (A/B/C/D with plain words), plus Not-eligible + Need-more-info escape hatches; hardcoded thresholds calibrated on labelled data
+- Phase 4: eligibility checklist with hard-fail, no percentage
+- Phase 5: single-user Pro only for MVP; teams post-MVP
+- Phase 6: revisions + digest to a single user; no team reports/exports
+
+### Position vs Source of Truth
+
+- Phase 0: **100% ✅**
+- Phase 1 planning: **complete**; awaiting execution
+- MVP overall (SoT §113, scope-reduced per ADR 0006): unchanged in percent terms, but the ceiling is lower now — Phase 5 + 6 have less to build

@@ -1,7 +1,7 @@
 # Plan: Phase 1 — Source Ingestion
 
 **Tier:** MewKing
-**Status:** Drafting → awaiting approval
+**Status:** Approved 2026-09-11 — execution starting session 6
 **Master spec:** `raw/TenderSense_MVP_Source_of_Truth.md` + `raw/TenderSense-SOT-Changes (1).md` (2026-09-09 revision)
 **SoT sections:** §10 (external sources), §11 (attribution), §12 (ingestion architecture), §13 (job state), §14 (canonical opportunity schema), §16.12–16.15 (DB tables), §67 (adapter structure), §68–70 (adapter pseudocode + parser resilience)
 **Exit criteria (SoT §113):** *"fresh opportunities appear automatically"* — refined per SoT changes to also mean *"a signed-in user can type their company name and see their past e-GP contracts appear."*

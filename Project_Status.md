@@ -9,18 +9,20 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-11
 last_wrap: 2026-09-11
-session_count: 4
-current_phase: "Phase 1 — Source ingestion (planning; Phase 0 shipped at v0.1.0-phase0 on 2026-09-11)"
+session_count: 5
+current_phase: "Phase 1 — Source ingestion (execution starting; plan approved 2026-09-11)"
+phase_1_plan_approved: true
+phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"
 email_provider: "Resend (noreply@tendersense.app)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
   - "proposals/active/phase-0-foundation/plan.md (COMPLETE — shipped at v0.1.0-phase0 on 2026-09-11)"
-  - "proposals/active/phase-1-source-ingestion/plan.md (drafting → awaiting approval)"
+  - "proposals/active/phase-1-source-ingestion/plan.md (APPROVED 2026-09-11, execution starting session 6)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 5: review revised proposals/active/phase-1-source-ingestion/plan.md (rewritten to incorporate SoT-Changes 2026-09-09 per ADR 0006). Answer the 10 open questions in plan §6, most importantly: (7) PII rule for procuring-entity officials, (8) manual e-GP reconnaissance for eExperience URL/selectors, (10) lookup quota. Once approved, begin Phase 1 step 2 (migrations 0007–0011)."
+next_action: "Session 6: Phase 1 step 2 — migrations 0007-0011 (sources, source_records, opportunities, revisions + sync_runs, projects.evidence_credential_number). Apply local + push hosted. Then step 3 (adapter contract + normalizer + pii.ts + http.ts) in a follow-up PR."
 open_questions:
   - "PII stance for named procuring-entity officials (proposed in ADR 0006 §8 — needs sign-off before e-GP adapter is written)"
   - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
