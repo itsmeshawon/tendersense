@@ -25,9 +25,8 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 8: pull, verify PR #8 is merged (needs @mewking2099 review first per collaborative rules). Then start Phase 1 step 4 — World Bank adapter + backfill script + npm run sync:worldbank. Open a GitHub Issue first (workqueue). Also resolve branch-protection question: upgrade to GitHub Pro (~$4/mo) or continue convention-only."
+next_action: "Session 8: pull, verify PR #8 is merged (needs @mewking2099 review first per collaborative rules). Then start Phase 1 step 4 — World Bank adapter + backfill script + npm run sync:worldbank. Open a GitHub Issue first (workqueue)."
 open_questions:
-  - "Branch-protection decision — pay $4/mo GitHub Pro for Rulesets, or continue convention-only enforcement of 'no self-merge'"
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
   - "Data-residency counsel question — draft the specific question (customer-uploaded docs + officials PII), file with lawyer; not launch-blocker for pilot but must not drift"

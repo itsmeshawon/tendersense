@@ -223,6 +223,6 @@
 
 ### Open threads
 
-- Branch-protection decision (Pro upgrade vs convention-only)
+- Branch protection: **decided 2026-09-12 — convention-only for now.** GitHub Pro deferred; "no self-merge" enforced by rule in `.claude/rules/mew-code/code-rules.md` and by convention among collaborators. Revisit if the team grows past two.
 - ADR 0006 §8 PII rule sign-off (now encoded in code + tests)
 - eExperience URL + selector reconnaissance (manual, not blocking until PR #8 in plan §5)
