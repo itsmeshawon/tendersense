@@ -1,0 +1,65 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getServerUser } from "@/lib/auth/session";
+import { listMyWorkspaces } from "@/lib/workspaces/service";
+import { signOut } from "../dashboard/actions";
+
+export default async function WorkspacesPage() {
+  const user = await getServerUser();
+  if (!user) redirect("/login");
+
+  const workspaces = await listMyWorkspaces();
+
+  if (workspaces.length === 0) {
+    redirect("/workspaces/new");
+  }
+
+  return (
+    <main className="mx-auto flex min-h-svh max-w-2xl flex-col gap-6 p-6">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Workspaces</h1>
+          <p className="text-sm text-muted-foreground">
+            Signed in as{" "}
+            <span className="font-mono">{user.email}</span>
+          </p>
+        </div>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Sign out
+          </button>
+        </form>
+      </header>
+
+      <ul className="flex flex-col gap-2">
+        {workspaces.map((w) => (
+          <li
+            key={w.id}
+            className="flex items-center justify-between rounded-md border p-4"
+          >
+            <div>
+              <p className="font-medium">{w.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {w.workspace_type} · {w.plan} · created{" "}
+                {new Date(w.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            <span className="font-mono text-xs text-muted-foreground">
+              {w.slug}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href="/workspaces/new"
+        className="self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+      >
+        New workspace
+      </Link>
+    </main>
+  );
+}
