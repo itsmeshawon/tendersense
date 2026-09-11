@@ -245,4 +245,25 @@
 - Data-residency counsel question — drafted; awaiting user review + filing
 - Grade vocabulary reader check — Phase 3, not urgent
 
-- **2026-09-11 19:20** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]
+## Session 10 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass 2; PR #8 still awaits review)
+
+### What shipped
+
+- **`docs/eexperience-reconnaissance-checklist.md`** — 21 numbered fill-in questions for someone to answer with a browser at eprocure.gov.bd. Covers entry-point URL, request shape, response HTML structure, pagination, edge cases, detail page, Bangla/English, robots.txt, terms of use, confidence check. Concrete 20-30 min task that unblocks Phase 1 PR #8 (eExperience lookup) and Peak 1 of the pilot demo.
+- **`README.md`** — first repo README. Directory layout, contributor onboarding, local Supabase setup, workflow rules, deploy targets, reading order for new joiners.
+
+### Not shipped
+
+- PR #8 review — still stuck. All downstream Phase 1 code blocked.
+
+### Position vs Source of Truth
+
+- Phase 1: **~42%** — every solo doc task from the plan tail is now done
+- MVP overall (§113 scope-reduced): **~23–25%**
+
+### Note
+
+Solo docs work is genuinely exhausted for Phase 1. Every remaining item needs either a code merge (PR #8) or human action (reconnaissance, counsel filing, reader check). Session 11 needs one of those to unstick before more can happen.
