@@ -34,3 +34,36 @@
 - Phase 0 (foundation): **~60%**
 - MVP overall (§113 phases 0–6): **~6–8%**
 - Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet
+
+## Session 2 — 2026-09-11
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-0-foundation/plan.md`
+**Phase:** Phase 0 — Foundation (step 4: auth wiring)
+
+### What shipped
+
+- `lib/auth/session.ts` — `getServerUser()` helper + 3 tests
+- `middleware.ts` — Supabase session cookie refresh; redirect unauthenticated users off `/dashboard`, `/workspaces`; redirect authenticated users off `/login` → `/dashboard`
+- `app/login/page.tsx` + `actions.ts` — magic-link form via `useActionState` + `signInWithOtp`
+- `app/auth/callback/route.ts` — PKCE `exchangeCodeForSession` with error fall-through to `/login?error=...`
+- `app/dashboard/page.tsx` + `signOut` action — protected landing showing user email
+- Verified end-to-end against hosted Supabase: golden path (allowlisted email → magic link → dashboard) and reject path (unlisted email → no email sent, no auth.users row)
+- 16 tests / 6 files passing; typecheck + build clean
+
+### Decisions (informal, to be codified at Finalize)
+
+- Adopting **feature branch + PR + squash-merge** workflow now that teammates are joining. First PR: `feat/phase0-auth`.
+- Impeccable design flow deferred to a dedicated pass after Phase 0 exit; Phase 0 UI is intentionally minimal.
+
+### Not done (blocking Phase 0 exit)
+
+- Workspace create UI (step 6)
+- Vercel deploy (step 7)
+- RLS integration test (step 8)
+- ADRs 0001–0004 (step 10)
+
+### Position vs Source of Truth
+
+- Phase 0 (foundation): **~75%** (auth wiring complete; workspaces UI + deploy + RLS test remaining)
+- MVP overall (§113 phases 0–6): **~8–10%**
+- Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet
