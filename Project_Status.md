@@ -20,8 +20,12 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 5: review + approve proposals/active/phase-1-source-ingestion/plan.md. Answer the 7 open questions in §6 (HTTP client, GHA vs Route Handler cron, watermark storage, backfill window, /opportunities bonus, TZ default, disclaimer). Once approved, set plan_approved semantics per phase (add `phase_1_plan_approved: true` or similar in this file), then begin Phase 1 step 1 (migrations 0007-0010)."
-open_questions: []
+next_action: "Session 5: review revised proposals/active/phase-1-source-ingestion/plan.md (rewritten to incorporate SoT-Changes 2026-09-09 per ADR 0006). Answer the 10 open questions in plan §6, most importantly: (7) PII rule for procuring-entity officials, (8) manual e-GP reconnaissance for eExperience URL/selectors, (10) lookup quota. Once approved, begin Phase 1 step 2 (migrations 0007–0011)."
+open_questions:
+  - "PII stance for named procuring-entity officials (proposed in ADR 0006 §8 — needs sign-off before e-GP adapter is written)"
+  - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
+  - "Data-residency counsel question — draft the specific question (customer-uploaded docs + officials PII), file with lawyer; not launch-blocker for pilot but must not drift"
+  - "Grade vocabulary — verify 'Strong fit / Good fit / Possible / Weak fit' reads well with BRAC IT or a BD product manager reviewer before Phase 3 UI ships"
 env_var_rule: "Never write NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_DB_URL from any other project or shell env. User creates the Supabase project and hands over values explicitly. Ask before wiring."
 open_threads: []
 blockers: []

@@ -23,8 +23,8 @@ export default function NewWorkspacePage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           A workspace is where opportunities, capabilities, and decisions live.
-          Pick individual for your own tender discovery, or organization for a
-          team.
+          For pilot, workspaces represent an organization — a company, NGO, or
+          agency pursuing tenders.
         </p>
       </div>
 
@@ -45,40 +45,13 @@ export default function NewWorkspacePage() {
           />
         </div>
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium">Type</legend>
-          <label className="flex items-start gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="radio"
-              name="type"
-              value="individual"
-              required
-              defaultChecked
-              className="mt-1"
-            />
-            <span>
-              <span className="block font-medium">Individual</span>
-              <span className="block text-muted-foreground">
-                Solo consultants, freelancers, or independent experts.
-              </span>
-            </span>
-          </label>
-          <label className="flex items-start gap-3 rounded-md border p-3 text-sm">
-            <input
-              type="radio"
-              name="type"
-              value="organization"
-              className="mt-1"
-            />
-            <span>
-              <span className="block font-medium">Organization</span>
-              <span className="block text-muted-foreground">
-                Companies, NGOs, agencies. You can invite up to 5 members on
-                Pro.
-              </span>
-            </span>
-          </label>
-        </fieldset>
+        {/*
+          Individual workspaces hidden for MVP (ADR 0006 §7). The
+          workspace_type enum in the DB still supports "individual" so
+          re-enabling later is a UI change, not a migration. All MVP
+          workspaces are organizations by default.
+        */}
+        <input type="hidden" name="type" value="organization" />
 
         <button
           type="submit"
