@@ -1,0 +1,9 @@
+openapi: "3.0.3"
+info:
+  title: "tender-sense"
+  version: "0.1.0"
+  description: "API for tender-sense. Update at MewKing Finalize stage."
+paths: {}
+components:
+  schemas: {}
+  securitySchemes: {}

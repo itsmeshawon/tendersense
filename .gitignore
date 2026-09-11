@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# next
+.next/
+out/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# supabase
+supabase/.temp/
+supabase/.branches/
+
+# editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# testing
+coverage/
