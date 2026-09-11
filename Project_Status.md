@@ -1,9 +1,12 @@
 ---
-project: tender-sense
+project: tendersense
 started: 2026-09-11
 status: active
 stack: next + typescript + supabase + vercel + github
 tier: mewking
+collaborators:
+  - "shawon (itsmeshawon on GitHub, mahedisalim@gmail.com) — founder"
+  - "mohabbat (mewking2099 on GitHub, mohabbat2099@gmail.com) — engineer"
 plan_approved: true
 plan_approved_at: 2026-09-11
 gate_block_count: 0
