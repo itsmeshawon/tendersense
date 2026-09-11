@@ -67,3 +67,38 @@
 - Phase 0 (foundation): **~75%** (auth wiring complete; workspaces UI + deploy + RLS test remaining)
 - MVP overall (§113 phases 0–6): **~8–10%**
 - Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet
+
+## Session 3 — 2026-09-11
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-0-foundation/plan.md`
+**Phase:** Phase 0 — Foundation (steps 6 + 7 + 8)
+
+### What shipped
+
+- **PR #2 — Workspaces UI (step 6):** `lib/workspaces/{repository,service}.ts` (RLS-scoped list + create_workspace RPC), `/workspaces` list + zero-state redirect, `/workspaces/new` form with individual/organization radio + server action. `/dashboard` becomes post-login router. 12 new tests.
+- **PR #3 — RLS integration test (step 8):** two-user integration test (`tests/integration/rls.test.ts`) against real local Supabase — Alice creates workspace via RPC, Bob cannot see it or Alice's membership, direct INSERT blocked, allowlist unreadable (42501), auth-trigger blocks unknown emails. Vitest split into unit (CI-safe) + integration (needs Docker) configs. 10 integration tests passing.
+- **Migration 0006:** explicit table grants for `authenticated` + `service_role`. Uncovered real gap — local Supabase doesn't inherit default privileges that hosted has; RLS policies were unreachable behind bare "permission denied". Pushed to hosted (idempotent).
+- **Vercel deploy (step 7):** repo imported, root dir set to `apps/web`, env vars pasted, deployed at https://tendersense-delta.vercel.app.
+- **Domain + email:** `tendersense.app` purchased on Hostinger, DKIM + CNAMEs added, Resend verified. Supabase SMTP switched to Resend (`noreply@tendersense.app`).
+- **Production auth end-to-end verified with two real users** (mahedisalim@gmail.com + mohabbat2099@gmail.com invited to repo + allowlist). Teammate logged in, created a workspace, saw it. RLS holds in production.
+- Adopted feature-branch + PR + squash-merge workflow. Three PRs merged this session (#1 already from session 2). CI caught one lint error on PR #1 before merge.
+
+### Decisions (informal, to be codified as ADRs in session 4)
+
+- Repo layout: `apps/web/` (room for future `apps/workers/`)
+- Package manager: npm
+- Supabase clients: three-file pattern (`client.ts`, `server.ts`, `service.ts` with server-only guard)
+- Workspace creation: SECURITY DEFINER RPC (no INSERT policies on workspaces/members)
+- Git workflow: feature branch + PR + squash-merge for non-trivial changes
+- Local Supabase runs on shifted ports (5433x) so Truzo can coexist
+
+### Not done (blocking Phase 0 exit)
+
+- ADRs 0001–0005 (step 10)
+- Tag `v0.1.0-phase0`
+
+### Position vs Source of Truth
+
+- Phase 0 (foundation): **~95%** (only ADRs + tag remaining)
+- MVP overall (§113 phases 0–6): **~12–14%**
+- Definition of MVP Done (§114, 18 items): 0/18 fully checkable yet (Phase 0 items partial)

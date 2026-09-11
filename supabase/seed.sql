@@ -4,5 +4,6 @@
 -- Add rows here for demo users. citext = case-insensitive.
 
 insert into public.allowed_signup_emails (email, note) values
-  ('mahedisalim@gmail.com', 'founder / dev')
+  ('mahedisalim@gmail.com',  'founder / dev'),
+  ('mohabbat2099@gmail.com', 'teammate / engineer')
 on conflict (email) do nothing;
