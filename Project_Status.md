@@ -9,15 +9,15 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-11
 last_wrap: 2026-09-11
-session_count: 1
-current_phase: "Phase 0 — Foundation (execution, ~60% done)"
+session_count: 2
+current_phase: "Phase 0 — Foundation (execution, ~75% done — auth wired end-to-end)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
   - "proposals/active/phase-0-foundation/plan.md (approved 2026-09-11, in progress)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 2: Phase 0 step 4 — auth pages (magic-link login + callback), middleware.ts session refresh, getServerUser() helper. Then step 6 (workspaces list + create UI), step 7 (Vercel deploy + confirm CI green), step 8 (RLS integration test), step 10 (ADRs 0001–0004 + tag v0.1.0-phase0)."
+next_action: "Session 3: Phase 0 step 6 — workspaces list + create UI (calls create_workspace RPC). Then step 7 (Vercel deploy + confirm CI green), step 8 (RLS integration test), step 10 (ADRs 0001–0004 including git workflow ADR + tag v0.1.0-phase0). Adopt feature-branch + PR + squash-merge from now on."
 open_questions: []
 env_var_rule: "Never write NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_DB_URL from any other project or shell env. User creates the Supabase project and hands over values explicitly. Ask before wiring."
 open_threads: []
