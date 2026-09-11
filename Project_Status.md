@@ -9,13 +9,15 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-11
 last_wrap: 2026-09-11
-session_count: 0
-current_phase: "Phase 0 — Foundation (planning)"
+session_count: 1
+current_phase: "Phase 0 — Foundation (execution, ~60% done)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
-  - "proposals/active/phase-0-foundation/plan.md (drafting)"
+  - "proposals/active/phase-0-foundation/plan.md (approved 2026-09-11, in progress)"
 pilot: "BRAC IT Services"
-next_action: "Phase 0 sequencing step 1: repo scaffold + Next.js + Tailwind + shadcn init. STOP before creating Supabase project — user provisions and provides env vars."
+github: "https://github.com/itsmeshawon/tendersense (private)"
+hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
+next_action: "Session 2: Phase 0 step 4 — auth pages (magic-link login + callback), middleware.ts session refresh, getServerUser() helper. Then step 6 (workspaces list + create UI), step 7 (Vercel deploy + confirm CI green), step 8 (RLS integration test), step 10 (ADRs 0001–0004 + tag v0.1.0-phase0)."
 open_questions: []
 env_var_rule: "Never write NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_DB_URL from any other project or shell env. User creates the Supabase project and hands over values explicitly. Ask before wiring."
 open_threads: []
