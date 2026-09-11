@@ -182,3 +182,5 @@
 
 - Phase 1: **~15% of the phase** (schema done; 6 more code PRs to go)
 - MVP overall (§113 scope-reduced): **~17–19%**
+
+- **2026-09-11 18:58** — auto-wrap: modified 0007-ingest-runner-pattern.md, 0008-content-hash-scope.md, 0009-cron-infrastructure.md +2 more [auto-wrap]
