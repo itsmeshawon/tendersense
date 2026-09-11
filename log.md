@@ -183,4 +183,37 @@
 - Phase 1: **~15% of the phase** (schema done; 6 more code PRs to go)
 - MVP overall (§113 scope-reduced): **~17–19%**
 
-- **2026-09-11 18:58** — auto-wrap: modified 0007-ingest-runner-pattern.md, 0008-content-hash-scope.md, 0009-cron-infrastructure.md +2 more [auto-wrap]
+## Session 8 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass while PR #8 awaits review)
+**Setting:** PR #8 (adapter plumbing) still unreviewed by @mewking2099. Instead of stacking risk on top of an in-review branch, this session cleared docs debt from the tail of Phase 1.
+
+### What shipped
+
+- **ADRs 0007–0010** landed direct-to-main under the code-rules docs exception:
+  - `0007-ingest-runner-pattern.md` — one runner orchestrates; adapters are data
+  - `0008-content-hash-scope.md` — SoT §26 material fields; explicit exclusion of reference_no/tags/sector
+  - `0009-cron-infrastructure.md` — GitHub Actions; not pg_cron / Scheduled Edge Functions / Vercel Cron
+  - `0010-eexperience-on-demand.md` — eExperience is a lookup, not a cron adapter
+- **Phase 1 plan §3** updated from "to record" to "recorded"
+- **`docs/pilot-demo-script.md` drafted** — 20-min pilot demo for BRAC IT, structured around two peaks (eExperience unlock + Discover feed with amendment detection), fallback plans, pre-demo checklist, what NOT to demo
+
+### Not shipped (still waiting)
+
+- PR #8 review by @mewking2099 (adapter plumbing) — blocks step 4 (WB adapter)
+- Everything downstream of PR #8
+
+### Position vs Source of Truth
+
+- Phase 1: **~35–40%** (all planned ADRs done ahead of schedule; adapter code still to come)
+- MVP overall (§113 scope-reduced): **~21–23%**
+- Definition of MVP Done (§114, 18 items): infra items partial; user-facing items 0/many
+
+### Open threads
+
+- eExperience URL + selector reconnaissance (Phase 1 §6 Q8) — now flagged as **blocker for scheduling any pilot demo** in `docs/pilot-demo-script.md` §12. Not just a code prereq.
+- `/opportunities` list (Phase 1 §6 Q5) — optional in the plan; demo script §12 recommends shipping it or Peak 2 of the demo becomes much weaker
+- PII rule (ADR 0006 §8) — encoded in code + tests; awaiting formal sign-off
+- Data-residency counsel question — draft not written yet
+- Grade vocabulary reader check — Phase 3, nice-to-have before demo
