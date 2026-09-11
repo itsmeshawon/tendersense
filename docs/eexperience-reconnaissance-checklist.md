@@ -1,202 +1,261 @@
-# eExperience Reconnaissance Checklist
+# eExperience Reconnaissance — Complete
 
-**Status:** Partially answered by WebFetch reconnaissance 2026-09-12. Remaining questions marked **[HUMAN]** need a browser + Network tab (~10 min).
+**Status:** DONE 2026-09-12. Enough information to write the eExperience lookup code.
 
-**Why manual for the remainder:** e-GP's eExperience form submits via POST/AJAX; GET-with-parameters doesn't trigger a search. To get exact input `name` attributes, the POST body, pagination params, and session-cookie behavior, someone (you or Mohabbat) needs to actually submit a search and watch the Network tab.
-
-**How the pre-fill happened:** WebFetch on `eprocure.gov.bd/robots.txt`, the domain root, and `SearcheCMS.jsp` (as GET). Every answer below is annotated `[via WebFetch]` or `[HUMAN]`.
+Answers combined from WebFetch reconnaissance and manual dev-tools capture. Field names + POST endpoint + payload shape + row markup + detail page URL all confirmed.
 
 ---
 
-## Step 1 — Entry point
+## Landing page + entry to advanced search
 
-**Q1. Landing URL of the eExperience search form:**
-`https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp` — [via WebFetch]
+- **Basic search form:** `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp` — public, no login
+- **Advanced search form (the one we need):** `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp?v=advSearch`
+- The advanced view is toggled with `?v=advSearch` and exposes the fields we care about (Contract Awarded To, Company Unique ID, Experience Certificate No, Work Status)
 
-Confirmed via the eGP homepage's dashboard link labeled "eExperience".
+## The four fields our adapter uses
 
-**Q2. Is a login required to see the search form?** — [via WebFetch]
-**No.** The homepage `https://www.eprocure.gov.bd/` shows a login form, but that login is for *registered eGP users* (bidders + procuring entities). The eExperience search page itself is publicly accessible without authentication.
+Captured from live HTML — real `name` and `id` attributes:
 
-## Step 2 — Submit a search
+```html
+<!-- Contract Awarded To (company name) — main input -->
+<select name="contAwrdSearchOpt" id="contAwrdSearchOpt">
+  <option value="Contains" selected>Contains</option>
+  <option value="Equals">Equals</option>
+</select>
+<input name="contractAwardTo" id="txtContractAwardTo" type="text">
 
-**Q3. HTTP method** — [HUMAN needed]
-WebFetch attempted a GET with `?contractAwardedTo=BRAC%20IT&workStatus=Completed`. The page returned but with an *empty results table* (no submission fired). This means the form **does not accept GET-with-params.** Options:
+<!-- Company Unique ID -->
+<input name="txtTendererId" id="txtTendererId" type="text">
 
-- POST to the same URL
-- POST to a separate handler (typical JSP: `SearcheCMSResult.jsp` or `SearcheCMSAction.do`)
-- AJAX to a JSON/XML endpoint
+<!-- Experience Certificate No -->
+<select name="exCertSearchOpt" id="exCertSearchOpt">
+  <option value="Contains" selected>Contains</option>
+  <option value="Equals">Equals</option>
+</select>
+<input name="exCertificateNo" id="exCertificateNo" type="text">
 
-**You need to confirm:** Open Chrome/Firefox dev tools → Network tab → submit the form with a company name → note the exact request URL, method, and body.
-
-**Q4. Full URL of the results page** — [HUMAN needed]
-_______________________________________________
-
-**Q5. Query-string / POST field names** — [HUMAN needed]
-
-WebFetch could see the form field *labels* but the JSP source-side `name` attributes are what we need. Fill in from the Network tab:
-
-| Label | Best-guess name | Actual `name` attr (fill in) |
-|---|---|---|
-| Ministry/Division/Organization | `ministry` | |
-| Procuring Entity | `procuringEntity` | |
-| Procurement Nature | `procurementNature` | |
-| Tender/Proposal ID | `tenderId` | |
-| Procurement Method | `procurementMethod` | |
-| Contract Start Date From | `contractStartDateFrom` | |
-| Contract Start Date To | `contractStartDateTo` | |
-| Contract End Date From | `contractEndDateFrom` | |
-| Contract End Date To | `contractEndDateTo` | |
-| Work Status (All/Completed/Ongoing) | `workStatus` | |
-| **Contract Awarded To** (our company-name field) | `contractAwardedTo` | |
-| Company Unique ID | `companyUniqueId` | |
-| Experience Certificate No | `experienceCertificateNo` | |
-| Procurement Type | `procurementType` | |
-| Tender Type | `tenderType` | |
-
-Note the "Contract Awarded To" field has a **Contains / Equals radio** — capture the radio's `name` and the two values (likely `contractAwardedToMatch=contains|equals`).
-
-**Q6. Hidden fields, session tokens, CSRF, captcha** — [HUMAN needed]
-WebFetch didn't detect any tokens visible in the rendered HTML, but JSP apps typically carry a `jsessionid` cookie and often hidden `_csrf` or `_token` fields. Confirm in Network tab:
-- Cookie header on the request: `_______________________________________________`
-- Any hidden form fields (search Network → Request → Form Data): `___`
-- Captcha element? (There was none in the initial page render — but confirm none appears after first search): `___`
-
-## Step 3 — Inspect the results page
-
-**Q7. Server-rendered or AJAX** — [via WebFetch, partial]
-**Mixed.** The form itself is server-rendered HTML. The results table is populated via JavaScript/AJAX after form submission — WebFetch saw a "loading.gif" placeholder and "Page 1 of 10" in the empty state, confirming client-side rendering of results.
-
-**Whether the AJAX endpoint returns JSON, XML, or HTML fragment** — [HUMAN needed] — check the response Content-Type in Network tab.
-
-**Q8. Number of results returned for the tested company** — [HUMAN needed]
-Test with "BRAC IT" — expected: several rows. Note the count. `___`
-
-**Q9. HTML structure of ONE result row** — [HUMAN needed]
-Copy the outer HTML from Elements panel. If AJAX returns JSON, copy one JSON record instead:
-
-```
-Paste here:
-
-
-
+<!-- Work Status -->
+<select name="cmbWorkStatus" id="cmbWorkStatus">
+  <option value="All" selected>All</option>
+  <option value="Completed">Completed</option>
+  <option value="Ongoing">Ongoing</option>
+</select>
 ```
 
-**Q10. Per-row fields we care about** — [via WebFetch: column headers known; row markup needs [HUMAN]]
+**Note the JS rewrite:** HTML `name` attributes differ from the actual POST field names in some cases. Client-side JavaScript renames fields before submission. The submitted payload uses `tendererId` (not `txtTendererId`) and `workStatus` (not `cmbWorkStatus`). See §Search endpoint for the ground truth.
 
-The results table has these 10 columns (from WebFetch):
+## Search endpoint
 
-| Column header (verbatim) | Our field | Confirmed present |
+- **URL:** `https://www.eprocure.gov.bd/AdvSearcheCMSServlet`
+- **Method:** `POST`
+- **Content-Type:** `application/x-www-form-urlencoded`
+- **Response Content-Type:** `text/html;charset=UTF-8` (HTML fragment, no JSON option)
+- **Session:** `JSESSIONID` cookie required — establish by fetching `SearcheCMS.jsp?v=advSearch` first
+
+**Full POST payload** (all 20 fields, empty values = `""`):
+
+```
+action=geteCMSList
+keyword=
+officeId=0
+contractAwardTo=BRAC IT              <-- our search value
+contractStartDtFrom=
+contractStartDtTo=
+contractEndDtFrom=
+contractEndDtTo=
+departmentId=
+tenderId=
+procurementMethod=
+procurementNature=
+contAwrdSearchOpt=Contains           <-- match mode for contractAwardTo
+exCertSearchOpt=Contains             <-- match mode for exCertificateNo
+exCertificateNo=
+tendererId=
+procType=
+statusTab=All
+pageNo=1
+size=10
+workStatus=All                       <-- All | Completed | Ongoing
+```
+
+**Adapter must send all fields**, empty strings included. The servlet probably rejects malformed bodies.
+
+## Result row shape
+
+Each row is one `<tr class="bgColor-white">` with **10 cells**:
+
+| Cell | Content | Extraction |
 |---|---|---|
-| S. No. | (skip) | ✓ via WebFetch |
-| Ministry, Division, Organization, PE | Procuring entity / Ministry / Agency name | ✓ via WebFetch |
-| Procurement Nature, Type & Method | Procurement method + category | ✓ via WebFetch |
-| Tender/Proposal ID, Ref No., Title & Publishing Date | External ID + reference no + title + publication date (4 fields combined) | ✓ via WebFetch |
-| Contract Awarded To | Winning company name | ✓ via WebFetch |
-| Company Unique ID | Company ID (useful for follow-up filter) | ✓ via WebFetch |
-| Experience Certificate No | Certificate number (this is our key value) | ✓ via WebFetch |
-| Contract Amount | Value + currency | ✓ via WebFetch |
-| Contract Start & End Date | Awarded date + end date | ✓ via WebFetch |
-| Work Status | Ongoing / Completed | ✓ via WebFetch |
+| 1 | Row number (S. No.) | skip |
+| 2 | Ministry / Division / PE (three lines separated by `<br>`) | 3 fields — split on `<br>` |
+| 3 | Nature / Type / Method (three lines) | 3 fields — split on `<br>` |
+| 4 | Tender ID + Ref No + **Title link** + Publishing Date | Contains `<a href="/resources/common/VieweCmsDetails.jsp?wcs=<status>&Id=<id>">Title</a>` |
+| 5 | Contract Awarded To (winning company) | text |
+| 6 | Company Unique ID | text (numeric) |
+| 7 | Experience Certificate No | text (long alphanumeric, may wrap) |
+| 8 | Contract Amount | numeric string, no currency symbol (BDT implied) |
+| 9 | Contract Start Date + End Date (two lines) | 2 dates, split on `<br>` |
+| 10 | Work Status | text (Completed / Ongoing) |
 
-**Fill in the exact CSS selector for each cell** — [HUMAN needed] — right-click a cell in Elements panel:
-- Contract title cell selector: `___`
-- Certificate number cell selector: `___`
-- Contract amount cell selector: `___`
-- Any detail-page anchor `<a href>` on the title cell? `___`
+**Sample row (Beximco):**
 
-**Q11. Pagination** — [via WebFetch, partial]
-WebFetch saw "Page 1 of 10" in the empty state. So pagination exists but exact param name is unknown.
-- Results per page (visible?) — [HUMAN needed]: `___`
-- URL/parameter for page N — [HUMAN needed]: `___`
-- Confirm "last page" indicator is `Page N of N` text — [HUMAN needed]: `___`
+```html
+<tr class="bgColor-white">
+  <td class="t-align-center">1</td>
+  <td class="t-align-center">Bank and Financial Institutions Division,<br>Bangladesh Krishi Bank,<br>ICT Operation Department</td>
+  <td class="t-align-center">Goods,<br>NCT,<br>OTM</td>
+  <td class="t-align-center">845283, BKB/HO/ICT(OP)/7(5)-76/2022-2023/1217<br>
+    <a href="/resources/common/VieweCmsDetails.jsp?wcs=completed&Id=165657" target="_blank">
+      Supply, Installation & Commissioning of Servers and Server Rack for Nikash-BEFTN Service of Bangladesh Krishi Bank.
+    </a><br>08-Jun-2023</td>
+  <td class="t-align-left">BEXIMCO COMPUTERS LTD</td>
+  <td class="t-align-center">1103644</td>
+  <td class="t-align-left">23/2022--2023/e-GP/20240711/845283/00165657</td>
+  <td class="t-align-right">5950000.014</td>
+  <td class="t-align-center">02-Oct-2023<br>11-Feb-2024</td>
+  <td class="t-align-center">Completed</td>
+</tr>
+```
 
-## Step 4 — Edge-case behavior — [HUMAN]
+## Detail page
 
-**Q12. Search for a company that returns nothing** (e.g. "Zzzz Fictitious Ltd"):
-`___`
+- URL pattern: `/resources/common/VieweCmsDetails.jsp?wcs=<workStatus>&Id=<internalId>`
+- `wcs` = `completed` or `ongoing`
+- `Id` = internal e-GP row id (not the certificate number, not the tender ID)
+- Opens in a new tab (`target="_blank"`)
+- Whether it has more fields worth fetching — deferred; for MVP the row payload is enough
 
-**Q13. Ambiguous name** (e.g. just "Systems"). Partial-match or exact-match? Contains vs Equals radio behavior?
-`___`
+## Pagination
 
-**Q14. Rate-limit / throttle behavior** — 5 searches in 30s:
-- Captcha appearing: `___`
-- HTTP 429 / 503: `___`
-- Session cookie required after first: `___`
+- Explicit `pageNo` + `size` params in POST body
+- Default `size=10`
+- Total-page indicator visible in results container (previously observed "Page 1 of 10")
+- Adapter can request `size=100` to reduce roundtrips — needs testing to confirm cap
 
-## Step 5 — Detail page — [HUMAN]
+## Bangla / English + digits
 
-Column header didn't obviously suggest a per-row detail link. Click any row title to test:
+- Amounts (`5950000.014`) and dates (`02-Oct-2023`) come in **Western digits + English format** by default
+- Bilingual toggle exists in page header, but the servlet responds in English regardless of URL (no lang param seen in payload)
+- Adapter can stay English-only
 
-**Q15. Detail page URL pattern:** `___`
-**Q16. Extra fields on the detail page:** `___`
+## robots.txt + T&C
 
-## Step 6 — Bangla vs English
+- `/robots.txt` redirects to session-timeout page — not usable as policy guidance
+- T&C footer link — **not captured this session**; note as small remaining task before the adapter ships to production. The counsel question already covers automated-access risk in general.
 
-**Q17. Language toggle** — [via WebFetch]
-**Bilingual.** Toggle labeled "Language English Bangla" appears in the header navigation. Exact URL parameter or session-based switch — [HUMAN needed]: `___`
+## Edge cases
 
-**Q18. Digit form (0-9 vs ০-৯)** — [HUMAN needed]
-Once you submit a search, note whether contract values / dates in the results table use Western digits or Bengali digits by default. `___`
-
-## Step 7 — Terms of use
-
-**Q19. robots.txt** — [via WebFetch]
-**Not usable as guidance.** `https://www.eprocure.gov.bd/robots.txt` **302-redirects to `/SessionTimedOut.jsp`** — the domain's session manager treats robots.txt as session-required, which is technically broken. There is no meaningful `robots.txt` policy to follow. We rely on the T&C footer instead (Q20).
-
-**Q20. Terms of use / acceptable use text** — [via WebFetch]
-**Present.** Footer links: "Terms and Conditions" and "Disclaimer and Privacy Policy". Fetch the T&C page and quote any clauses that restrict automated access, redistribution, or reuse of the data — [HUMAN needed]:
-- T&C URL: `___`
-- Automated-access clauses: `___`
-- Data-reuse clauses: `___`
-
-## Step 8 — Confidence check
-
-**Q21. Confidence rating (1-10)** — after you fill in Q3-Q9 from Network tab: `___`
+- **Empty results (BRAC IT, DataSoft):** results table shows no rows. Row-count indicator: not confirmed but presumably "0 records" or similar.
+- **Rapid-fire captcha / throttle:** not tested — no captcha appeared in normal use, but 5-search burst was not run. Adapter should include the 3-5s courtesy delay from ADR 0010 §Cost.
+- **Detail page:** not visited — deferred, not blocking.
 
 ---
 
-## Pre-fill summary (what WebFetch answered)
+## Blocker candidates — status
 
-- Entry point confirmed: `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp` (public, no login)
-- Form fields **identified** (15 total, with human-readable labels + inferred name attributes)
-- Results table **10 columns identified** covering everything we need (title, entity, method, amount, dates, cert no, unique ID, status)
-- Rich filter options far beyond what SoT §10.2 hinted at — we can filter by ministry, procurement type, work status (Completed vs Ongoing), date ranges
-- Pagination exists ("Page N of N")
-- Server-rendered form + AJAX-populated results
-- Bilingual (English/Bangla) toggle in header
-- robots.txt is broken (redirect to session-timeout); T&C page is the real policy source
-- Terms and Conditions link exists in footer — needs reading before we ship
+- ✅ Captcha: none observed during normal use. Adapter still throttles by convention.
+- ✅ Session requirement: JSESSIONID, standard cookie handling.
+- ⚠ T&C automated-access clause: not read this session. Small follow-up — read the footer T&C page, note any restriction, decide with counsel input. Not blocking initial code, is blocking production launch.
 
-## What still needs a human (~10 min in Chrome/Firefox dev tools)
+## The unexpected finding — BRAC IT returned zero
 
-1. Open `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp`
-2. Open Network tab
-3. Type "BRAC IT" (or your test company) into "Contract Awarded To", pick "Contains", pick Work Status "Completed"
-4. Click Search
-5. In Network tab, find the request (probably POST to a `.jsp` or `.do` endpoint):
-   - Copy request URL → Q4
-   - Copy form-data payload → Q5 (real `name` attributes)
-   - Copy Cookie header → Q6
-   - Copy Content-Type of the response → Q7 supplement
-6. In Elements panel, right-click one result row → Inspect → copy outer HTML → Q9
-7. Test with a fake name for empty state → Q12
-8. Test ambiguous name → Q13
-9. Rapid-fire 5 searches → Q14
-10. Click a row title to test detail page → Q15
-11. Toggle language → Q17
-12. Note digit form on submitted results → Q18
-13. Open T&C footer link → Q20
+**Peak 1 of the pilot demo relies on typing "BRAC IT" and seeing their contracts appear.** This test showed **BRAC IT and DataSoft returned zero results**; only Beximco returned one row.
 
-## When you finish
+Possibilities:
 
-Commit this file with answers, mark `Project_Status.md` open_questions eExperience recon **DONE**, mark plan §6 Q8 answered → next session writes the eExperience adapter.
+1. BRAC IT's eGP entries are registered under a different legal name (e.g. "BRAC IT Services Limited", "BITS", "BRAC Bank IT", etc.)
+2. BRAC IT wins contracts through offline/manual procurement channels not reflected in eExperience
+3. BRAC IT genuinely hasn't won eGP-tracked government contracts in the timeframe queried
 
-## Blocker candidates to watch for during the 10 min
+**Implication for the demo:** Peak 1 as scripted in `docs/pilot-demo-script.md` §4 does not work with the input "BRAC IT" today. Options:
 
-- **Captcha on repeat searches** — blocks any adapter code, forces us to defer eExperience out of Phase 1 or ask BPPA for a data-partnership
-- **T&C explicitly prohibits automated access** — legal risk, needs counsel input (already partly covered in `docs/data-residency-counsel-question.md`)
-- **AJAX endpoint returns opaque binary or heavy JavaScript-generated markup** — parsing gets much harder, HTML fallback may not exist
-- **Session cookie required for every request** — means our adapter has to establish a session first, more state to manage
+- **A.** Try name variants during the demo. Requires knowing which variant works — must be tested in advance.
+- **B.** Pre-seed BRAC IT's profile manually with 3-5 real contracts sourced elsewhere. Demo shows a workspace already populated, framed as "here's what your profile looks like after the eExperience lookup runs."
+- **C.** Switch demo target from BRAC IT to a company with confirmed eExperience presence (Beximco has data).
+- **D.** Ship a smaller version of Peak 1: "type your company name" → results appear or "no results — add manually." Honest but less dramatic.
 
-If any of these appear, flag in the recon file. Better to know now than in the middle of adapter development.
+**Recommend:** confirm with BRAC IT directly which name they register under on e-GP, before committing to Option A. Add to open threads / demo prep. Do not schedule the demo until this is resolved.
+
+## Design implications for the adapter
+
+The eExperience lookup can be written now — no dependency on PR #8's adapter contract, per ADR 0010 (it's a lookup, not a `ProcurementSourceAdapter`).
+
+Shape:
+
+```ts
+// apps/web/lib/experience/egp-experience-client.ts
+
+interface LookupParams {
+  companyName: string
+  match?: "Contains" | "Equals"     // default Contains
+  workStatus?: "All" | "Completed" | "Ongoing"  // default Completed
+  pageSize?: number                  // default 25; adapter tests cap
+}
+
+interface ExperienceRecord {
+  detailId: string                   // internal e-GP id from href
+  detailUrl: string                  // absolute URL to /VieweCmsDetails.jsp?...
+  workStatus: "completed" | "ongoing"
+
+  // Cell 4 fields
+  tenderId: string
+  referenceNo: string
+  title: string
+  publishingDate: string             // ISO 8601 after parse
+
+  // Cell 2 fields
+  ministry: string
+  division: string
+  procuringEntity: string
+
+  // Cell 3 fields
+  procurementNature: string          // Goods / Works / Services
+  procurementType: string            // NCT / ICT
+  procurementMethod: string          // OTM / DTM / etc.
+
+  // Cells 5-10
+  contractAwardedTo: string
+  companyUniqueId: string
+  experienceCertificateNo: string
+  contractAmount: number             // in BDT
+  contractStartDate: string          // ISO 8601
+  contractEndDate: string            // ISO 8601
+}
+
+export async function lookupByCompanyName(
+  params: LookupParams
+): Promise<ExperienceRecord[]>
+```
+
+Flow:
+1. GET `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp?v=advSearch` — establish JSESSIONID
+2. POST to `https://www.eprocure.gov.bd/AdvSearcheCMSServlet` with full payload + cookie
+3. Parse HTML response with `cheerio` — select `tr.bgColor-white`
+4. Extract 10 cells per row, split multi-line cells on `<br>`
+5. Parse `<a href>` in cell 4 to get detailId + workStatus
+6. Parse date strings from `02-Oct-2023` format
+7. Return array
+
+Throttling: 3-5s delay between successive calls (per ADR 0010).
+
+Session pool: on-demand lookup, one call per user action, so a short in-memory session cache (JSESSIONID for 20 minutes) is enough. No need for a persistent session store.
+
+---
+
+## What's now closed
+
+- Q1 through Q11 (form + endpoint + payload + row structure + pagination) — all answered
+- Q17 (language) + Q18 (digit form) — English + Western digits
+- Q19 (robots.txt) — broken; not usable
+- Adapter design has enough detail to write
+
+## What's still open (minor)
+
+- Q14 rapid-fire throttle behavior — untested; assume none, adapter throttles by convention
+- Q15/Q16 detail page — not visited; not blocking
+- Q20 T&C automated-access clause — not read; blocking production launch, not development
+- **BRAC IT name variance** — moved to Project_Status open_questions; blocks pilot demo scheduling
+
+## Bottom line
+
+The eExperience adapter can be written in a single PR after this. The demo can be scheduled only after the BRAC IT name question is answered.

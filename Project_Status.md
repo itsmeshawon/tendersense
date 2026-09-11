@@ -24,10 +24,11 @@ github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
 next_action: "Session 12 needs one of: (a) PR #8 merged; (b) eExperience 10-min dev-tools recon completed (only the browser-Network-tab portion remains after WebFetch pre-fill in session 11); (c) counsel question filed. Solo Claude-doable tasks fully exhausted."
 open_questions:
-  - "PII stance for named procuring-entity officials (proposed in ADR 0006 §8 — needs sign-off before e-GP adapter is written)"
-  - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
-  - "Data-residency counsel question — draft the specific question (customer-uploaded docs + officials PII), file with lawyer; not launch-blocker for pilot but must not drift"
+  - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
+  - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
+  - "Data-residency counsel question — drafted at docs/data-residency-counsel-question.md; awaiting user review + filing"
   - "Grade vocabulary — verify 'Strong fit / Good fit / Possible / Weak fit' reads well with BRAC IT or a BD product manager reviewer before Phase 3 UI ships"
+  - "T&C automated-access clause at eprocure.gov.bd footer — read before production launch of eExperience lookup"
 env_var_rule: "Never write NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_DB_URL from any other project or shell env. User creates the Supabase project and hands over values explicitly. Ask before wiring."
 open_threads: []
 blockers: []
