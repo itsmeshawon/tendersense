@@ -9,8 +9,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
-session_count: 8
-current_phase: "Phase 1 — Source ingestion (ADRs 0007-0010 landed; adapter plumbing waiting on PR #8 review)"
+session_count: 9
+current_phase: "Phase 1 — Source ingestion (docs debt cleared; adapter code still waiting on PR #8 review)"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"
@@ -22,7 +22,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 9: git pull; verify PR #8 merged (needs @mewking2099 review). If merged, start Phase 1 step 4 — World Bank adapter + backfill + npm run sync:worldbank. Open a GitHub Issue first. If not merged, either nudge Mohabbat or draft the data-residency counsel question."
+next_action: "Session 10: git pull; verify PR #8 merged (needs @mewking2099 review). If merged, start Phase 1 step 4 — World Bank adapter + backfill + npm run sync:worldbank. Open a GitHub Issue first. If not merged, nudge Mohabbat (docs debt is now cleared — data-residency draft and pilot demo script both shipped; only PR review + manual work items remain)."
 open_questions:
   - "PII stance for named procuring-entity officials (proposed in ADR 0006 §8 — needs sign-off before e-GP adapter is written)"
   - "eExperience URL + HTML selectors — manual reconnaissance task, not code"

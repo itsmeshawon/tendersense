@@ -218,4 +218,29 @@
 - Data-residency counsel question — draft not written yet
 - Grade vocabulary reader check — Phase 3, nice-to-have before demo
 
-- **2026-09-11 19:13** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]
+## Session 9 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass while PR #8 still awaits review)
+
+### What shipped
+
+- **`docs/data-residency-counsel-question.md`** — structured counsel query per ADR 0006 §9. Three categories (MVP pilot / Post-pilot Pro / Deliberate exclusions), numbered sub-questions, regime references with 2025/2026 update caveat, 4-week/2-week turnaround target. Draft ready for user review + naming decision before sending.
+
+### Not shipped
+
+- PR #8 (adapter plumbing) — still open, still no review from @mewking2099. Every downstream Phase 1 step remains blocked.
+
+### Position vs Source of Truth
+
+- Phase 1: **~40%** (all ADRs done, counsel question drafted, code still stalled on PR #8)
+- MVP overall (§113 scope-reduced): **~22–24%**
+
+### Open threads
+
+- **PR #8 review** — biggest blocker; nudge Mohabbat if session 10 opens with it still stuck
+- eExperience URL + selector reconnaissance — manual, blocks pilot demo scheduling
+- `/opportunities` list — decide before Phase 1 exit
+- PII rule (ADR 0006 §8) — encoded, awaiting formal sign-off
+- Data-residency counsel question — drafted; awaiting user review + filing
+- Grade vocabulary reader check — Phase 3, not urgent
