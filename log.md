@@ -148,3 +148,37 @@
 - Phase 0: **100% ✅**
 - Phase 1 planning: **complete**; awaiting execution
 - MVP overall (SoT §113, scope-reduced per ADR 0006): unchanged in percent terms, but the ceiling is lower now — Phase 5 + 6 have less to build
+
+## Session 6 — 2026-09-11
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md` (approved 2026-09-11)
+**Phase:** Phase 1 — Source ingestion (step 2: schema)
+
+### What shipped
+
+- **PR #6 — `feat/phase1-schema`** merged (`main` @ `f5de461`) — five migrations 0007–0011:
+  - `0007_sources` — registry with `world_bank` + `bd_egp` seed rows; cursor lives in `configuration jsonb`
+  - `0008_source_records` — raw payload retained per ADR 0006 §3; server-only (no client role has access)
+  - `0009_opportunities` — canonical normalized notice; auth-readable via RLS (SoT §17 public-data exception); tsvector `search_text` refreshed on write; **zero PII columns** per ADR 0006 §8
+  - `0010_opportunity_revisions + source_sync_runs` — amendment detection (SoT §26) + ingestion bookkeeping (SoT §13)
+  - `0011_projects` — workspace-scoped past-contracts table (SoT §16.9) + `evidence_credential_number` for e-GP eExperience integration; `is_workspace_member` RLS gate
+- Applied to local (10 tables total, 2 sources seeded) + pushed to hosted `tendersense`
+- Grants verified via `information_schema.role_table_grants`: opportunities/revisions read-only for authenticated, projects full CRUD for authenticated (via RLS), sources/source_records/sync_runs server-only
+- 28/28 unit + 10/10 RLS integration tests still green (new tables don't break existing isolation)
+- Vercel preview built cleanly on PR #6
+
+### Not done (blocking Phase 1 exit)
+
+- PR #3 in plan sequence — adapter contract + normalizer + `pii.ts` + `http.ts`
+- WB adapter + backfill
+- Runner + revision detection
+- e-GP notices adapter
+- Cron workflows
+- eExperience lookup + profile-onboarding UI
+- Bonus `/opportunities` list (optional)
+- Remaining ADRs 0007–0010 + tag `v0.2.0-phase1`
+
+### Position vs Source of Truth
+
+- Phase 1: **~15% of the phase** (schema done; 6 more code PRs to go)
+- MVP overall (§113 scope-reduced): **~17–19%**

@@ -9,8 +9,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-11
 last_wrap: 2026-09-11
-session_count: 5
-current_phase: "Phase 1 — Source ingestion (execution starting; plan approved 2026-09-11)"
+session_count: 6
+current_phase: "Phase 1 — Source ingestion (schema shipped; adapter layer next)"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"
@@ -22,7 +22,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 6: Phase 1 step 2 — migrations 0007-0011 (sources, source_records, opportunities, revisions + sync_runs, projects.evidence_credential_number). Apply local + push hosted. Then step 3 (adapter contract + normalizer + pii.ts + http.ts) in a follow-up PR."
+next_action: "Session 7: Phase 1 step 3 — adapter contract + normalizer + pii.ts + http.ts under apps/web/lib/ingest/. TDD-first. No live-source calls; MSW or nock for HTTP mocks. This PR sets up the plumbing; WB adapter (step 4) lands next."
 open_questions:
   - "PII stance for named procuring-entity officials (proposed in ADR 0006 §8 — needs sign-off before e-GP adapter is written)"
   - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
