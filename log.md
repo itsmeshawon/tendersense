@@ -217,3 +217,5 @@
 - PII rule (ADR 0006 §8) — encoded in code + tests; awaiting formal sign-off
 - Data-residency counsel question — draft not written yet
 - Grade vocabulary reader check — Phase 3, nice-to-have before demo
+
+- **2026-09-11 19:13** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]
