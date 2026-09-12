@@ -15,11 +15,13 @@ import { Badge } from "@/components/ui/badge";
 export function CredentialRow({
   row,
   workspaceId,
-  formatDate,
+  issuedLabel,
+  expiresLabel,
 }: {
   row: Row;
   workspaceId: string;
-  formatDate: (iso: string | null) => string;
+  issuedLabel: string;
+  expiresLabel: string;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -36,8 +38,7 @@ export function CredentialRow({
           ) : null}
         </div>
         <p className="mt-1 truncate text-xs text-muted-foreground">
-          {row.issuer ?? "—"} · issued {formatDate(row.issue_date)} · expires{" "}
-          {formatDate(row.expiry_date)}
+          {row.issuer ?? "—"} · issued {issuedLabel} · expires {expiresLabel}
           {row.credential_number ? (
             <>
               {" · "}

@@ -9,11 +9,16 @@ import { Badge } from "@/components/ui/badge";
 export function FinancialRow({
   row,
   workspaceId,
-  format,
+  formatted,
 }: {
   row: Row;
   workspaceId: string;
-  format: (n: number) => string;
+  formatted: {
+    annual_turnover: string;
+    net_worth: string;
+    liquid_assets: string;
+    largest_contract_value: string;
+  };
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -45,28 +50,20 @@ export function FinancialRow({
         </Button>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
-        <Cell label="Turnover" v={row.annual_turnover} f={format} />
-        <Cell label="Net worth" v={row.net_worth} f={format} />
-        <Cell label="Liquid" v={row.liquid_assets} f={format} />
-        <Cell label="Largest contract" v={row.largest_contract_value} f={format} />
+        <Cell label="Turnover" value={formatted.annual_turnover} />
+        <Cell label="Net worth" value={formatted.net_worth} />
+        <Cell label="Liquid" value={formatted.liquid_assets} />
+        <Cell label="Largest contract" value={formatted.largest_contract_value} />
       </dl>
     </li>
   );
 }
 
-function Cell({
-  label,
-  v,
-  f,
-}: {
-  label: string;
-  v: number | null;
-  f: (n: number) => string;
-}) {
+function Cell({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-mono">{v !== null ? f(v) : "—"}</dd>
+      <dd className="font-mono">{value}</dd>
     </div>
   );
 }
