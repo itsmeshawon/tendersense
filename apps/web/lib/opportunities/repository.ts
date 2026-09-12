@@ -51,8 +51,22 @@ export type Opportunity = {
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
+export type OpportunityStatusFilter = "open" | "closed";
+
 export interface ListOpportunitiesParams {
   limit?: number;
+  /** ISO-3166-2 country code, e.g. "BD". Filters rows where country_code matches. */
+  country?: string;
+  /** Source key, e.g. "world_bank" or "bd_egp". */
+  source?: string;
+  /**
+   * Include only rows whose `deadline_at` falls within the next N days
+   * from now. Also excludes rows with a null deadline. Common values
+   * we'll expose in the UI: 7, 30, 90.
+   */
+  deadlineWithinDays?: number;
+  /** Filter on `status`. */
+  status?: OpportunityStatusFilter;
 }
 
 export async function listOpportunities(
@@ -60,11 +74,33 @@ export async function listOpportunities(
   params: ListOpportunitiesParams = {},
 ): Promise<Opportunity[]> {
   const limit = Math.min(params.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-  const { data, error } = await supabase
-    .from("opportunities")
-    .select("*")
+
+  let query = supabase.from("opportunities").select("*");
+
+  if (params.country) {
+    query = query.eq("country_code", params.country);
+  }
+  if (params.source) {
+    query = query.eq("source_key", params.source);
+  }
+  if (params.status) {
+    query = query.eq("status", params.status);
+  }
+  if (params.deadlineWithinDays !== undefined) {
+    const now = new Date();
+    const then = new Date(
+      now.getTime() + params.deadlineWithinDays * 24 * 60 * 60 * 1000,
+    );
+    query = query
+      .not("deadline_at", "is", null)
+      .gte("deadline_at", now.toISOString())
+      .lte("deadline_at", then.toISOString());
+  }
+
+  const { data, error } = await query
     .order("publication_at", { ascending: false, nullsFirst: false })
     .limit(limit);
+
   if (error) throw new Error(error.message);
   return (data as Opportunity[] | null) ?? [];
 }

@@ -2,6 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { listPublicOpportunities } from "@/lib/opportunities/service";
+import type {
+  ListOpportunitiesParams,
+  OpportunityStatusFilter,
+} from "@/lib/opportunities/repository";
 
 const DHAKA_DATE = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dhaka",
@@ -32,11 +36,79 @@ const SOURCE_LABEL: Record<string, string> = {
   bd_egp: "Bangladesh e-GP",
 };
 
-export default async function OpportunitiesPage() {
+const SOURCES = [
+  { value: "", label: "All sources" },
+  { value: "world_bank", label: "World Bank" },
+  { value: "bd_egp", label: "Bangladesh e-GP" },
+] as const;
+
+const COUNTRIES = [
+  { value: "", label: "All countries" },
+  { value: "BD", label: "Bangladesh" },
+  { value: "NP", label: "Nepal" },
+  { value: "LK", label: "Sri Lanka" },
+  { value: "IN", label: "India" },
+] as const;
+
+const DEADLINE_RANGES = [
+  { value: "", label: "Any deadline" },
+  { value: "7", label: "Next 7 days" },
+  { value: "30", label: "Next 30 days" },
+  { value: "90", label: "Next 90 days" },
+] as const;
+
+const STATUSES = [
+  { value: "", label: "Any status" },
+  { value: "open", label: "Open" },
+  { value: "closed", label: "Closed" },
+] as const;
+
+function parseFilters(
+  sp: Record<string, string | string[] | undefined>,
+): ListOpportunitiesParams {
+  const country = typeof sp.country === "string" ? sp.country : undefined;
+  const source = typeof sp.source === "string" ? sp.source : undefined;
+  const statusRaw = typeof sp.status === "string" ? sp.status : undefined;
+  const status: OpportunityStatusFilter | undefined =
+    statusRaw === "open" || statusRaw === "closed" ? statusRaw : undefined;
+  const deadlineRaw =
+    typeof sp.deadline === "string" ? Number(sp.deadline) : undefined;
+  const deadlineWithinDays =
+    Number.isFinite(deadlineRaw) && deadlineRaw && deadlineRaw > 0
+      ? deadlineRaw
+      : undefined;
+  return {
+    country: country || undefined,
+    source: source || undefined,
+    status,
+    deadlineWithinDays,
+    limit: 50,
+  };
+}
+
+export default async function OpportunitiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await getServerUser();
   if (!user) redirect("/login");
 
-  const opportunities = await listPublicOpportunities({ limit: 50 });
+  const sp = await searchParams;
+  const filters = parseFilters(sp);
+  const opportunities = await listPublicOpportunities(filters);
+
+  const activeFilters = [
+    filters.source && SOURCE_LABEL[filters.source],
+    filters.country &&
+      COUNTRIES.find((c) => c.value === filters.country)?.label,
+    filters.deadlineWithinDays &&
+      DEADLINE_RANGES.find(
+        (d) => d.value === String(filters.deadlineWithinDays),
+      )?.label,
+    filters.status &&
+      STATUSES.find((s) => s.value === filters.status)?.label,
+  ].filter((v): v is string => Boolean(v));
 
   return (
     <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
@@ -47,7 +119,7 @@ export default async function OpportunitiesPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             Public procurement notices ingested from World Bank and Bangladesh
-            e-GP. Read-only for now.
+            e-GP.
           </p>
         </div>
         <Link
@@ -58,17 +130,117 @@ export default async function OpportunitiesPage() {
         </Link>
       </header>
 
+      <form
+        method="get"
+        className="flex flex-col gap-3 rounded-md border p-4"
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-foreground">Source</span>
+            <select
+              name="source"
+              defaultValue={filters.source ?? ""}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              {SOURCES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-foreground">Country</span>
+            <select
+              name="country"
+              defaultValue={filters.country ?? ""}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-foreground">Deadline</span>
+            <select
+              name="deadline"
+              defaultValue={
+                filters.deadlineWithinDays
+                  ? String(filters.deadlineWithinDays)
+                  : ""
+              }
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              {DEADLINE_RANGES.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-foreground">Status</span>
+            <select
+              name="status"
+              defaultValue={filters.status ?? ""}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {activeFilters.length > 0
+              ? `Filters: ${activeFilters.join(" · ")}`
+              : "No filters"}
+          </p>
+          <div className="flex items-center gap-2">
+            {activeFilters.length > 0 ? (
+              <Link
+                href="/opportunities"
+                className="text-xs text-muted-foreground underline hover:text-foreground"
+              >
+                Clear all
+              </Link>
+            ) : null}
+            <button
+              type="submit"
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <p className="text-xs text-muted-foreground">
+        Showing {opportunities.length} result
+        {opportunities.length === 1 ? "" : "s"}
+        {activeFilters.length > 0 ? " with filters applied" : ""}.
+      </p>
+
       {opportunities.length === 0 ? (
         <section
           data-testid="opportunities-empty"
           className="rounded-md border border-dashed p-8 text-sm text-muted-foreground"
         >
-          <p className="font-medium text-foreground">No opportunities yet.</p>
+          <p className="font-medium text-foreground">
+            {activeFilters.length > 0
+              ? "No opportunities match these filters."
+              : "No opportunities yet."}
+          </p>
           <p className="mt-2">
-            Sync jobs populate this list on a daily and 4-hourly cadence for
-            World Bank and Bangladesh e-GP respectively. If this stays empty
-            after a scheduled run, check the sync-runs log or the source-health
-            check.
+            {activeFilters.length > 0
+              ? "Try broadening the filters, or clear them to see everything."
+              : "Sync jobs populate this list on a daily and 4-hourly cadence for World Bank and Bangladesh e-GP respectively."}
           </p>
         </section>
       ) : (
