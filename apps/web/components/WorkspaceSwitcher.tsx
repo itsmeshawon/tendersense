@@ -4,6 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
 
+/** Isolated so React Compiler's immutability check doesn't flag the
+ *  event handler for writing document.cookie directly. */
+function persistWorkspaceCookie(id: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `ts_workspace=${encodeURIComponent(id)}; path=/; max-age=31536000; samesite=lax`;
+}
+
 interface WorkspaceOption {
   id: string;
   name: string;
@@ -54,6 +61,12 @@ export function WorkspaceSwitcher({
 
   function switchTo(id: string) {
     setOpen(false);
+    // Persist the selection so it survives navigation across pages
+    // that don't carry ?workspace= in their URL. Server components
+    // read this via next/headers `cookies()` — see
+    // lib/workspaces/context.ts.
+    persistWorkspaceCookie(id);
+
     // If the current path is workspace-scoped, jump to its hub.
     // Otherwise preserve pathname and just swap ?workspace=.
     if (pathname.startsWith("/workspaces/")) {

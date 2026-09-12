@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
+import { resolveActiveWorkspaceId } from "@/lib/workspaces/context";
 import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
@@ -46,13 +47,12 @@ export default async function DashboardPage({
   const workspaces = await listMyWorkspaces();
   if (workspaces.length === 0) redirect("/workspaces/new");
 
-  // Respect ?workspace= so the top-bar switcher actually changes what
-  // this page renders. Falls back to first workspace when the param
-  // is missing or doesn't match a member workspace.
   const sp = await searchParams;
   const requested = typeof sp.workspace === "string" ? sp.workspace : undefined;
-  const primary =
-    (requested && workspaces.find((w) => w.id === requested)) || workspaces[0];
+  const primary = (await resolveActiveWorkspaceId({
+    workspaces,
+    requestedId: requested,
+  })) ?? workspaces[0];
   const plan: WorkspacePlan = (primary.plan as WorkspacePlan) ?? "free";
   const supabase = await createServerSupabaseClient();
 

@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/PageHeader";
+import { resolveActiveWorkspaceId } from "@/lib/workspaces/context";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -176,15 +177,11 @@ export default async function OpportunitiesPage({
     listPublicOpportunities(filters),
     listMyWorkspaces(),
   ]);
-  // Prefer ?workspace=<id> when it's one the user is a member of;
-  // otherwise fall back to the first workspace so single-workspace
-  // users still see grades without having to add the param.
-  const requestedWs =
-    workspaceParam && workspaces.some((w) => w.id === workspaceParam)
-      ? workspaceParam
-      : undefined;
-  const defaultWorkspaceId = requestedWs ?? workspaces[0]?.id;
-  const activeWorkspace = workspaces.find((w) => w.id === defaultWorkspaceId);
+  const activeWorkspace = await resolveActiveWorkspaceId({
+    workspaces,
+    requestedId: workspaceParam,
+  });
+  const defaultWorkspaceId = activeWorkspace?.id;
 
   const supabase = await createServerSupabaseClient();
   const [revisionSummary, matches] = await Promise.all([

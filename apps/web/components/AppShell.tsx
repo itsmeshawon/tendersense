@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerUser } from "@/lib/auth/session";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
+import { resolveActiveWorkspaceId } from "@/lib/workspaces/context";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { AppShellNav } from "./AppShellNav";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -27,8 +28,10 @@ export async function AppShell({
 }) {
   const user = await getServerUser();
   const workspaces = user ? await listMyWorkspaces() : [];
-  const activeWorkspace =
-    workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
+  const activeWorkspace = await resolveActiveWorkspaceId({
+    workspaces,
+    requestedId: currentWorkspaceId ?? null,
+  });
 
   return (
     <>

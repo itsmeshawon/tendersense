@@ -40,8 +40,8 @@ export function AppShellNav({
             aria-current={active ? "page" : undefined}
             className={
               active
-                ? "rounded-md px-3 py-1.5 font-medium text-foreground"
-                : "rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                ? "rounded-md bg-accent/70 px-3 py-1.5 font-medium text-foreground"
+                : "rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
             }
           >
             {l.label}

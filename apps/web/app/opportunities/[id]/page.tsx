@@ -11,6 +11,7 @@ import {
   listRequirements,
 } from "@/lib/assessment/repository";
 import { getUsage, type WorkspacePlan } from "@/lib/assessment/quota";
+import { resolveActiveWorkspaceId } from "@/lib/workspaces/context";
 import { PageHeader } from "@/components/PageHeader";
 import { GradeChip } from "@/components/GradeChip";
 import { EligibilityChip } from "@/components/EligibilityChip";
@@ -45,13 +46,11 @@ export default async function OpportunityDetailPage({
 
   if (!opp) notFound();
 
-  // Pick workspace context: ?workspace= first, else first workspace
-  const requestedWs =
-    workspaceParam && workspaces.some((w) => w.id === workspaceParam)
-      ? workspaceParam
-      : undefined;
-  const activeWorkspaceId = requestedWs ?? workspaces[0]?.id;
-  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
+  const activeWorkspace = await resolveActiveWorkspaceId({
+    workspaces,
+    requestedId: workspaceParam,
+  });
+  const activeWorkspaceId = activeWorkspace?.id;
 
   // In parallel: match + revisions + latest assessment
   const [matches, revisions, assessment] = await Promise.all([
