@@ -14,7 +14,7 @@ values (
   'bd_bppa',
   'Bangladesh BPPA Advertisement Notices',
   'https://www.bppa.gov.bd/advertisement-notices/advertisement-goods.html',
-  'scraper', 'cron',
+  'html', 'cron',
   '{"category":"goods","pageSize":10}'::jsonb
 )
 on conflict (key) do nothing;
