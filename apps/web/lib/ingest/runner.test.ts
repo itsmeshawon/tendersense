@@ -13,6 +13,7 @@ const persistenceMocks = vi.hoisted(() => ({
   findOpportunityByExternalId: vi.fn(),
   upsertOpportunity: vi.fn(),
   writeRevision: vi.fn(),
+  nextRevisionNo: vi.fn(),
   updateSourceCursor: vi.fn(),
 }));
 
@@ -78,6 +79,7 @@ describe("runSync", () => {
     persistenceMocks.findOpportunityByExternalId.mockResolvedValue(null);
     persistenceMocks.upsertOpportunity.mockResolvedValue("op-generated");
     persistenceMocks.writeRevision.mockResolvedValue(undefined);
+    persistenceMocks.nextRevisionNo.mockResolvedValue(1);
     persistenceMocks.endSyncRun.mockResolvedValue(undefined);
     persistenceMocks.updateSourceCursor.mockResolvedValue(undefined);
   });
