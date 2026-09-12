@@ -76,3 +76,37 @@ export async function listWorkspaceMembers(
   if (error) throw new Error(error.message);
   return (data as WorkspaceMember[] | null) ?? [];
 }
+
+export type WorkspaceMemberWithProfile = WorkspaceMember & {
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
+/**
+ * Same as `listWorkspaceMembers` but joins `profiles` so the UI can
+ * render display names + avatars instead of raw user IDs.
+ */
+export async function listWorkspaceMembersWithProfile(
+  supabase: SupabaseClient,
+  workspaceId: string,
+): Promise<WorkspaceMemberWithProfile[]> {
+  const { data, error } = await supabase
+    .from("workspace_members")
+    .select("*, profiles:user_id (display_name, avatar_url)")
+    .eq("workspace_id", workspaceId)
+    .order("joined_at", { ascending: true, nullsFirst: false });
+  if (error) throw new Error(error.message);
+  const rows =
+    (data as
+      | Array<
+          WorkspaceMember & {
+            profiles: { display_name: string | null; avatar_url: string | null } | null;
+          }
+        >
+      | null) ?? [];
+  return rows.map((r) => ({
+    ...r,
+    display_name: r.profiles?.display_name ?? null,
+    avatar_url: r.profiles?.avatar_url ?? null,
+  }));
+}

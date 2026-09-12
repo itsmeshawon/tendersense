@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -32,12 +31,6 @@ export default async function MonitoringPage({
             match. Free plan supports one active profile.
           </p>
         </div>
-        <Link
-          href={`/workspaces/${workspaceId}`}
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          ← Workspace
-        </Link>
       </header>
 
       <section className="rounded-md border p-4">

@@ -29,7 +29,20 @@ export function WorkspaceSwitcher({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+  // Prefer the workspace inferred from the URL (?workspace= or the
+  // /workspaces/[id]/ path segment) over the server-rendered activeId
+  // prop — that prop is stale as soon as the user navigates client-
+  // side. Pattern matches SoT §Q7 workspace-context resolution.
+  const urlWorkspaceId = (() => {
+    const qs = searchParams.get("workspace");
+    if (qs && workspaces.some((w) => w.id === qs)) return qs;
+    const match = pathname.match(/^\/workspaces\/([0-9a-f-]{36})(?:\/|$)/);
+    if (match && workspaces.some((w) => w.id === match[1])) return match[1];
+    return null;
+  })();
+  const active =
+    workspaces.find((w) => w.id === (urlWorkspaceId ?? activeId)) ??
+    workspaces[0];
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {

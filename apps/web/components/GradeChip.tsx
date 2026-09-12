@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { OpportunityMatchRow } from "@/lib/matching/repository";
 
 /**
@@ -8,13 +9,50 @@ import type { OpportunityMatchRow } from "@/lib/matching/repository";
  * ADR 0006 §5: A/B/C/D + Not eligible + Need more info. Words matter —
  * never render "D" without "Weak fit" alongside; never render Not-
  * eligible as if it were a D.
+ *
+ * Popover is portalled to <body> to escape parent overflow: hidden
+ * clipping (row cards, list containers) — Session 26 UX audit.
  */
 export function GradeChip({ match }: { match: OpportunityMatchRow | null }) {
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const popW = 288; // matches w-72
+    // Anchor top under the button, right-aligned to its right edge.
+    const left = Math.min(
+      Math.max(8, rect.right - popW),
+      window.innerWidth - popW - 8,
+    );
+    setCoords({ top: rect.bottom + 6, left });
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (popRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open]);
 
   if (!match) {
-    // No match row means recompute hasn't run for this opp/workspace pair yet.
-    // Explicit "Not yet ranked" state (Phase 3 §Q3 decision).
     return (
       <span
         className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
@@ -28,12 +66,12 @@ export function GradeChip({ match }: { match: OpportunityMatchRow | null }) {
   const { grade, score, reasons, concerns } = match;
   const cls = classFor(grade);
   const label = labelFor(grade);
-
   const hasDetail = reasons.length > 0 || concerns.length > 0;
 
   return (
-    <span className="relative inline-flex">
+    <>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={`rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}
@@ -42,51 +80,59 @@ export function GradeChip({ match }: { match: OpportunityMatchRow | null }) {
       >
         {label}
       </button>
-      {open && hasDetail ? (
-        <div className="absolute right-0 top-6 z-10 w-72 rounded-md border bg-background p-3 text-xs shadow-lg">
-          <p className="mb-2 text-sm font-medium">
-            Why {label}
-            {grade === "A" || grade === "B" || grade === "C" || grade === "D"
-              ? ` (${score}/100)`
-              : ""}
-          </p>
-          {reasons.length > 0 ? (
-            <div className="mb-2">
-              <p className="mb-1 font-semibold text-foreground">
-                Fit signals
+      {open && hasDetail && coords && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={popRef}
+              className="fixed z-50 w-72 rounded-md border bg-background p-3 text-xs shadow-lg"
+              style={{ top: coords.top, left: coords.left }}
+              role="dialog"
+            >
+              <p className="mb-2 text-sm font-medium">
+                Why {label}
+                {grade === "A" || grade === "B" || grade === "C" || grade === "D"
+                  ? ` (${score}/100)`
+                  : ""}
               </p>
-              <ul className="space-y-1 text-muted-foreground">
-                {reasons.map((r, i) => (
-                  <li key={i}>
-                    <span className="font-mono text-[10px]">
-                      +{r.contribution}
-                    </span>{" "}
-                    {r.evidence}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {concerns.length > 0 ? (
-            <div>
-              <p className="mb-1 font-semibold text-foreground">Concerns</p>
-              <ul className="space-y-1 text-muted-foreground">
-                {concerns.map((c, i) => (
-                  <li key={i}>{c.evidence}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="mt-2 text-muted-foreground underline hover:text-foreground"
-          >
-            Close
-          </button>
-        </div>
-      ) : null}
-    </span>
+              {reasons.length > 0 ? (
+                <div className="mb-2">
+                  <p className="mb-1 font-semibold text-foreground">
+                    Fit signals
+                  </p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    {reasons.map((r, i) => (
+                      <li key={i}>
+                        <span className="font-mono text-[10px]">
+                          +{r.contribution}
+                        </span>{" "}
+                        {r.evidence}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {concerns.length > 0 ? (
+                <div>
+                  <p className="mb-1 font-semibold text-foreground">Concerns</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    {concerns.map((c, i) => (
+                      <li key={i}>{c.evidence}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="mt-2 text-muted-foreground underline hover:text-foreground"
+              >
+                Close
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
 

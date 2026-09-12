@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getWorkforce } from "@/lib/workforce/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkforceForm } from "./form";
 
@@ -40,11 +38,6 @@ export default async function WorkforcePage({
             &ldquo;minimum 20 engineers on the delivery team.&rdquo;
           </p>
         </div>
-        <Link href={`/workspaces/${workspaceId}`}>
-          <Button variant="outline" size="sm">
-            ← Workspace
-          </Button>
-        </Link>
       </header>
 
       <Card>

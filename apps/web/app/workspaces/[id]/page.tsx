@@ -5,7 +5,7 @@ import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   getWorkspaceById,
-  listWorkspaceMembers,
+  listWorkspaceMembersWithProfile,
 } from "@/lib/workspaces/repository";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,7 +97,7 @@ export default async function WorkspaceDetailPage({
     workforce,
     financials,
   ] = await Promise.all([
-    listWorkspaceMembers(supabase, id),
+    listWorkspaceMembersWithProfile(supabase, id),
     listProjectsForWorkspace(supabase, id),
     listWorkspaceCapabilities(supabase, id),
     listMonitoringProfiles(supabase, id),
@@ -340,24 +340,59 @@ export default async function WorkspaceDetailPage({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <ul className="flex flex-col gap-1 text-sm">
-            {members.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center justify-between gap-4"
-              >
-                <span className="truncate font-mono text-xs">{m.user_id}</span>
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="secondary">{m.role}</Badge>
-                  <Badge variant="outline">{m.status}</Badge>
-                </div>
-              </li>
-            ))}
+          <ul className="flex flex-col gap-2 text-sm">
+            {members.map((m) => {
+              const name = m.display_name?.trim() || null;
+              const initial = (name ?? "?")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((s) => s[0]?.toUpperCase() ?? "")
+                .join("") || "?";
+              return (
+                <li
+                  key={m.id}
+                  className="flex items-center gap-3"
+                >
+                  {m.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={m.avatar_url}
+                      alt=""
+                      className="size-8 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground"
+                    >
+                      {initial}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {name ?? "Unnamed member"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      Joined{" "}
+                      {m.joined_at
+                        ? new Date(m.joined_at).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "recently"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant="secondary">{m.role}</Badge>
+                    {m.status !== "active" ? (
+                      <Badge variant="outline">{m.status}</Badge>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Member management (invite / remove) is deferred to Pro tier — see
-            ADR 0006 §7.
-          </p>
         </CardContent>
       </Card>
 

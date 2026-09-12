@@ -7,7 +7,6 @@ import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listRecommendedMatches } from "@/lib/matching/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, SectionHeader } from "@/components/PageHeader";
@@ -64,11 +63,6 @@ export default async function DashboardPage() {
       <PageHeader
         title={`Good day — ${primary.name}`}
         description={`Your ${primary.plan === "pro" ? "Pro" : "Free"} workspace, at a glance.`}
-        actions={
-          <Link href="/opportunities">
-            <Button size="sm">Browse opportunities</Button>
-          </Link>
-        }
       />
 
       {/* Hero — Recommended for you gets the visual weight. */}
@@ -115,7 +109,7 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
-                      className="truncate font-medium hover:underline"
+                      className="block truncate font-medium hover:underline"
                     >
                       {r.opportunity?.title ?? "—"}
                     </Link>

@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listFinancials } from "@/lib/financials/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UpsertFinancialForm } from "./upsert-form";
@@ -45,11 +43,6 @@ export default async function FinancialsPage({
             </span>
           </p>
         </div>
-        <Link href={`/workspaces/${workspaceId}`}>
-          <Button variant="outline" size="sm">
-            ← Workspace
-          </Button>
-        </Link>
       </header>
 
       <Card>

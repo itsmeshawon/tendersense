@@ -40,12 +40,6 @@ export default async function SavedSearchesPage({
             to restore its state.
           </p>
         </div>
-        <Link
-          href={`/workspaces/${workspaceId}`}
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          ← Workspace
-        </Link>
       </header>
 
       {from ? (

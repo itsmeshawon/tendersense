@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listExperts } from "@/lib/experts/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddExpertForm } from "./add-form";
 import { ExpertRowUI } from "./row";
@@ -27,14 +25,9 @@ export default async function ExpertsPage({
           <h1 className="text-2xl font-semibold tracking-tight">Key experts</h1>
           <p className="text-sm text-muted-foreground">
             Named personnel you can propose for consultancy or delivery
-            engagements. Attach CVs as evidence documents (Phase 4 next).
+            engagements.
           </p>
         </div>
-        <Link href={`/workspaces/${workspaceId}`}>
-          <Button variant="outline" size="sm">
-            ← Workspace
-          </Button>
-        </Link>
       </header>
 
       <Card>

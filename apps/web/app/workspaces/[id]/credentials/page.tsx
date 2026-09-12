@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -7,7 +6,6 @@ import {
   CREDENTIAL_TYPE_LABEL,
   type CredentialType,
 } from "@/lib/credentials/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddCredentialForm } from "./add-form";
 import { CredentialRow } from "./row";
@@ -48,11 +46,6 @@ export default async function CredentialsPage({
             when eligibility rules ask for one.
           </p>
         </div>
-        <Link href={`/workspaces/${workspaceId}`}>
-          <Button variant="outline" size="sm">
-            ← Workspace
-          </Button>
-        </Link>
       </header>
 
       <Card>
