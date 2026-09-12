@@ -24,14 +24,22 @@ export default async function WorkspacesPage() {
             <span className="font-mono">{user.email}</span>
           </p>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
+        <div className="flex items-center gap-2">
+          <Link
+            href="/opportunities"
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
           >
-            Sign out
-          </button>
-        </form>
+            Opportunities
+          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
 
       <ul className="flex flex-col gap-2">

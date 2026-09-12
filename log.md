@@ -226,3 +226,123 @@
 - Branch protection: **decided 2026-09-12 — convention-only for now.** GitHub Pro deferred; "no self-merge" enforced by rule in `.claude/rules/mew-code/code-rules.md` and by convention among collaborators. Revisit if the team grows past two.
 - ADR 0006 §8 PII rule sign-off (now encoded in code + tests)
 - eExperience URL + selector reconnaissance (manual, not blocking until PR #8 in plan §5)
+## Session 8 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass while PR #8 awaits review)
+**Setting:** PR #8 (adapter plumbing) still unreviewed by @mewking2099. Instead of stacking risk on top of an in-review branch, this session cleared docs debt from the tail of Phase 1.
+
+### What shipped
+
+- **ADRs 0007–0010** landed direct-to-main under the code-rules docs exception:
+  - `0007-ingest-runner-pattern.md` — one runner orchestrates; adapters are data
+  - `0008-content-hash-scope.md` — SoT §26 material fields; explicit exclusion of reference_no/tags/sector
+  - `0009-cron-infrastructure.md` — GitHub Actions; not pg_cron / Scheduled Edge Functions / Vercel Cron
+  - `0010-eexperience-on-demand.md` — eExperience is a lookup, not a cron adapter
+- **Phase 1 plan §3** updated from "to record" to "recorded"
+- **`docs/pilot-demo-script.md` drafted** — 20-min pilot demo for BRAC IT, structured around two peaks (eExperience unlock + Discover feed with amendment detection), fallback plans, pre-demo checklist, what NOT to demo
+
+### Not shipped (still waiting)
+
+- PR #8 review by @mewking2099 (adapter plumbing) — blocks step 4 (WB adapter)
+- Everything downstream of PR #8
+
+### Position vs Source of Truth
+
+- Phase 1: **~35–40%** (all planned ADRs done ahead of schedule; adapter code still to come)
+- MVP overall (§113 scope-reduced): **~21–23%**
+- Definition of MVP Done (§114, 18 items): infra items partial; user-facing items 0/many
+
+### Open threads
+
+- eExperience URL + selector reconnaissance (Phase 1 §6 Q8) — now flagged as **blocker for scheduling any pilot demo** in `docs/pilot-demo-script.md` §12. Not just a code prereq.
+- `/opportunities` list (Phase 1 §6 Q5) — optional in the plan; demo script §12 recommends shipping it or Peak 2 of the demo becomes much weaker
+- PII rule (ADR 0006 §8) — encoded in code + tests; awaiting formal sign-off
+- Data-residency counsel question — draft not written yet
+- Grade vocabulary reader check — Phase 3, nice-to-have before demo
+
+## Session 9 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass while PR #8 still awaits review)
+
+### What shipped
+
+- **`docs/data-residency-counsel-question.md`** — structured counsel query per ADR 0006 §9. Three categories (MVP pilot / Post-pilot Pro / Deliberate exclusions), numbered sub-questions, regime references with 2025/2026 update caveat, 4-week/2-week turnaround target. Draft ready for user review + naming decision before sending.
+
+### Not shipped
+
+- PR #8 (adapter plumbing) — still open, still no review from @mewking2099. Every downstream Phase 1 step remains blocked.
+
+### Position vs Source of Truth
+
+- Phase 1: **~40%** (all ADRs done, counsel question drafted, code still stalled on PR #8)
+- MVP overall (§113 scope-reduced): **~22–24%**
+
+### Open threads
+
+- **PR #8 review** — biggest blocker; nudge Mohabbat if session 10 opens with it still stuck
+- eExperience URL + selector reconnaissance — manual, blocks pilot demo scheduling
+- `/opportunities` list — decide before Phase 1 exit
+- PII rule (ADR 0006 §8) — encoded, awaiting formal sign-off
+- Data-residency counsel question — drafted; awaiting user review + filing
+- Grade vocabulary reader check — Phase 3, not urgent
+
+## Session 10 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (docs pass 2; PR #8 still awaits review)
+
+### What shipped
+
+- **`docs/eexperience-reconnaissance-checklist.md`** — 21 numbered fill-in questions for someone to answer with a browser at eprocure.gov.bd. Covers entry-point URL, request shape, response HTML structure, pagination, edge cases, detail page, Bangla/English, robots.txt, terms of use, confidence check. Concrete 20-30 min task that unblocks Phase 1 PR #8 (eExperience lookup) and Peak 1 of the pilot demo.
+- **`README.md`** — first repo README. Directory layout, contributor onboarding, local Supabase setup, workflow rules, deploy targets, reading order for new joiners.
+
+### Not shipped
+
+- PR #8 review — still stuck. All downstream Phase 1 code blocked.
+
+### Position vs Source of Truth
+
+- Phase 1: **~42%** — every solo doc task from the plan tail is now done
+- MVP overall (§113 scope-reduced): **~23–25%**
+
+### Note
+
+Solo docs work is genuinely exhausted for Phase 1. Every remaining item needs either a code merge (PR #8) or human action (reconnaissance, counsel filing, reader check). Session 11 needs one of those to unstick before more can happen.
+
+## Session 11 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (WebFetch reconnaissance)
+
+### What shipped
+
+- **`docs/eexperience-reconnaissance-checklist.md` pre-filled** via WebFetch. ~11 of 21 questions answered without touching a browser. Human remainder drops from ~30 min to ~10 min in dev tools.
+
+### Key discoveries
+
+- Entry point confirmed: `https://www.eprocure.gov.bd/resources/common/SearcheCMS.jsp` (public, no login)
+- 15 form fields identified with labels
+- Results table has 10 columns covering every field we need
+- Rich filter surface — can pre-filter Work Status=Completed for profile onboarding
+- Server-rendered form + AJAX-loaded results; pagination confirmed
+- Bilingual English/Bangla toggle
+- robots.txt broken (302→SessionTimedOut.jsp); T&C footer is the real policy source
+- Form does NOT accept GET-with-params — must POST or AJAX
+
+### Blocker candidates flagged for human step
+
+- Captcha on repeat searches
+- T&C automated-access clause
+
+### Honest observation
+
+Four consecutive sessions (7–11) have been either PR-blocked or docs-only. Vercel prod looks exactly like end of Session 3. Real docs have shipped, but nothing user-visible has moved. The two humans in the loop (Mohabbat on PR #8 review; user on eExperience 10-min recon) need to unstick before code can move again.
+
+### Position vs Source of Truth
+
+- Phase 1: **~44%**
+- MVP overall (§113 scope-reduced): **~24%**
+
+- **2026-09-11 19:38** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]

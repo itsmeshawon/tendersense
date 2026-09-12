@@ -149,13 +149,15 @@ Later phases (whenever document upload arrives on Pro): revisit this and get cou
 - **Integration** — extend `tests/integration/`; real local Supabase, real HTTP mocked with `msw` or `nock`; adapter → runner → DB → assert row counts + revision row
 - No live-API calls in CI. Manual smoke: `scripts/smoke-worldbank.ts` and `scripts/smoke-egp.ts`
 
-## 3. Decisions to record as ADRs
+## 3. Decisions recorded as ADRs
 
-- `0006-sot-2026-09-09-scope.md` — captures the SoT revision itself: adapter re-ordering, MVP scope reductions (individual profiles hidden, team/reports gutted), grade vocabulary, PII stance
-- `0007-ingest-runner-pattern.md` — runner-as-orchestrator vs adapter-owns-run
-- `0008-content-hash-scope.md` — which fields feed `content_hash`
-- `0009-cron-infrastructure.md` — GitHub Actions vs pg_cron vs Supabase Scheduled Functions
-- `0010-eexperience-on-demand.md` — why eExperience is a lookup, not a cron adapter
+All landed 2026-09-11 → 2026-09-12:
+
+- `decisions/0006-sot-2026-09-09-scope.md` — SoT 2026-09-09 revision: adapter re-ordering, MVP scope reductions, grade vocabulary, PII stance
+- `decisions/0007-ingest-runner-pattern.md` — runner-as-orchestrator; adapters are data
+- `decisions/0008-content-hash-scope.md` — which fields feed `content_hash` (title, description, deadline, method, entity, URL, value range)
+- `decisions/0009-cron-infrastructure.md` — GitHub Actions cron; not pg_cron / Scheduled Edge Functions / Vercel Cron
+- `decisions/0010-eexperience-on-demand.md` — eExperience is a lookup, not a cron adapter
 
 ## 4. TDD gate
 

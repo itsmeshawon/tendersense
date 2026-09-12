@@ -10,10 +10,10 @@ collaborators:
 plan_approved: true
 plan_approved_at: 2026-09-11
 gate_block_count: 0
-last_session: 2026-09-11
-last_wrap: 2026-09-11
-session_count: 7
-current_phase: "Phase 1 — Source ingestion (adapter plumbing in review as PR #8)"
+last_session: 2026-09-12
+last_wrap: 2026-09-12
+session_count: 11
+current_phase: "Phase 1 — Source ingestion (WebFetch recon halved the eExperience human step; still awaiting PR #8 review + 10-min dev-tools recon)"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"
@@ -25,12 +25,13 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 8: pull, verify PR #8 is merged (needs @mewking2099 review first per collaborative rules). Then start Phase 1 step 4 — World Bank adapter + backfill script + npm run sync:worldbank. Open a GitHub Issue first (workqueue)."
+next_action: "Session 13 (Mohabbat joining): everything merged. Start Phase 1 step 4 — World Bank adapter + backfill + npm run sync:worldbank. Open a GitHub Issue first."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
-  - "eExperience URL + HTML selectors — manual reconnaissance task, not code"
-  - "Data-residency counsel question — draft the specific question (customer-uploaded docs + officials PII), file with lawyer; not launch-blocker for pilot but must not drift"
+  - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
+  - "Data-residency counsel question — drafted at docs/data-residency-counsel-question.md; awaiting user review + filing"
   - "Grade vocabulary — verify 'Strong fit / Good fit / Possible / Weak fit' reads well with BRAC IT or a BD product manager reviewer before Phase 3 UI ships"
+  - "T&C automated-access clause at eprocure.gov.bd footer — read before production launch of eExperience lookup"
 env_var_rule: "Never write NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_DB_URL from any other project or shell env. User creates the Supabase project and hands over values explicitly. Ask before wiring."
 open_threads: []
 blockers: []
