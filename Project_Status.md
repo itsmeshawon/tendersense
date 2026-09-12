@@ -13,13 +13,15 @@ gate_block_count: 0
 last_session: 2026-09-13
 last_wrap: 2026-09-13
 session_count: 23
-current_phase: "Post-Phase-3 polish COMPLETE — v0.4.0-phase3 shipped; shadcn design system + brand identity + Opportunity Detail page + real BRAC IT persona all live on prod. Next: Phase 4 planning (Assessment)."
+current_phase: "Phase 4 — Assessment plan APPROVED v2 (no LLM, rule-based + manual). v0.4.0-phase3 tag holds. Execution begins Session 25 with schema PR."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
 phase_2_plan_approved_at: 2026-09-12
 phase_3_plan_approved: true
 phase_3_plan_approved_at: 2026-09-12
+phase_4_plan_approved: true
+phase_4_plan_approved_at: 2026-09-13
 production_url: "https://tendersense-delta.vercel.app"
 email_provider: "Resend (noreply@tendersense.app)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
@@ -27,11 +29,12 @@ active_plans:
   - "proposals/active/phase-0-foundation/plan.md (COMPLETE — shipped at v0.1.0-phase0 on 2026-09-11)"
   - "proposals/active/phase-1-source-ingestion/plan.md (COMPLETE — shipped at v0.2.0-phase1 on 2026-09-12)"
   - "proposals/active/phase-2-discovery/plan.md (COMPLETE — shipped at v0.3.0-phase2 on 2026-09-12)"
-  - "proposals/active/phase-3-matching/plan.md (IN PROGRESS v2 — 4/7 PRs shipped 2026-09-12; capabilities tab + calibration + review remaining)"
+  - "proposals/active/phase-3-matching/plan.md (COMPLETE — shipped at v0.4.0-phase3 on 2026-09-12)"
+  - "proposals/active/phase-4-assessment/plan.md (APPROVED v2 2026-09-13 — no LLM, rule-based + manual; 12 PRs sequenced)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 24 — draft proposals/active/phase-4-assessment/plan.md. Ground it in profile-plan v0.1 (raw/) + Raihan-variant learnings (S/A/B/C grade scale, separate PASS/FAIL Eligibility signal, BID/VERIFY/HOLD/SKIP Recommendation dimension). Deliverables likely: credentials + financial_capacity + workforce tables; two-stage scoring (Fit + Qualification per profile-plan §2); LLM-based requirement extraction from opportunity descriptions; quota + assessment tables. Do NOT touch code before plan is approved (MewKing tier)."
+next_action: "Session 25 — Phase 4 PR #1: schema migrations 0020-0028 (assessments · opportunity_requirements · requirement_evaluations · workspace_credentials · workspace_financials · evidence_documents · workspace_workforce · workspace_experts · jobs · workspace_usage · match-schema-split adding eligibility column). Applied to hosted before subsequent work. All 10 plan open questions resolved 2026-09-13."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"

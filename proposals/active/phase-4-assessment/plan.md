@@ -1,7 +1,7 @@
 # Plan: Phase 4 — Assessment
 
 **Tier:** MewKing
-**Status:** Draft — awaiting approval after `v0.4.0-phase3` (already tagged)
+**Status:** APPROVED v2 (2026-09-13) — all 10 open questions resolved; **no LLM in MVP** per cost-avoidance decision. Execution unlocked.
 **Master spec:** `raw/TenderSense_MVP_Source_of_Truth.md` + `raw/TenderSense_Profile_Plan_Individual_Organization.md` (v0.1)
 **SoT sections:** §20 Assessment engine · §21 Requirement extraction · §22 Eligibility evaluation · §23 Assessment scoring · §24 Recommendation logic · §25 Preparation window · §33 Assessment APIs · §48 Assessment UX · §88 async execution · §89 idempotency
 **Governing ADRs:** 0006 §4 (ambiguity rule), 0016 (deferred signals — credential restoration lands here)
@@ -28,7 +28,7 @@ Phase 4 answers a harder question: *"can you actually qualify for it?"* — pars
 - **Assessment history** per opportunity — every re-run stores a new record; nothing overwrites
 - **Recommendation dimension** (SoT §24) — system suggests `Strong Pursue / Potential Pursue / Needs Review / High Risk / Likely Decline`. Human owns final decision (`Pursue / Hold / Decline`) — Phase 5.
 - **Opportunity Detail: Eligibility + Requirements + Documents tabs** — completes SoT §6 IA
-- **LLM boundary discipline** — one entrypoint (`lib/assessment/extractRequirements`), cached, quota-gated, never on page render (SoT Rule 5 §115)
+- **Rule-based requirement extraction + manual entry fallback** — no LLM in MVP. A pattern library covers ~60-70% of common tender phrases ("Minimum X years experience", "ISO 27001 certification required", "Turnover >= BDT Y"). Anything the rules miss, the workspace admin enters manually via a "Add requirement" form. This trades magic for auditability + zero external-provider cost.
 
 **Not in scope for Phase 4:**
 
@@ -39,53 +39,56 @@ Phase 4 answers a harder question: *"can you actually qualify for it?"* — pars
 
 ---
 
-## 2. Decisions to make before execution
+## 2. Decisions (all resolved 2026-09-13)
 
-Ranked by scope impact.
+### 2a. Grade scale
+**Decided: keep `A / B / C / D` + `Not eligible` + `Need more info`** (ADR 0006 §5 unchanged). Migration to Raihan's `S/A/B/C` would touch every match row + GradeChip + calibration doc for a naming preference. Reopen only if a Pro customer demands convention alignment.
 
-### 2a. Grade scale — keep A/B/C/D or migrate to S/A/B/C?
+### 2b. Eligibility split
+**Decided: separate `eligibility` column on `opportunity_matches`.** Current `not_eligible` grade migrates to `eligibility='fail' + grade='D'`. Enables the honest four-quadrant view: `A + PASS` / `A + FAIL` / `C + PASS` / etc. SoT §6 Opportunity Detail already reserves a distinct "Eligibility" tab. Recorded in ADR 0020.
 
-- **Current** (ADR 0006 §5): `A — Strong fit / B — Good fit / C — Possible / D — Weak fit / Not eligible / Need more info`
-- **Raihan variant**: `S / A / B / C` (no D)
-- **Trade-off**: our vocabulary is more explicit ("Strong fit" reads better than "S"). His scale is compact and matches convention from other bid-management tools.
-- **Recommendation**: keep our current scale. Migration would touch every match row + GradeChip + calibration doc. Not worth it for a naming preference. Reopen ADR 0006 §5 only if a Pro user demands convention alignment.
+### 2c. Recommendation dimension
+**Decided: 4-way BID / VERIFY / HOLD / SKIP as display; 5-way SoT (`strong_pursue / potential_pursue / needs_review / high_risk / likely_decline`) stored as `recommendation_reason` for reports.** Simple derivation table:
 
-### 2b. Eligibility as separate signal or overloaded into grade?
+| Reason | Display |
+|---|---|
+| `strong_pursue` | `BID` |
+| `potential_pursue` | `BID` |
+| `needs_review` | `VERIFY` |
+| `high_risk` | `HOLD` |
+| `likely_decline` | `SKIP` |
 
-- **Current**: `not_eligible` and `need_more_info` are short-circuits inside the *grade* enum
-- **Profile plan §2 + Raihan variant**: separate **Match Grade** (A/B/C/D) from **Eligibility** (PASS/FAIL/NEEDS_VERIFICATION)
-- **Trade-off**: overloading is simpler; separating is honest. A workspace with A-grade fit but missing a mandatory certification currently reads as "Not eligible" only. Splitting gives `A + PASS`, `A + NEEDS_VERIFICATION`, `A + FAIL` as distinct states.
-- **Recommendation**: **separate them.** Add `eligibility` column on `opportunity_matches` (Phase 3 already has `not_eligible` as a grade value; migrate that to the new column). The UI already has room — SoT §6 Opportunity Detail wants an "Eligibility" tab distinct from "Match".
+Recorded in ADR 0021.
 
-### 2c. Recommendation dimension — 5-way SoT §24 or 4-way Raihan (BID/VERIFY/HOLD/SKIP)?
+### 2d. Requirement extraction — **NO LLM in MVP**
+**Decided: rule-based pattern library + manual entry fallback.** Zero external-provider cost. Two subsystems:
 
-- **SoT §24**: `Strong Pursue / Potential Pursue / Needs Review / High Risk / Likely Decline`
-- **Raihan variant**: `BID / VERIFY / HOLD / SKIP`
-- **Trade-off**: Raihan's is action-oriented and compact (better UX). SoT's is more nuanced (better analytics).
-- **Recommendation**: adopt Raihan's 4-way as the *display* value; keep SoT's 5-way in the DB as `recommendation_reason` for reports. Simple derivation table.
+- **`lib/assessment/rulesExtractor.ts`** — a hand-authored pattern library of ~30 common tender-requirement shapes ("Minimum X years experience", "ISO NNNNN certification required", "Turnover >= BDT Y in last N years", "At least N similar projects", country/geography clauses, submission-window rules, etc.). Regex + NLP-lite tokenization. Auditable, deterministic, expandable via a JSON config.
+- **`lib/assessment/manualRequirement.ts`** — server action to add / edit / remove a requirement on an assessment. Workspace admin curates whatever the rules miss.
 
-### 2d. LLM provider
+Expected recall: 60-70% on structured WB/e-GP notices; lower on unstructured tender text. Precision high (rules don't hallucinate).
 
-- SoT Rules §115: don't call LLM during page render (Rule 5); don't treat LLM output as authoritative (Rule 6)
-- Options: Anthropic Claude (Sonnet), OpenAI GPT, self-hosted
-- **Recommendation**: Anthropic Claude Sonnet 4 via API. Reasons: (a) TenderSense is Claude Code-native — same key rotation flow already established in `mewvault/secrets`; (b) Sonnet's long-context handles full tender texts (some run 40+ pages) without chunking; (c) structured output support for the JSON requirement schema. Cost budget: capped by quota per §2f below.
-- If AI provider fails: SoT §20 mandate — "mark failed / do not charge usage / allow retry"
+**LLM as follow-up:** if pilot demand justifies, Phase 4.5 or Phase 5 can add an "Auto-fill from source" button that calls Claude/GPT once per assessment, cached forever. Cost model at that point is per-assessment, quota-gated, opt-in per workspace. Not shipping in MVP.
 
-### 2e. Async execution architecture
+Recorded in ADR 0022.
 
-- **SoT §88 recommends** Supabase Edge Function or `jobs` table with worker
-- **Trade-off**: Edge Functions add a deployment surface; `jobs` table + a cron-triggered worker (like the existing GH Actions sync workflows) reuses our current infrastructure
-- **Recommendation**: **`jobs` table** + a new `.github/workflows/process-assessments.yml` running every 5 minutes. Fits our pattern; no new infra. If throughput becomes a bottleneck later, promote to Edge Function.
+### 2e. Async execution
+**Decided: `jobs` table + cron worker.** Same pattern as existing sync workflows. New workflow `.github/workflows/process-jobs.yml` runs every 5 minutes. Job types for MVP: `document.extract` (parse uploaded evidence). Assessment runs themselves are fast (rules + evaluator, no LLM) so they execute synchronously in the server action — no queue needed for that. Recorded in ADR 0023.
 
 ### 2f. Free-plan quota
+**Decided: 5 assessments/month free · unlimited Pro.** Enforced server-side in the "Run Assessment" RPC. Bumpable via a config constant. Recorded in ADR 0024.
 
-- **Options**: 5/month · 10/month · 20/month · unlimited-for-pilot
-- **Recommendation**: **5/month free · unlimited Pro** for MVP. Enough for BRAC IT's demo (they'd assess a few key tenders/week). Bumpable via a config constant, not a schema change.
+### 2g. Extraction source scope
+**Decided: HTML/text descriptions only for MVP.** PDF extraction deferred to Phase 4.5. Log `source_text_len` on every assessment so we can quantify pilot-time PDF gaps and decide when to invest.
 
-### 2g. Extraction quality bar
+### 2h. 6-dim weight rebalance (credential signal restored)
+**Decided:** `capability 33 · sector 18 · keyword 18 · past_project 14 · country 10 · credential 7 = 100`. Credential signal fires when the workspace has ≥1 valid credential matching a required certification on the opportunity. Bumps `SCORING_VERSION` to 2 — all existing match rows re-scored. Recorded in ADR 0025.
 
-- Assessment quality depends on how well we extract requirements from tender text. Some tenders are 5-page PDFs; some are 50-page government RFPs.
-- **Recommendation**: MVP handles **HTML/text descriptions only**. PDF extraction is a Phase 4.5 follow-up if pilot flags it as a blocker. Log the source-text length in every assessment record so we can see where PDF gaps are hurting.
+### 2i. Sensitive-field UI (Free tier)
+**Decided: gray out with upgrade nudge** per profile-plan §37. Free users see the Financials tab exists and what it does; the form fields are disabled with a subtle "Available on Pro" tooltip. Not hidden entirely — awareness matters even if usage is gated.
+
+### 2j. Assessment history retention
+**Decided: keep forever.** Every re-run creates a new `assessments` row (SoT §20). Audit trail justifies the storage cost. Auto-archive is a future optimization when the DB shows real growth pressure.
 
 ---
 
@@ -107,7 +110,8 @@ create table public.assessments (
   recommendation_reason   text check (recommendation_reason in ('strong_pursue', 'potential_pursue', 'needs_review', 'high_risk', 'likely_decline')),
   summary                 text,                -- LLM-generated, human-readable
   category_scores         jsonb not null default '{}'::jsonb,  -- {strategic_fit: 82, eligibility: 78, ...}
-  extraction_meta         jsonb not null default '{}'::jsonb,  -- model, tokens_in, tokens_out, took_ms, source_text_len
+  extraction_method       text not null default 'rules' check (extraction_method in ('rules', 'manual', 'mixed')),
+  extraction_meta         jsonb not null default '{}'::jsonb,  -- rule_hits, manual_added, source_text_len, took_ms
   requested_by            uuid references public.profiles(id),
   requested_at            timestamptz not null default now(),
   completed_at            timestamptz,
@@ -290,11 +294,13 @@ Then remove `not_eligible` from the grade check constraint (deferred to a later 
 
 ### 4.1 Backend
 
-- **`lib/assessment/extractRequirements.ts`** — the single LLM entrypoint. Signature: `(opportunityText, opportunityMeta) → RequirementList`. Returns the SoT §21 JSON schema. Cached in `assessments.extraction_meta`.
-- **`lib/assessment/evaluate.ts`** — per-requirement evaluator. Deterministic: given a requirement + workspace snapshot (credentials, projects, financials, workforce), computes `status ∈ {meets, partially_meets, needs_verification, gap, not_applicable}` with reasoning. No LLM here — the LLM already gave us the requirement; evaluation is a rules engine.
+- **`lib/assessment/rulesExtractor.ts`** — pattern library over opportunity title + description. Returns `Requirement[]` per SoT §21 schema, each tagged `confidence` + `sourceLocation`. Extensible — patterns live in a JSON config, adding a rule is one PR touching one file.
+- **`lib/assessment/manualRequirement.ts`** — server actions for add / edit / remove of requirement rows on a queued or in-flight assessment. Marks the assessment's `extraction_method` as `mixed` if both rules and manual are present.
+- **`lib/assessment/evaluate.ts`** — per-requirement evaluator. Deterministic: given a requirement + workspace snapshot (credentials, projects, financials, workforce), computes `status ∈ {meets, partially_meets, needs_verification, gap, not_applicable}` with reasoning.
 - **`lib/assessment/score.ts`** — aggregates evaluations into category scores per SoT §23. Recomputes overall eligibility_score (0-100) and derives recommendation via the 4-way mapping (§2c).
-- **`lib/jobs/runner.ts`** — leases + processes queued jobs. First job type: `assessment.run`.
-- **`lib/matching/signals.ts`** — restore the credential signal (ADR 0016 recovery). Weight 5 (rebalance existing 5-dim to 6-dim per §2h below). Bump `SCORING_VERSION` to 2.
+- **`lib/assessment/run.ts`** — the "Run Assessment" orchestrator. Server-action-invoked, synchronous (rules + evaluator are fast). Steps: (a) load opportunity, (b) rulesExtractor → requirements, (c) load workspace snapshot, (d) evaluate each, (e) score, (f) write assessments + opportunity_requirements + requirement_evaluations rows, (g) decrement quota.
+- **`lib/jobs/runner.ts`** — leases + processes queued jobs. First job type: `document.extract` (parse uploaded evidence into text).
+- **`lib/matching/signals.ts`** — restore the credential signal (ADR 0016 recovery). Weight 7 per §2h. Bump `SCORING_VERSION` to 2.
 
 ### 4.2 Frontend
 
@@ -334,26 +340,30 @@ Then remove `not_eligible` from the grade check constraint (deferred to a later 
 
 - `0020-eligibility-separate-from-grade.md` — per §2b. Records the schema split + migration path.
 - `0021-recommendation-vocabulary.md` — per §2c. Records the 4-way display / 5-way internal decision.
-- `0022-llm-provider-selection.md` — Anthropic Claude Sonnet as the assessment LLM. Boundary rules (no page-render calls, cached, quota-gated, mark-failed-no-charge on provider outage).
-- `0023-jobs-table-worker-pattern.md` — reject Edge Functions for MVP; use jobs table + cron worker. Same reasoning as ADR 0009 (cron infra).
+- `0022-rule-based-requirement-extraction.md` — per §2d. **No LLM in MVP.** Rationale: cost avoidance + auditability + deterministic behavior. Pattern-library approach; LLM auto-fill deferred to Phase 4.5+ as opt-in per workspace.
+- `0023-jobs-table-worker-pattern.md` — reject Edge Functions for MVP; use jobs table + cron worker. Only job type for MVP is `document.extract` (LLM assessment jobs would live here later if added).
 - `0024-assessment-quota-tier.md` — 5 free/month, unlimited Pro. Reopen when we have real usage data.
-- `0025-credential-signal-restoration.md` — ADR 0016's recovery path enacted. Weight 5, rebalance to 6-dim (see §2h).
+- `0025-credential-signal-restoration.md` — ADR 0016's recovery path enacted. 6-dim rebalance per §2h.
 - `0026-evidence-documents-storage.md` — private Supabase Storage bucket, signed URLs only, background text extraction.
 
 ---
 
-## 6. Open questions (need answers before approval)
+## 6. All decisions resolved (2026-09-13)
 
-1. **§2a grade scale** — keep `A/B/C/D` or migrate to `S/A/B/C`? Recommend keep.
-2. **§2b eligibility split** — separate column? Recommend yes.
-3. **§2c recommendation** — 4-way display / 5-way reason? Recommend yes.
-4. **§2d LLM provider** — Anthropic Claude Sonnet 4? Confirm cost budget acceptable.
-5. **§2e async** — `jobs` table? Recommend yes.
-6. **§2f quota** — 5/month free? Confirm.
-7. **§2g PDF extraction** — HTML/text-only MVP with PDF as Phase-4.5 follow-up? Or block Phase 4 on PDF?
-8. **§2h weight rebalance** — new 6-dim weights when credential signal restores. Suggested: capability 33 · sector 18 · keyword 18 · past_project 14 · country 10 · credential 7 = 100. Confirm or override.
-9. **Sensitive-field UI** — do free users see the financial capacity form (grayed out with upgrade nudge) or hidden entirely? Recommend: **shown grayed out** per profile-plan §37.
-10. **Assessment history retention** — SoT §20 says every re-run creates a new record. Keep forever, or auto-archive after 12 months? Recommend keep forever (audit trail).
+Ten open questions closed as recorded in §2a-j above. Approvals:
+
+| # | Question | Decision |
+|---|---|---|
+| 2a | Grade scale | Keep `A/B/C/D` |
+| 2b | Eligibility split | Separate column |
+| 2c | Recommendation | 4-way display + 5-way reason |
+| 2d | LLM | **No LLM in MVP.** Rule-based + manual entry |
+| 2e | Async | `jobs` table + cron worker |
+| 2f | Quota | 5 free/month, unlimited Pro |
+| 2g | PDF extraction | HTML-only; PDF is Phase 4.5 |
+| 2h | 6-dim rebalance | 33 · 18 · 18 · 14 · 10 · 7 |
+| 2i | Sensitive-field UI | Grayed with upgrade nudge |
+| 2j | History retention | Keep forever |
 
 ---
 
@@ -380,46 +390,47 @@ Then remove `not_eligible` from the grade check constraint (deferred to a later 
 
 Approximate order. Each is a session's worth of work.
 
-1. **Schema PR (0020–0026)**: assessments · requirements · evaluations · credentials · financials · workforce · experts · evidence · jobs · usage · match-schema-split. Applied to hosted before subsequent work.
-2. **Credentials + Financials + Workforce/Experts CRUD UI**: workspace-side ingestion so we have inputs to evaluate against. Multi-select, gray-out for free users.
-3. **Evidence documents upload + storage + text extraction**: Supabase Storage bucket, signed URLs, background text extraction into `extracted_text` via a job.
-4. **Jobs runner + cron workflow**: infrastructure for async work. `assessment.run` handler is a stub that logs.
-5. **LLM entrypoint + fixture tests**: `extractRequirements(opportunityText)`. Provider = Claude Sonnet via Anthropic API. Cached in DB.
-6. **Deterministic evaluator + scorer**: per-requirement + per-category. Rules engine over workspace snapshot.
-7. **Assessment runner (job handler)**: ties LLM extraction + evaluator + scorer into one end-to-end flow. Writes back to assessments row.
-8. **Opportunity Detail tabs**: Eligibility, Requirements, Documents. Read-side only.
-9. **"Run Assessment" button + quota RPC**: user-facing trigger. Enforce quota server-side.
-10. **Two-signal GradeChip + list UI**: grade + eligibility badges side-by-side. Sort by `eligible_first`.
-11. **Credential signal restoration + `SCORING_VERSION = 2` recompute**: enact ADR 0016. Backfill match rows.
-12. **Cross-cutting review + calibration**: run 5 assessments on BRAC IT B-graded tenders, compare against Raihan-variant output where possible, tune. Tag `v0.5.0-phase4`.
+1. **Schema PR (0020–0028)**: assessments · requirements · evaluations · credentials · financials · workforce · experts · evidence · jobs · usage · match-schema-split. Applied to hosted before subsequent work.
+2. **Credentials + Financials + Workforce/Experts CRUD UI**: workspace-side ingestion so we have inputs to evaluate against. Multi-select, financials grayed for free users per §2i.
+3. **Evidence documents upload + storage + text extraction (jobs pattern)**: Supabase Storage bucket, signed URLs, background `document.extract` job writes into `extracted_text`. Establishes the jobs+worker pattern with one concrete job type.
+4. **Rule-based requirement extractor**: `lib/assessment/rulesExtractor.ts` with ~30 patterns + JSON config. Fixture-tested against a curated corpus of real WB + e-GP + BPPA tender descriptions. Aim for 60-70% recall.
+5. **Manual requirement entry** (server actions): add / edit / remove requirements on an assessment. Sets `extraction_method = 'mixed'` when combined with rules.
+6. **Deterministic evaluator + scorer**: per-requirement 5-status evaluation + per-category aggregation per SoT §22-23.
+7. **Assessment runner** (`lib/assessment/run.ts`): synchronous orchestrator invoked from a server action. Extracts → evaluates → scores → writes.
+8. **Opportunity Detail tabs**: Eligibility, Requirements, Documents. Requirements tab shows source-location backlinks + "manually added" badges.
+9. **"Run Assessment" button + quota RPC**: user-facing trigger. Server-side quota enforcement + rejection copy.
+10. **Two-signal GradeChip + list UI**: grade + eligibility badges side-by-side on `/opportunities`. Sort adds `eligible_first`.
+11. **Credential signal restoration + `SCORING_VERSION = 2` recompute**: enact ADR 0025. 6-dim rebalance. Backfill all match rows.
+12. **Cross-cutting review + tag `v0.5.0-phase4`**: run 5-10 assessments on BRAC IT B-graded tenders; walk the bid team through the rule-based verdicts; note where manual entry filled gaps (drives the pattern-library expansion for the next release).
 
 ---
 
 ## 9. Rough size
 
-**5–7 weeks solo pace, 3–5 weeks with the teammate.** Bigger than Phase 3.
+**~3-5 weeks solo pace, 2-3 weeks with the teammate.** Cutting LLM saves ~2 weeks vs the original estimate.
 
 Breakdown:
 - Schema + jobs infra: ~1 week (mostly SQL + boilerplate, low novelty)
-- Credential/financial/workforce/expert/evidence CRUD: ~1 week (5 forms, similar shape)
-- LLM entrypoint + evaluator + scorer: ~2 weeks (the hard part — prompt engineering + testing against real tenders)
-- Assessment UI (Detail tabs + Run button + quota): ~1 week
+- Credential/financial/workforce/expert/evidence CRUD: ~1 week (5 forms, similar shape to Phase 2 monitoring UI)
+- Rule-based extractor + evaluator + scorer: ~1 week (pattern library is the hard part; fixture-heavy testing but bounded by the pattern count)
+- Assessment UI (Detail tabs + Run button + quota + manual-add): ~1 week
 - Two-signal UI + credential-signal restoration: ~0.5 weeks
-- Cross-cutting review + calibration + tag: ~0.5 weeks
+- Cross-cutting review + tag: ~0.5 weeks
 
-Fastest win path: schema first, then LLM entrypoint + fixture-heavy testing before touching UI. UI is meaningful only once real requirement extraction works.
+Fastest win path: schema first, then evaluator + scorer with hand-authored fixtures (deterministic — easy to test), then extractor, then UI last.
 
 ---
 
 ## 10. Why this is more than "add a form"
 
-Phase 4 introduces **three new subsystems** the codebase hasn't had before:
+Phase 4 introduces **two new subsystems** the codebase hasn't had before:
 
-1. **LLM boundary discipline** — first place we call an external AI. Sets the pattern for future AI features. Must fail safely, cache aggressively, never render-block, never claim authority.
-2. **Async job execution** — first place we can't respond in-request. Jobs table + worker + cron. Sets the pattern for future long-running work (bulk imports, exports, digests).
-3. **Two-dimensional verdict** — grade + eligibility replaces our current single-grade output. Every downstream reader (list UI, dashboard, notifications, reports) needs updating.
+1. **Async job execution** — first place we can't respond in-request. Jobs table + worker + cron. Only one job type in MVP (`document.extract`) but establishes the pattern for future long-running work (bulk imports, exports, digests, and eventually the deferred LLM entrypoint).
+2. **Two-dimensional verdict** — grade + eligibility replaces our current single-grade output. Every downstream reader (list UI, dashboard, notifications, reports) needs updating.
 
 Each of these can fail independently in ways the earlier phases couldn't. Test coverage matters more here.
+
+**Deferred:** LLM boundary discipline. When LLM auto-fill is added later (as opt-in per workspace with cost model), it becomes subsystem #3 — with a single `lib/assessment/llmExtractor.ts` entrypoint, cached forever, quota-gated, mark-failed-no-charge on outage, and a Rules-first-LLM-fallback merge policy so the rule-based baseline is never lost.
 
 ---
 
