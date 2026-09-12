@@ -39,6 +39,60 @@ export async function listMatchesForWorkspace(
   return ((data as OpportunityMatchRow[] | null) ?? []).slice(0, limit);
 }
 
+/**
+ * Top-N matches with their joined opportunity for the workspace home
+ * hub. Filters to A/B grades and orders by score desc.
+ */
+export async function listRecommendedMatches(
+  supabase: SupabaseClient,
+  workspaceId: string,
+  limit = 5,
+): Promise<
+  Array<
+    OpportunityMatchRow & {
+      opportunity: {
+        id: string;
+        title: string;
+        source_key: string;
+        country_name: string | null;
+        deadline_at: string | null;
+      } | null;
+    }
+  >
+> {
+  const { data, error } = await supabase
+    .from("opportunity_matches")
+    .select(
+      `id, workspace_id, opportunity_id, score, grade, reasons, concerns,
+       scoring_version, computed_at,
+       opportunity:opportunities(id, title, source_key, country_name, deadline_at)`,
+    )
+    .eq("workspace_id", workspaceId)
+    .in("grade", ["A", "B"])
+    .order("score", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  const rows = (data as unknown as Array<
+    Omit<OpportunityMatchRow, "opportunity"> & {
+      opportunity:
+        | Array<{
+            id: string;
+            title: string;
+            source_key: string;
+            country_name: string | null;
+            deadline_at: string | null;
+          }>
+        | null;
+    }
+  > | null) ?? [];
+  return rows.map((r) => ({
+    ...r,
+    opportunity: Array.isArray(r.opportunity)
+      ? (r.opportunity[0] ?? null)
+      : r.opportunity,
+  }));
+}
+
 export async function listMatchesByIds(
   supabase: SupabaseClient,
   workspaceId: string,

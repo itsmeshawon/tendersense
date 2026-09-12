@@ -7,6 +7,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
+import { listRecommendedMatches } from "@/lib/matching/repository";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -49,7 +50,7 @@ export default async function DashboardPage() {
   const primary = workspaces[0];
   const supabase = await createServerSupabaseClient();
 
-  const [recentRevisions, upcoming, profiles] = await Promise.all([
+  const [recentRevisions, upcoming, profiles, recommended] = await Promise.all([
     listRecentRevisions(supabase, 7, 10),
     listOpportunities(supabase, {
       status: "open",
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
       sort: "deadline_asc",
     }),
     listMonitoringProfiles(supabase, primary.id),
+    listRecommendedMatches(supabase, primary.id, 5),
   ]);
 
   const activeProfile = profiles.find((p) => p.is_active);
@@ -85,6 +87,72 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-baseline justify-between">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Recommended for you ({recommended.length})
+            </CardTitle>
+            <Link
+              href={`/opportunities?workspace=${primary.id}&sort=grade_desc`}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              See all →
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {recommended.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No A or B fits yet. Adjust your{" "}
+              <Link
+                href={`/workspaces/${primary.id}/monitoring`}
+                className="underline hover:text-foreground"
+              >
+                monitoring profile
+              </Link>{" "}
+              or{" "}
+              <Link
+                href={`/workspaces/${primary.id}/capabilities`}
+                className="underline hover:text-foreground"
+              >
+                capabilities
+              </Link>
+              — grades recompute automatically.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2 text-sm">
+              {recommended.map((r) => (
+                <li key={r.id} className="flex items-baseline justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
+                      className="truncate hover:underline"
+                    >
+                      {r.opportunity?.title ?? "—"}
+                    </Link>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {r.opportunity?.source_key} ·{" "}
+                      {r.opportunity?.country_name ?? "—"}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={r.grade === "A" ? "default" : "secondary"}
+                    className={
+                      r.grade === "A"
+                        ? "border-green-600 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
+                        : "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                    }
+                  >
+                    {r.grade} · {r.score}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-3">

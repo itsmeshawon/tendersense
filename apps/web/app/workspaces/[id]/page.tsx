@@ -10,6 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { listWorkspaceCapabilities } from "@/lib/matching/repository";
+import { listMonitoringProfiles } from "@/lib/monitoring/repository";
+import { listSavedSearches } from "@/lib/saved-searches/repository";
 
 // Inlined `projects` reader — the shared `lib/workspaces/projects-repository`
 // lands via PR #17. Once that merges, this reader collapses to a single
@@ -73,10 +76,22 @@ export default async function WorkspaceDetailPage({
   const workspace = await getWorkspaceById(supabase, id);
   if (!workspace) notFound();
 
-  const [members, projects] = await Promise.all([
-    listWorkspaceMembers(supabase, id),
-    listProjectsForWorkspace(supabase, id),
-  ]);
+  const [members, projects, capabilities, monitoringProfiles, savedSearches] =
+    await Promise.all([
+      listWorkspaceMembers(supabase, id),
+      listProjectsForWorkspace(supabase, id),
+      listWorkspaceCapabilities(supabase, id),
+      listMonitoringProfiles(supabase, id),
+      listSavedSearches(supabase, id),
+    ]);
+
+  const confirmedCaps = capabilities.filter((c) => c.source === "user").length;
+  const suggestedCaps = capabilities.filter(
+    (c) => c.source === "auto_derived",
+  ).length;
+  const activeProfileCount = monitoringProfiles.filter(
+    (p) => p.is_active,
+  ).length;
 
   return (
     <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
@@ -122,6 +137,87 @@ export default async function WorkspaceDetailPage({
           </Link>
         </div>
       </header>
+
+      {/* Profile-at-a-glance — SoT §6 Workspace → Profile landing */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Capabilities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">{confirmedCaps}</p>
+            <p className="text-xs text-muted-foreground">
+              {suggestedCaps > 0
+                ? `${suggestedCaps} suggested`
+                : "Drives 35% of your fit grade"}
+            </p>
+            <Link
+              href={`/workspaces/${id}/capabilities`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {confirmedCaps === 0 ? "Add capabilities" : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Monitoring
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">
+              {activeProfileCount}
+              <span className="text-sm font-normal text-muted-foreground">
+                {" "}
+                / {monitoringProfiles.length}
+              </span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {activeProfileCount > 0
+                ? "active profile"
+                : "profiles configured"}
+            </p>
+            <Link
+              href={`/workspaces/${id}/monitoring`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {monitoringProfiles.length === 0
+                  ? "Create profile"
+                  : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Saved searches
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">{savedSearches.length}</p>
+            <p className="text-xs text-muted-foreground">
+              Bookmarked filter combinations
+            </p>
+            <Link
+              href={`/workspaces/${id}/saved-searches`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {savedSearches.length === 0 ? "Save your first" : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
 
       <Card>
         <CardHeader className="pb-3">
