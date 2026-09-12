@@ -37,7 +37,11 @@ export async function lookupByCompanyName(
   // Step 1 — establish session
   const sessionRes = await fetchImpl(ADV_FORM_URL, {
     method: "GET",
-    headers: { "user-agent": userAgent },
+    headers: {
+      "user-agent": userAgent,
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+    },
     redirect: "manual",
   });
   const jsessionid = extractJsessionId(sessionRes.headers);
@@ -50,7 +54,15 @@ export async function lookupByCompanyName(
   const pageNo = params.pageNo ?? 1;
   const pageSize = params.pageSize ?? 10;
 
-  // Step 2 — POST search
+  // Step 2 — POST search.
+  //
+  // Headers here matter. e-GP's servlet returns an empty results table
+  // (200 OK, well-formed HTML, no error markers) when the POST lacks the
+  // browser-expected Referer / Accept / Accept-Language / Origin.
+  // Reproduced on Vercel preview 2026-09-12: manual browser search
+  // returned rows for "Sayma Construction", our bare POST returned zero.
+  // Full browser-shaped header set below matches what the servlet sees
+  // from the real form submission.
   const body = buildPayload(params, { pageNo, pageSize });
   const searchRes = await fetchImpl(SERVLET_URL, {
     method: "POST",
@@ -58,6 +70,11 @@ export async function lookupByCompanyName(
       "user-agent": userAgent,
       "content-type": "application/x-www-form-urlencoded",
       cookie: `JSESSIONID=${jsessionid}`,
+      referer: ADV_FORM_URL,
+      origin: BASE,
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+      "x-requested-with": "XMLHttpRequest",
     },
     body,
   });
