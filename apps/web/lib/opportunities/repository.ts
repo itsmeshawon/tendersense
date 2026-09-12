@@ -119,10 +119,13 @@ export async function listOpportunities(
   }
   if (params.q && params.q.trim().length > 0) {
     // `websearch` dialect per ADR 0012 — user-facing search box.
-    // Supabase maps this to `websearch_to_tsquery('english', <q>)`.
+    // Config MUST match migration 0009's trigger, which builds the
+    // tsvector with 'simple' (no stemming) to keep mixed Bengali/Latin
+    // text tokenizing correctly. Using 'english' here silently
+    // near-misses because the query stems words the tsvector didn't.
     query = query.textSearch("search_text", params.q, {
       type: "websearch",
-      config: "english",
+      config: "simple",
     });
   }
 

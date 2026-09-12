@@ -360,14 +360,26 @@ export default async function OpportunitiesPage({
                   </div>
                 </div>
 
-                <a
-                  href={o.source_url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="mt-1 text-xs text-muted-foreground underline hover:text-foreground"
-                >
-                  View original notice
-                </a>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  {o.reference_no ? (
+                    <span>
+                      Ref{" "}
+                      <span className="font-mono text-foreground">
+                        {o.reference_no}
+                      </span>
+                    </span>
+                  ) : null}
+                  <a
+                    href={o.source_url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="underline hover:text-foreground"
+                  >
+                    {o.source_key === "bd_egp"
+                      ? "Open e-GP search page (look up by ref no)"
+                      : "View original notice"}
+                  </a>
+                </div>
               </li>
             );
           })}
