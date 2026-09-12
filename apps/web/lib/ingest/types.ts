@@ -63,6 +63,13 @@ export interface NormalizedOpportunity {
   rawLanguage?: string;
   sourceUpdatedAt?: string;
 
+  /**
+   * Adapter-specific extras that don't fit the normalized schema but are
+   * needed downstream (e.g., bd_egp stashes `egpId` here so the UI can
+   * open the POST-only tender detail page). Kept as free-form JSON.
+   */
+  sourceMetadata?: Record<string, unknown>;
+
   /** SHA-256 hex of the material fields; drives revision detection. */
   contentHash: string;
 }

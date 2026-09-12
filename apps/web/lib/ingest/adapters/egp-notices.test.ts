@@ -183,6 +183,9 @@ describe("createEgpNoticesAdapter — normalize", () => {
     );
     // sourceUrl falls back to the search page (per recon: title link is a POST form)
     expect(first.sourceUrl).toContain("AllTenders.jsp");
+    // sourceMetadata carries the internal e-GP tender id so the UI can
+    // build a client-side POST form to ViewTender.jsp (recon 2026-09-12).
+    expect(first.sourceMetadata).toEqual({ egpId: "1331092" });
     expect(first.contentHash).toMatch(/^[a-f0-9]{64}$/);
     expect(first.rawLanguage).toBe("en");
     expect(first.countryCode).toBe("BD");

@@ -224,6 +224,7 @@ function normalizedToRow(
     language: o.rawLanguage ?? null,
     content_hash: o.contentHash,
     source_updated_at: o.sourceUpdatedAt ?? null,
+    source_metadata: o.sourceMetadata ?? {},
     last_seen_at: new Date().toISOString(),
   };
 }

@@ -174,6 +174,7 @@ export function createEgpNoticesAdapter(
       // Category to "Goods / NCT" style if we want both later. For now
       // procurementType is dropped; recovering it is a search-side
       // consumer concern.
+      sourceMetadata: r.tenderId ? { egpId: r.tenderId } : undefined,
     });
   }
 
