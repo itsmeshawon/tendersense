@@ -4,6 +4,9 @@ import { getServerUser } from "@/lib/auth/session";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { signOut } from "../dashboard/actions";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function WorkspacesPage() {
   const user = await getServerUser();
@@ -16,85 +19,96 @@ export default async function WorkspacesPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-2xl flex-col gap-6 p-6">
+    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Workspaces</h1>
           <p className="text-sm text-muted-foreground">
-            Signed in as{" "}
-            <span className="font-mono">{user.email}</span>
+            Signed in as <span className="font-mono">{user.email}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
           <NotificationsBell />
-          <Link
-            href="/opportunities"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Opportunities
+          <Link href="/opportunities">
+            <Button variant="outline" size="sm">
+              Opportunities
+            </Button>
           </Link>
           <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-            >
+            <Button type="submit" variant="outline" size="sm">
               Sign out
-            </button>
+            </Button>
           </form>
         </div>
       </header>
 
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-3">
         {workspaces.map((w) => (
-          <li
-            key={w.id}
-            className="flex items-center justify-between gap-4 rounded-md border p-4"
-          >
-            <Link
-              href={`/workspaces/${w.id}`}
-              className="min-w-0 flex-1 hover:underline"
-            >
-              <p className="truncate font-medium">{w.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {w.workspace_type} · {w.plan} · created{" "}
-                {new Date(w.created_at).toLocaleDateString()}
-              </p>
-            </Link>
-            <div className="flex shrink-0 items-center gap-2">
-              <Link
-                href={`/opportunities?workspace=${w.id}`}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
-                Opportunities
-              </Link>
-              <Link
-                href={`/workspaces/${w.id}/monitoring`}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
-                Monitoring
-              </Link>
-              <Link
-                href={`/workspaces/${w.id}/onboarding`}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
-                Import from e-GP
-              </Link>
-              <Link
-                href={`/workspaces/${w.id}`}
-                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-              >
-                Open
-              </Link>
-            </div>
+          <li key={w.id}>
+            <Card className="transition-colors hover:bg-accent/40">
+              <CardHeader className="pb-3">
+                <div className="flex items-baseline justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle>
+                      <Link
+                        href={`/workspaces/${w.id}`}
+                        className="hover:underline"
+                      >
+                        {w.name}
+                      </Link>
+                    </CardTitle>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      Created {new Date(w.created_at).toLocaleDateString()}
+                      <span className="hidden sm:inline">
+                        {" "}
+                        · <span className="font-mono">{w.slug}</span>
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Badge variant="secondary">{w.workspace_type}</Badge>
+                    <Badge variant={w.plan === "pro" ? "default" : "outline"}>
+                      {w.plan}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-wrap items-center gap-2 pt-0">
+                <Link href={`/opportunities?workspace=${w.id}`}>
+                  <Button variant="secondary" size="sm">
+                    Opportunities
+                  </Button>
+                </Link>
+                <Link href={`/workspaces/${w.id}/monitoring`}>
+                  <Button variant="outline" size="sm">
+                    Monitoring
+                  </Button>
+                </Link>
+                <Link href={`/workspaces/${w.id}/capabilities`}>
+                  <Button variant="outline" size="sm">
+                    Capabilities
+                  </Button>
+                </Link>
+                <Link href={`/workspaces/${w.id}/onboarding`}>
+                  <Button variant="outline" size="sm">
+                    Import from e-GP
+                  </Button>
+                </Link>
+                <Link href={`/workspaces/${w.id}`} className="ml-auto">
+                  <Button variant="ghost" size="sm">
+                    Open →
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </li>
         ))}
       </ul>
 
-      <Link
-        href="/workspaces/new"
-        className="self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-      >
-        New workspace
+      <Link href="/workspaces/new">
+        <Button size="lg" className="self-start">
+          New workspace
+        </Button>
       </Link>
     </main>
   );
