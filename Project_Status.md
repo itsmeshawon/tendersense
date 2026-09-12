@@ -12,8 +12,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
-session_count: 12
-current_phase: "Phase 1 — Source ingestion (~65% — contract, eExperience lookup, /opportunities, ADRs, seed shipped; WB adapter next)"
+session_count: 16
+current_phase: "Phase 1 — Source ingestion (~95% code done; six PRs in review; finalization checklist ready for Mohabbat)"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"
@@ -25,7 +25,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 13 (Mohabbat joining): everything merged. Start Phase 1 step 4 — World Bank adapter + backfill + npm run sync:worldbank. Open a GitHub Issue first."
+next_action: "Session 17: draft Phase 2 (Discovery) plan + Phase 3 (Matching) plan while Mohabbat clears review queue. Phase 1 exit is fully documented in docs/phase-1-finalization-checklist.md — no further Claude work needed for Phase 1."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"

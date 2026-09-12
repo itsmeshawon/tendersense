@@ -384,3 +384,25 @@ User explicitly directed me to merge PR #8, #10, #12, #13 without collaborator r
 - PII rule formal sign-off
 - Data-residency counsel question (drafted, awaiting filing)
 - T&C automated-access clause at eprocure.gov.bd
+
+- **2026-09-12 06:14** — auto-wrap: modified egp-notices-reconnaissance-checklist.md [auto-wrap]
+
+## Session 16 — 2026-09-12
+
+**Phase:** Phase 1 (e-GP adapter + filter bar + finalization docs)
+
+### What shipped
+
+- **PR #23** — e-GP notices adapter (built first-try from user's dev-tools recon on `AllTenders.jsp` / `TenderDetailsServlet`). 11 new tests.
+- **PR #25** — `/opportunities` filter bar (source / country / deadline / status; URL-param-driven, bookmarkable).
+- **docs/egp-notices-reconnaissance-checklist.md** — captures the notices-search POST + response shape
+- **docs/phase-1-finalization-checklist.md** — paint-by-numbers plan for Mohabbat to close Phase 1 after 6-PR merge
+
+### PR queue at session end (all independent, awaiting Mohabbat)
+
+#15 · #17 · #19 · #21 · #23 · #25 (six PRs)
+
+### Position vs Source of Truth
+
+- Phase 1: **~95%** code complete; remaining is ~90 lines of glue + cron YAML + tag (documented in the finalization checklist)
+- MVP overall (§113 scope-reduced): **~45%**
