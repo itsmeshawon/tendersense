@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const repoMocks = vi.hoisted(() => ({
   upsertMatch: vi.fn(),
+  upsertMatchesBulk: vi.fn(),
 }));
 const loaderMocks = vi.hoisted(() => ({
   loadWorkspaceProfile: vi.fn(),
@@ -66,16 +67,18 @@ function fakeSupabase(opportunities: ScorableOpportunity[]) {
 describe("recomputeForWorkspace", () => {
   beforeEach(() => {
     repoMocks.upsertMatch.mockReset().mockResolvedValue(undefined);
+    repoMocks.upsertMatchesBulk.mockReset().mockResolvedValue(undefined);
     loaderMocks.loadWorkspaceProfile.mockReset().mockResolvedValue(richProfile);
   });
 
-  it("scores each opportunity and upserts one match row per opp", async () => {
+  it("bulk-upserts scored matches in one round-trip per chunk", async () => {
     const client = fakeSupabase([opp]);
     const result = await recomputeForWorkspace(client, "ws-1");
     expect(result.matched).toBe(1);
-    expect(repoMocks.upsertMatch).toHaveBeenCalledTimes(1);
-    const [, call] = repoMocks.upsertMatch.mock.calls[0];
-    expect(call).toMatchObject({
+    expect(repoMocks.upsertMatchesBulk).toHaveBeenCalledTimes(1);
+    const [, rows] = repoMocks.upsertMatchesBulk.mock.calls[0];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
       workspaceId: "ws-1",
       opportunityId: "op-1",
       grade: "A",
@@ -86,15 +89,16 @@ describe("recomputeForWorkspace", () => {
     const client = fakeSupabase([]);
     const result = await recomputeForWorkspace(client, "ws-1");
     expect(result.matched).toBe(0);
-    expect(repoMocks.upsertMatch).not.toHaveBeenCalled();
+    expect(repoMocks.upsertMatchesBulk).not.toHaveBeenCalled();
   });
 
-  it("chunks large opportunity sets to avoid long-running requests", async () => {
+  it("splits large opportunity sets into chunks — one bulk call per chunk", async () => {
     const many = Array.from({ length: 250 }, (_, i) => ({ ...opp, id: `op-${i}` }));
     const client = fakeSupabase(many);
     const result = await recomputeForWorkspace(client, "ws-1", { chunkSize: 100 });
     expect(result.matched).toBe(250);
-    expect(repoMocks.upsertMatch).toHaveBeenCalledTimes(250);
+    // 250 / 100 = 3 chunks (100 + 100 + 50)
+    expect(repoMocks.upsertMatchesBulk).toHaveBeenCalledTimes(3);
   });
 });
 

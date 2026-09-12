@@ -85,6 +85,34 @@ export async function upsertMatch(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Bulk-upsert. Cuts N round-trips to 1 at the cost of losing per-row
+ * error reporting. Used by recomputeForWorkspace to avoid a slow
+ * loop when scoring hundreds of opportunities.
+ */
+export async function upsertMatchesBulk(
+  supabase: SupabaseClient,
+  inputs: UpsertMatchInput[],
+): Promise<void> {
+  if (inputs.length === 0) return;
+  const now = new Date().toISOString();
+  const rows = inputs.map((input) => ({
+    workspace_id: input.workspaceId,
+    opportunity_id: input.opportunityId,
+    score: input.score,
+    grade: input.grade,
+    reasons: input.reasons,
+    concerns: input.concerns,
+    scoring_version: input.scoringVersion,
+    computed_at: now,
+    updated_at: now,
+  }));
+  const { error } = await supabase
+    .from("opportunity_matches")
+    .upsert(rows, { onConflict: "workspace_id,opportunity_id" });
+  if (error) throw new Error(error.message);
+}
+
 export async function listWorkspaceCapabilities(
   supabase: SupabaseClient,
   workspaceId: string,
