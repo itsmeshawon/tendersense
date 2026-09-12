@@ -12,8 +12,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
-session_count: 11
-current_phase: "Phase 1 — Source ingestion (WebFetch recon halved the eExperience human step; still awaiting PR #8 review + 10-min dev-tools recon)"
+session_count: 12
+current_phase: "Phase 1 — Source ingestion (~65% — contract, eExperience lookup, /opportunities, ADRs, seed shipped; WB adapter next)"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 production_url: "https://tendersense-delta.vercel.app"

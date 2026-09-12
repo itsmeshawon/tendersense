@@ -345,4 +345,42 @@ Four consecutive sessions (7–11) have been either PR-blocked or docs-only. Ver
 - Phase 1: **~44%**
 - MVP overall (§113 scope-reduced): **~24%**
 
-- **2026-09-11 19:38** — auto-wrap: modified log.md, Project_Status.md [auto-wrap]
+## Session 12 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (code sprint + handoff merge)
+
+### What shipped
+
+- Live eExperience recon in dev tools; recon checklist marked complete
+- **PR #10** — eExperience on-demand lookup (`lib/experience/`). 21 new tests
+- **PR #12** — `/opportunities` read-only list. First user-visible route since Session 3
+- **PR #13** — 10 sample opportunities + 1 amendment revision (local seed)
+- All four open PRs merged (#8, #10, #12, #13) as founder-authorized override
+
+### The override, explicitly logged
+
+User explicitly directed me to merge PR #8, #10, #12, #13 without collaborator review, on grounds that main should be clean before Mohabbat joins live coding. Deliberate one-time exception to `.claude/rules/mew-code/code-rules.md` § "Collaborative projects" (no self-merge). Future PRs return to the reviewed-by-collaborator default.
+
+### End-of-session state on `main` (@ 9c8fa13)
+
+- 87 unit + 10 integration tests passing
+- Lint + typecheck + build clean
+- Routes: `/`, `/login`, `/auth/callback`, `/dashboard`, `/opportunities`, `/workspaces`, `/workspaces/new`
+- ADRs 0001–0010 shipped
+- Migrations 0001–0011 on local + hosted
+- Vercel prod: `/opportunities` live (empty state until adapters run)
+
+### Position vs Source of Truth
+
+- Phase 1: **~65%**
+- MVP overall (§113 scope-reduced): **~30%**
+
+### Open threads carried into session 13
+
+- WB adapter — `lib/ingest/types.ts` now on main
+- eExperience UI wrap — server action + profile-onboarding form
+- BRAC IT name on e-GP — before pilot demo scheduling
+- PII rule formal sign-off
+- Data-residency counsel question (drafted, awaiting filing)
+- T&C automated-access clause at eprocure.gov.bd
