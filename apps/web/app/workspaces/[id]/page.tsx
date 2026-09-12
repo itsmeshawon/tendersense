@@ -99,6 +99,12 @@ export default async function WorkspaceDetailPage({
             Monitoring
           </Link>
           <Link
+            href={`/workspaces/${id}/capabilities`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Capabilities
+          </Link>
+          <Link
             href={`/workspaces/${id}/saved-searches`}
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
           >
