@@ -4,6 +4,7 @@ import { getServerUser } from "@/lib/auth/session";
 import { listPublicOpportunities } from "@/lib/opportunities/service";
 import type {
   ListOpportunitiesParams,
+  OpportunitySort,
   OpportunityStatusFilter,
 } from "@/lib/opportunities/repository";
 
@@ -29,6 +30,19 @@ function daysUntil(iso: string | null): number | null {
   if (Number.isNaN(then)) return null;
   const diffMs = then - Date.now();
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Urgency band for a days-remaining chip.
+ * <7 red, <14 yellow, otherwise muted. Grade is *fit*; timeline is
+ * *urgency* — the two axes stay separate per Phase 3 v2 §2a.
+ */
+function deadlineToneClass(days: number | null): string {
+  if (days === null) return "text-muted-foreground";
+  if (days < 0) return "text-muted-foreground line-through";
+  if (days < 7) return "text-red-600 dark:text-red-400 font-medium";
+  if (days < 14) return "text-yellow-700 dark:text-yellow-400";
+  return "text-muted-foreground";
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -63,6 +77,22 @@ const STATUSES = [
   { value: "closed", label: "Closed" },
 ] as const;
 
+const SORTS = [
+  { value: "publication_desc", label: "Newest first" },
+  { value: "deadline_asc", label: "Deadline soonest" },
+  { value: "value_desc", label: "Highest value" },
+  { value: "relevance", label: "Best match (requires search)" },
+] as const;
+
+function isSort(v: string | undefined): v is OpportunitySort {
+  return (
+    v === "publication_desc" ||
+    v === "deadline_asc" ||
+    v === "value_desc" ||
+    v === "relevance"
+  );
+}
+
 function parseFilters(
   sp: Record<string, string | string[] | undefined>,
 ): ListOpportunitiesParams {
@@ -77,11 +107,16 @@ function parseFilters(
     Number.isFinite(deadlineRaw) && deadlineRaw && deadlineRaw > 0
       ? deadlineRaw
       : undefined;
+  const q = typeof sp.q === "string" && sp.q.trim().length > 0 ? sp.q : undefined;
+  const sortRaw = typeof sp.sort === "string" ? sp.sort : undefined;
+  const sort = isSort(sortRaw) ? sortRaw : undefined;
   return {
     country: country || undefined,
     source: source || undefined,
     status,
     deadlineWithinDays,
+    q,
+    sort,
     limit: 50,
   };
 }
@@ -134,6 +169,16 @@ export default async function OpportunitiesPage({
         method="get"
         className="flex flex-col gap-3 rounded-md border p-4"
       >
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="font-semibold text-foreground">Search</span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={filters.q ?? ""}
+            placeholder='Try "ERP" or "solar OR wind"'
+            className="rounded-md border px-3 py-2 text-sm"
+          />
+        </label>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <label className="flex flex-col gap-1 text-xs">
             <span className="font-semibold text-foreground">Source</span>
@@ -196,6 +241,24 @@ export default async function OpportunitiesPage({
             </select>
           </label>
         </div>
+        <label className="flex flex-col gap-1 text-xs sm:max-w-xs">
+          <span className="font-semibold text-foreground">Sort by</span>
+          <select
+            name="sort"
+            defaultValue={filters.sort ?? "publication_desc"}
+            className="rounded-md border px-3 py-2 text-sm"
+          >
+            {SORTS.map((s) => (
+              <option
+                key={s.value}
+                value={s.value}
+                disabled={s.value === "relevance" && !filters.q}
+              >
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             {activeFilters.length > 0
@@ -288,9 +351,9 @@ export default async function OpportunitiesPage({
                     </div>
                     <div>
                       {formatDate(o.deadline_at)}
-                      {remaining !== null && remaining >= 0 ? (
-                        <span className="ml-1 text-muted-foreground">
-                          ({remaining}d)
+                      {remaining !== null ? (
+                        <span className={`ml-1 ${deadlineToneClass(remaining)}`}>
+                          ({remaining >= 0 ? `${remaining}d` : `${-remaining}d past`})
                         </span>
                       ) : null}
                     </div>

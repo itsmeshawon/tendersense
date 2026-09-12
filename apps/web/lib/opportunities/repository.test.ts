@@ -48,7 +48,6 @@ const row: Opportunity = {
  */
 function fakeClient(finalValue: unknown) {
   const limitMock = vi.fn().mockResolvedValue(finalValue);
-  const orderMock = vi.fn(() => ({ limit: limitMock }));
 
   // Chain returned by every filter method — allows further chaining.
   const chain: Record<string, ReturnType<typeof vi.fn>> = {
@@ -56,10 +55,12 @@ function fakeClient(finalValue: unknown) {
     not: vi.fn(),
     gte: vi.fn(),
     lte: vi.fn(),
-    order: orderMock,
+    textSearch: vi.fn(),
+    order: vi.fn(),
+    limit: limitMock,
   };
-  // eq/not/gte/lte all return the same chain so calls compose.
-  for (const key of ["eq", "not", "gte", "lte"]) {
+  // All builder methods return the same chain so calls compose.
+  for (const key of ["eq", "not", "gte", "lte", "textSearch", "order"]) {
     chain[key].mockReturnValue(chain);
   }
 
@@ -74,7 +75,8 @@ function fakeClient(finalValue: unknown) {
       not: chain.not,
       gte: chain.gte,
       lte: chain.lte,
-      orderMock,
+      textSearch: chain.textSearch,
+      orderMock: chain.order,
       limitMock,
     },
   };
@@ -189,6 +191,28 @@ describe("listOpportunities — filters", () => {
     expect(diffDays).toBe(30);
   });
 
+  it("applies text search via .textSearch on search_text with websearch dialect", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { q: "ERP implementation" },
+    );
+    expect(client._spies.textSearch).toHaveBeenCalledWith(
+      "search_text",
+      "ERP implementation",
+      { type: "websearch", config: "english" },
+    );
+  });
+
+  it("skips text search when q is only whitespace", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { q: "   " },
+    );
+    expect(client._spies.textSearch).not.toHaveBeenCalled();
+  });
+
   it("combines source + country + status + deadline in one query", async () => {
     const client = fakeClient({ data: [], error: null });
     await listOpportunities(
@@ -208,5 +232,70 @@ describe("listOpportunities — filters", () => {
     expect(client._spies.lte).toHaveBeenCalledTimes(1);
     expect(client._spies.orderMock).toHaveBeenCalledTimes(1);
     expect(client._spies.limitMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("listOpportunities — sort", () => {
+  it("defaults to publication_at desc", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+    );
+    expect(client._spies.orderMock).toHaveBeenCalledWith("publication_at", {
+      ascending: false,
+      nullsFirst: false,
+    });
+  });
+
+  it("sort=deadline_asc orders by deadline_at asc with nulls last", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { sort: "deadline_asc" },
+    );
+    expect(client._spies.orderMock).toHaveBeenCalledWith("deadline_at", {
+      ascending: true,
+      nullsFirst: false,
+    });
+  });
+
+  it("sort=value_desc orders by estimated_value_max desc with nulls last", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { sort: "value_desc" },
+    );
+    expect(client._spies.orderMock).toHaveBeenCalledWith(
+      "estimated_value_max",
+      { ascending: false, nullsFirst: false },
+    );
+  });
+
+  it("sort=relevance without q falls back to publication_at desc", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { sort: "relevance" },
+    );
+    expect(client._spies.orderMock).toHaveBeenCalledWith("publication_at", {
+      ascending: false,
+      nullsFirst: false,
+    });
+    expect(client._spies.textSearch).not.toHaveBeenCalled();
+  });
+
+  it("sort=relevance with q applies textSearch and orders by publication_at desc", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { sort: "relevance", q: "erp" },
+    );
+    expect(client._spies.textSearch).toHaveBeenCalledTimes(1);
+    // Relevance ordering falls back to publication_desc secondary until
+    // an RPC exposes ts_rank explicitly (documented in repository.ts).
+    expect(client._spies.orderMock).toHaveBeenCalledWith("publication_at", {
+      ascending: false,
+      nullsFirst: false,
+    });
   });
 });

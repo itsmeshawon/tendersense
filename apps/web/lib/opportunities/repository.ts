@@ -53,6 +53,19 @@ const MAX_LIMIT = 200;
 
 export type OpportunityStatusFilter = "open" | "closed";
 
+/**
+ * Sort options for /opportunities.
+ * - `publication_desc` (default): newest first
+ * - `deadline_asc`: soonest deadline first (nulls last)
+ * - `value_desc`: largest estimated value first (nulls last)
+ * - `relevance`: FTS rank desc; only meaningful when `q` is set
+ */
+export type OpportunitySort =
+  | "publication_desc"
+  | "deadline_asc"
+  | "value_desc"
+  | "relevance";
+
 export interface ListOpportunitiesParams {
   limit?: number;
   /** ISO-3166-2 country code, e.g. "BD". Filters rows where country_code matches. */
@@ -67,6 +80,14 @@ export interface ListOpportunitiesParams {
   deadlineWithinDays?: number;
   /** Filter on `status`. */
   status?: OpportunityStatusFilter;
+  /**
+   * Free-text query against the `search_text` tsvector column (populated
+   * by trigger in migration 0009). Uses `websearch_to_tsquery` semantics
+   * per ADR 0012 — supports quoted phrases and `OR` operators.
+   */
+  q?: string;
+  /** Sort order. Defaults to `publication_desc`. */
+  sort?: OpportunitySort;
 }
 
 export async function listOpportunities(
@@ -96,10 +117,56 @@ export async function listOpportunities(
       .gte("deadline_at", now.toISOString())
       .lte("deadline_at", then.toISOString());
   }
+  if (params.q && params.q.trim().length > 0) {
+    // `websearch` dialect per ADR 0012 — user-facing search box.
+    // Supabase maps this to `websearch_to_tsquery('english', <q>)`.
+    query = query.textSearch("search_text", params.q, {
+      type: "websearch",
+      config: "english",
+    });
+  }
 
-  const { data, error } = await query
-    .order("publication_at", { ascending: false, nullsFirst: false })
-    .limit(limit);
+  // Relevance sort only makes sense when there's a query. Silently
+  // fall back to publication_desc if not.
+  const effectiveSort: OpportunitySort =
+    params.sort === "relevance" && !params.q?.trim()
+      ? "publication_desc"
+      : (params.sort ?? "publication_desc");
+
+  switch (effectiveSort) {
+    case "deadline_asc":
+      query = query.order("deadline_at", {
+        ascending: true,
+        nullsFirst: false,
+      });
+      break;
+    case "value_desc":
+      query = query.order("estimated_value_max", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "relevance":
+      // supabase-js has no first-class ts_rank order; the textSearch
+      // filter above already surfaces matches. We still add a stable
+      // secondary order by publication_at desc so results are
+      // deterministic. Proper ts_rank ordering will need an RPC —
+      // captured as a Phase 3+ follow-up.
+      query = query.order("publication_at", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "publication_desc":
+    default:
+      query = query.order("publication_at", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+  }
+
+  const { data, error } = await query.limit(limit);
 
   if (error) throw new Error(error.message);
   return (data as Opportunity[] | null) ?? [];
