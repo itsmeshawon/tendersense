@@ -6,6 +6,11 @@ import { lookupByCompanyName } from "@/lib/experience/egp-experience-client";
 import type { ExperienceRecord } from "@/lib/experience/types";
 import { importExperienceRecords } from "@/lib/workspaces/projects-service";
 
+// e-GP servlet responses run 3-8s in practice. Vercel's default 10s ceiling
+// leaves no headroom for the two round-trips (session GET + search POST) plus
+// parsing. Bump to 30s so the search completes on serverless runs.
+export const maxDuration = 30;
+
 export type WorkStatusFilter = "All" | "Completed" | "Ongoing";
 
 export type SearchState =

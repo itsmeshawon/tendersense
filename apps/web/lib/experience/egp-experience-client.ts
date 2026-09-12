@@ -69,9 +69,52 @@ export async function lookupByCompanyName(
   }
 
   const html = await searchRes.text();
-  const records = parseExperienceRows(html);
 
+  // Server-side diagnostic — surfaces in `vercel logs` output. Length +
+  // small snippet is enough to distinguish "session expired" (~500 char
+  // page) from "no rows" (~few KB with an empty table) from "real
+  // results" (~10-100 KB).
+  console.log(
+    `[eexp] search response: len=${html.length} snippet=${JSON.stringify(
+      html.slice(0, 200),
+    )}`,
+  );
+
+  detectErrorPage(html);
+
+  const records = parseExperienceRows(html);
   return { records, pageNo, pageSize };
+}
+
+/**
+ * The eGP servlet answers 200 OK for several bad states we want to surface
+ * as real errors instead of an empty results array:
+ *   - Session-timeout redirect page
+ *   - Login prompt (indicates the JSESSIONID cookie wasn't accepted)
+ *
+ * Legitimate empty-result responses are still valid HTML with a table
+ * skeleton, so we DON'T gate on length.
+ */
+function detectErrorPage(html: string): void {
+  const lower = html.toLowerCase();
+  if (
+    lower.includes("sessiontimedout") ||
+    lower.includes("session has timed out")
+  ) {
+    throw new Error(
+      "eExperience: session timed out mid-request. Retry the search.",
+    );
+  }
+  if (
+    lower.includes("user id") &&
+    lower.includes("password") &&
+    lower.includes("login") &&
+    html.length < 10_000
+  ) {
+    throw new Error(
+      "eExperience: servlet returned a login page — JSESSIONID cookie not accepted.",
+    );
+  }
 }
 
 function buildPayload(
