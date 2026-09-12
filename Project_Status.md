@@ -13,7 +13,7 @@ gate_block_count: 0
 last_session: 2026-09-13
 last_wrap: 2026-09-13
 session_count: 23
-current_phase: "Phase 4 — Assessment plan APPROVED v2 (no LLM, rule-based + manual). v0.4.0-phase3 tag holds. Execution begins Session 25 with schema PR."
+current_phase: "Phase 4 — Assessment implementation. PRs #1–#11 implemented (schema · profile CRUD · rules extractor · manual entry · evaluator/scorer · runner · Opportunity Detail tabs · Run button + quota · two-signal chips · credential signal + SCORING_VERSION=2). Cross-cutting review (PR #12) + hosted SCORING_VERSION=2 recompute + tag v0.5.0-phase4 pending."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
@@ -35,7 +35,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 25 — Phase 4 PR #1: schema migrations 0020-0028 (assessments · opportunity_requirements · requirement_evaluations · workspace_credentials · workspace_financials · evidence_documents · workspace_workforce · workspace_experts · jobs · workspace_usage · match-schema-split adding eligibility column). Applied to hosted before subsequent work. All 10 plan open questions resolved 2026-09-13."
+next_action: "PR #12 cross-cutting review: (a) run 5–10 assessments on BRAC IT B-graded tenders + walk the bid team through the verdicts, (b) hosted-side SCORING_VERSION=2 recompute across all workspaces (recomputeForWorkspace loop), (c) verify Eligibility/Requirements/Documents tabs render for a real assessment, (d) tag v0.5.0-phase4. ADRs 0020–0025 committed."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
