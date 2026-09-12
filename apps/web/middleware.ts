@@ -5,7 +5,7 @@ import {
   supabaseUrl,
 } from "./lib/supabase/env";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/workspaces"];
+const PROTECTED_PREFIXES = ["/dashboard", "/workspaces", "/opportunities"];
 const AUTH_PATHS = new Set(["/login"]);
 
 export async function middleware(request: NextRequest) {
