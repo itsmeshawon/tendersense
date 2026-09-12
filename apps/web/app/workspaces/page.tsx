@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { signOut } from "../dashboard/actions";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 export default async function WorkspacesPage() {
   const user = await getServerUser();
@@ -25,6 +26,7 @@ export default async function WorkspacesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationsBell />
           <Link
             href="/opportunities"
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"

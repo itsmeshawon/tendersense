@@ -5,6 +5,7 @@ import { listPublicOpportunities } from "@/lib/opportunities/service";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -182,6 +183,7 @@ export default async function OpportunitiesPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationsBell />
           {defaultWorkspaceId && savableQs ? (
             <Link
               href={`/workspaces/${defaultWorkspaceId}/saved-searches?from=?${savableQs}`}

@@ -13,6 +13,10 @@ import type { NormalizedOpportunity, SourceCursor } from "./types";
 export interface ExistingOpportunity {
   id: string;
   contentHash: string;
+  /** For diffing changed_fields when a revision is detected. */
+  deadlineAt: string | null;
+  title: string;
+  status: string;
 }
 
 export interface SyncRunCounts {
@@ -98,14 +102,26 @@ export async function findOpportunityByExternalId(
 ): Promise<ExistingOpportunity | null> {
   const { data, error } = await supabase
     .from("opportunities")
-    .select("id, content_hash")
+    .select("id, content_hash, deadline_at, title, status")
     .eq("source_key", sourceKey)
     .eq("external_id", externalId)
     .maybeSingle();
   if (error) throw new Error(`findOpportunityByExternalId: ${error.message}`);
   if (!data) return null;
-  const row = data as { id: string; content_hash: string };
-  return { id: row.id, contentHash: row.content_hash };
+  const row = data as {
+    id: string;
+    content_hash: string;
+    deadline_at: string | null;
+    title: string;
+    status: string;
+  };
+  return {
+    id: row.id,
+    contentHash: row.content_hash,
+    deadlineAt: row.deadline_at,
+    title: row.title,
+    status: row.status,
+  };
 }
 
 /** Upsert an opportunity; returns its id. */
@@ -144,7 +160,7 @@ export async function nextRevisionNo(
   return row.revision_no + 1;
 }
 
-/** Append an `opportunity_revisions` row for a detected material change. */
+/** Append an `opportunity_revisions` row for a detected material change. Returns the new revision's id. */
 export async function writeRevision(
   supabase: SupabaseClient,
   input: {
@@ -155,16 +171,21 @@ export async function writeRevision(
     changedFields: string[];
     changeSnapshot: Record<string, unknown>;
   },
-): Promise<void> {
-  const { error } = await supabase.from("opportunity_revisions").insert({
-    opportunity_id: input.opportunityId,
-    revision_no: input.revisionNo,
-    previous_hash: input.previousHash,
-    new_hash: input.newHash,
-    changed_fields: input.changedFields,
-    change_snapshot: input.changeSnapshot,
-  });
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("opportunity_revisions")
+    .insert({
+      opportunity_id: input.opportunityId,
+      revision_no: input.revisionNo,
+      previous_hash: input.previousHash,
+      new_hash: input.newHash,
+      changed_fields: input.changedFields,
+      change_snapshot: input.changeSnapshot,
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(`writeRevision: ${error.message}`);
+  return (data as { id: string }).id;
 }
 
 /** Advance the source's cursor + watermark. Call only after a successful run. */
