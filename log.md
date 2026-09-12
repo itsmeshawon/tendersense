@@ -406,3 +406,33 @@ User explicitly directed me to merge PR #8, #10, #12, #13 without collaborator r
 
 - Phase 1: **~95%** code complete; remaining is ~90 lines of glue + cron YAML + tag (documented in the finalization checklist)
 - MVP overall (§113 scope-reduced): **~45%**
+
+## Session 17 — 2026-09-12
+
+**Phase:** Phase 2 (Discovery) + Phase 3 (Matching) — plans drafted
+
+### What shipped
+
+- **`proposals/active/phase-2-discovery/plan.md`** — BPPA + NOA + APP adapters, `monitoring_profiles` + `saved_searches` + `notifications` (migrations 0012–0015), FTS + sort on `/opportunities`, amendment badges, `/dashboard` hub, notifications bell. 10 PRs sequenced; ADRs 0011–0014 called out. Size: 3–5 weeks. Blocker risk: APP data-shape recon (may be PDF-only).
+- **`proposals/active/phase-3-matching/plan.md`** — deterministic scoring engine across 9 dimensions, `opportunity_matches` table (migrations 0016–0017), grade UI per ADR 0006 §5 (A/B/C/D + Not-eligible + Need-more-info), `lib/matching/` library, recompute triggers, capabilities tab, calibration methodology. ADRs 0015–0018. Size: 4–6 weeks.
+
+### Why plan both now
+
+Mohabbat is clearing the 6-PR queue + running the finalization checklist to close Phase 1. That work does not need Claude. Drafting Phase 2 + Phase 3 in parallel keeps the planning gate unblocked so execution can start the moment Phase 1 tags `v0.2.0-phase1`.
+
+### Not shipped this session
+
+- Neither plan has been approved yet — MewKing tier hard gate holds until user reviews.
+- No code touched. No PRs opened.
+
+### Position vs Source of Truth
+
+- Phase 1: **~95%** (unchanged — awaiting Mohabbat)
+- MVP overall (§113 scope-reduced): **~45%** (unchanged; planning ≠ shipping)
+
+### Open threads carried into session 18
+
+- Phase 2 plan awaiting approval (6 open questions listed in plan §6)
+- Phase 3 plan awaiting approval (open questions in plan)
+- 6 PRs awaiting Mohabbat's review
+- Phase 1 finalization checklist awaiting Mohabbat's execution
