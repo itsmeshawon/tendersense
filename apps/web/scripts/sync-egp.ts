@@ -11,7 +11,7 @@ async function main() {
   });
 
   const adapter = createEgpNoticesAdapter({ fetchImpl: fetch, pageSize: 10 });
-  const result = await runSync(adapter, supabase, { maxPages: 10 });
+  const result = await runSync(adapter, supabase, { maxPages: 3 });
 
   console.log("[sync-egp]", result);
   if (result.status === "failed") process.exit(1);
