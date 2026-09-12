@@ -955,3 +955,49 @@ By user during session: 0018 + 0019.
 - Sector inference on BD adapters (e-GP + BPPA) — sector signal currently inapplicable on ~80% of BD pool
 - BRAC IT name mismatch on e-GP (pilot demo blocker for Peak 1)
 - Grade calibration session with BRAC IT bid team (ADR 0019)
+
+## Session 24 — 2026-09-13 · Phase 4 engine end-to-end, PR #61 merged
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-4-assessment/plan.md` (approved v2)
+**Phase:** Phase 4 — Assessment engine
+
+### What shipped
+
+Landed as a single squash-merged PR **#61** (`9ff87e6`), sequencing PRs #4 through #12 from plan §8.
+
+- `lib/assessment/rulesExtractor.ts` — 10-pattern regex library. ISO/CMMI, min-years-experience, similar-projects thresholds, sector coverage, annual turnover, audited financials, geography, submission mechanics. `sourceLocation` char range + `patternId` on every hit.
+- `lib/assessment/evaluate.ts` — deterministic per-requirement 5-status evaluator against a `WorkspaceSnapshot`. Golden rule enforced: unknown never becomes gap.
+- `lib/assessment/score.ts` — mandatory-gap dominance → `fail`. Per-SoT-§21 category scores. Recommendation reason derived, mapped to 4-way display per ADR 0021.
+- `lib/assessment/compute.ts` + `snapshot.ts` + `run.ts` — pure pipeline behind the runner; loader composes creds/projects/financials/workforce/country; sync orchestrator inserts `assessments`, bulk-inserts requirements + evaluations, propagates eligibility back onto `opportunity_matches`.
+- `lib/assessment/actions.ts` + `errors.ts` — add/update/delete manual requirements; `runAssessmentAction` with server-side quota check throwing `QuotaExceededError`.
+- `lib/assessment/quota.ts` — 5/month free · unlimited Pro, keyed by `(workspace_id, period_month)`.
+- Opportunity Detail: three new tabs (Eligibility · Requirements · Documents), `RunAssessmentButton` with `useTransition` + inline error surface. Source-location backlinks re-render the exact matched snippet.
+- Matching rebalance: 6th dimension `credential` (weight 7). Weights `capability 33 · sector 18 · keyword 18 · past_project 14 · country 10 · credential 7 = 100`. **`SCORING_VERSION` 1 → 2.** `credentialSignal` reuses the assessment rules extractor to identify required certifications, intersects with workspace `credentialKeys`.
+- Two-signal list UI: `EligibilityChip` next to `GradeChip` on every row; `eligible_first` sort (pass → partial → needs_verify → not_evaluated → fail, tie-break by score).
+- ADRs 0020–0025 committed.
+- `app/api/admin/recompute-all/route.ts` — one-shot POST endpoint gated by `ADMIN_TASK_TOKEN` for the v1 → v2 sweep.
+- `docs/phase-4-pilot-review.md` — calibration doc scaffold with release gate.
+- **Test count: 345 across 53 files, all green. Typecheck clean.**
+
+### Debugging worth remembering
+
+- **`"use server"` files may only export async functions.** First push failed both `verify` and Vercel with "Export runAssessmentAction doesn't exist in target module" — cascading `The module has no exports at all`. Root cause: I put `class QuotaExceededError` next to the server actions. Next silently collapses the whole module on non-async exports. Fix (`1b18cd9`) moved the class to `lib/assessment/errors.ts`.
+- Existing action files already export `type` alongside `"use server"` — types erase at compile time so they're safe. Classes/constants are not.
+
+### Not done (before `v0.5.0-phase4` tag)
+
+- Set `ADMIN_TASK_TOKEN` in Vercel prod, redeploy.
+- Curl `POST /api/admin/recompute-all` to bring every match row to `SCORING_VERSION=2`.
+- BRAC IT profile completeness pass (creds · financials · workforce · experts · projects · capabilities).
+- Bump BRAC IT to Pro (`update workspaces set plan = 'pro' where slug = 'brac-it';`).
+- Run 5–10 pilot assessments on B-graded tenders, fill in Session 1 of `docs/phase-4-pilot-review.md`.
+- Tag `v0.5.0-phase4`.
+
+### Open threads carried forward
+
+- `not_eligible` value still in `opportunity_matches.grade` check-constraint (transitional per migration 0028) — drop in a future migration once no code emits it.
+- Evidence document upload + PDF text extraction — deferred to Phase 4.5 per §2g.
+- LLM auto-fill button — deferred to Phase 4.5/5, contingent on pilot demand.
+- Pattern-library expansion — driven by gap notes captured during the pilot walk-through.
+- BRAC IT name mismatch on e-GP (Peak 1 demo blocker, from Session 23).
+- Grade calibration session with BRAC IT bid team (folded into pilot review).

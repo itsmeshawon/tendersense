@@ -12,7 +12,7 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-13
 last_wrap: 2026-09-13
-session_count: 23
+session_count: 24
 current_phase: "Phase 4 — Assessment implementation. PRs #1–#11 implemented (schema · profile CRUD · rules extractor · manual entry · evaluator/scorer · runner · Opportunity Detail tabs · Run button + quota · two-signal chips · credential signal + SCORING_VERSION=2). Cross-cutting review (PR #12) + hosted SCORING_VERSION=2 recompute + tag v0.5.0-phase4 pending."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
