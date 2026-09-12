@@ -710,3 +710,59 @@ By user during session: 0012, 0013, 0014, 0015, 0016. All verified with SELECT q
 - e-GP `procNature`/`procMethod` numeric codes recon (only `1`=Goods confirmed)
 - BRAC IT name mismatch on e-GP (pilot demo blocker)
 - Grade vocabulary sanity check with BRAC IT (Phase 3 prep)
+
+- **2026-09-12 11:06** — auto-wrap: modified Project_Status.md [auto-wrap]
+
+- **2026-09-12 11:18** — auto-wrap: modified runner.ts, matching.test.ts, matching.ts +15 more [auto-wrap]
+
+- **2026-09-12 11:27** — auto-wrap: modified 20260912100017_seed_bppa_source.sql, bppa-goods-fragment.html, bppa.test.ts +6 more [auto-wrap]
+
+- **2026-09-12 11:30** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 11:33** — auto-wrap: modified 20260912100017_seed_bppa_source.sql [auto-wrap]
+
+- **2026-09-12 11:34** — auto-wrap: session ended [auto-wrap]
+
+## Session 21 — 2026-09-12
+
+**Phase:** Phase 2 close (PRs #6 + #7) → tag v0.3.0-phase2
+
+### What shipped
+
+- **`#39` PR #6 Notifications** — bell component (server-rendered, unread badge, 30d lookback), `/notifications` route with mark-read/mark-all-read, and runner fan-out. When the ingest runner writes a revision, fanoutRevisionNotifications loads all active monitoring profiles, deterministically AND-matches them against the opportunity, dedupes per workspace, and inserts one notification per match. Added to `/dashboard`, `/opportunities`, `/workspaces` headers. changed_fields computed from previous vs new (deadline_at / title / status) in the runner. writeRevision now returns the id.
+- **`#40` PR #7 BPPA adapter** — third BD tender feed. Recon via WebFetch on bppa.gov.bd confirmed plain HTML `<table>` with GET-linkable detail URLs and `?page=N` pagination — much cleaner than e-GP's POST-form dance. Adapter + fixture + tests + sync script + cron workflow (03:30 UTC daily). MVP scope: goods category (largest ~14k). Works/services/physical-service can be added via `category` option later.
+- **`#41` fix** — migration 0017 source_type `'scraper'` → `'html'` (invalid enum value rejected on hosted apply).
+
+### Migrations applied to hosted
+
+By user during session: 0017. Verified 3 sources in public.sources.
+
+### End-to-end verification
+
+- BPPA sync dispatched → 32 rows written to `opportunities` where `source_key = 'bd_bppa'`
+- Notifications will fire on next sync run that detects a matching opportunity revision
+
+### Tag: `v0.3.0-phase2` pushed
+
+Definition of MVP Done (SoT §114): items 1-9 checked.
+
+### Position vs Source of Truth
+
+- Phase 1: **100%** ✓ shipped at `v0.2.0-phase1`
+- Phase 2: **100%** ✓ shipped at `v0.3.0-phase2`
+- MVP overall (§113 scope-reduced): **~78%**
+
+### Notable notes for session 22
+
+- Phase 3 plan already approved (v2, 5-dim scoring, ~3 weeks + calibration tail) — execution unblocked
+- BRAC IT name mismatch on e-GP (still a pilot demo blocker)
+- Grade vocabulary sanity check with BRAC IT (should happen alongside Phase 3 UI work)
+- Follow-up: batch supabase writes in persistence.ts (~3× round-trip reduction) — would let cron page sizes go back up
+
+### Open threads carried into session 22
+
+- Phase 3 kickoff: migrations 0018 (opportunity_matches) + 0019 (workspace_capabilities). See proposals/active/phase-3-matching/plan.md §6 sequencing.
+- e-GP `procNature`/`procMethod` numeric codes recon (only `1`=Goods confirmed)
+- BPPA works/services/physical-service categories (post-MVP)
+- Data-residency counsel question (drafted, awaiting filing)
+- T&C automated-access clause at eprocure.gov.bd
