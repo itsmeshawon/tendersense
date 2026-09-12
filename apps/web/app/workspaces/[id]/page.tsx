@@ -8,8 +8,14 @@ import {
   listWorkspaceMembers,
 } from "@/lib/workspaces/repository";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageHeader";
 import { listWorkspaceCapabilities } from "@/lib/matching/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listSavedSearches } from "@/lib/saved-searches/repository";
@@ -115,55 +121,32 @@ export default async function WorkspaceDetailPage({
   ).length;
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Workspace
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {workspace.name}
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        crumbs={[
+          { label: "Workspaces", href: "/workspaces" },
+          { label: workspace.name },
+        ]}
+        title={workspace.name}
+        description={
+          <>
             {workspace.workspace_type} · {workspace.plan} · created{" "}
             {formatDate(workspace.created_at)} ·{" "}
             <span className="font-mono">{workspace.slug}</span>
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+          </>
+        }
+        actions={
           <Link href={`/opportunities?workspace=${id}`}>
-            <Button variant="secondary" size="sm">
-              Opportunities
-            </Button>
+            <Button size="sm">Opportunities →</Button>
           </Link>
-          <Link href={`/workspaces/${id}/monitoring`}>
-            <Button variant="outline" size="sm">
-              Monitoring
-            </Button>
-          </Link>
-          <Link href={`/workspaces/${id}/capabilities`}>
-            <Button variant="outline" size="sm">
-              Capabilities
-            </Button>
-          </Link>
-          <Link href={`/workspaces/${id}/credentials`}>
-            <Button variant="outline" size="sm">
-              Credentials
-            </Button>
-          </Link>
-          <Link href="/workspaces">
-            <Button variant="outline" size="sm">
-              Back
-            </Button>
-          </Link>
-        </div>
-      </header>
+        }
+      />
 
       {/* Profile-at-a-glance — SoT §6 Workspace → Profile landing */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Capabilities
             </CardTitle>
           </CardHeader>
@@ -187,7 +170,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Monitoring
             </CardTitle>
           </CardHeader>
@@ -219,7 +202,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Saved searches
             </CardTitle>
           </CardHeader>
@@ -241,7 +224,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Credentials
             </CardTitle>
           </CardHeader>
@@ -273,7 +256,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Key experts
             </CardTitle>
           </CardHeader>
@@ -295,7 +278,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Workforce
             </CardTitle>
           </CardHeader>
@@ -321,7 +304,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Financials
             </CardTitle>
           </CardHeader>
@@ -352,7 +335,7 @@ export default async function WorkspaceDetailPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Members ({members.length})
           </CardTitle>
         </CardHeader>
@@ -381,7 +364,7 @@ export default async function WorkspaceDetailPage({
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-baseline justify-between gap-4">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Past projects ({projects.length})
             </CardTitle>
             <Link href={`/workspaces/${id}/onboarding`}>

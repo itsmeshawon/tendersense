@@ -39,7 +39,7 @@ export default async function ExpertsPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Add expert
           </CardTitle>
         </CardHeader>
@@ -50,7 +50,7 @@ export default async function ExpertsPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Roster ({rows.length})
           </CardTitle>
         </CardHeader>

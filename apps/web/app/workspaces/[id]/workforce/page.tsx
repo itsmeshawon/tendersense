@@ -49,7 +49,7 @@ export default async function WorkforcePage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Team composition
           </CardTitle>
         </CardHeader>

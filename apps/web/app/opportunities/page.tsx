@@ -5,7 +5,6 @@ import { listPublicOpportunities } from "@/lib/opportunities/service";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMatchesByIds } from "@/lib/matching/repository";
 import { GradeChip } from "@/components/GradeChip";
 import { EligibilityChip } from "@/components/EligibilityChip";
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/PageHeader";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -247,69 +247,16 @@ export default async function OpportunitiesPage({
   ].filter((v): v is string => Boolean(v));
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Opportunities
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Public procurement notices ingested from World Bank, Bangladesh
-            e-GP, and BPPA.
-            {activeWorkspace ? (
-              <>
-                {" "}Grades for <strong>{activeWorkspace.name}</strong>.
-              </>
-            ) : null}
-          </p>
-          {workspaces.length > 1 ? (
-            <form method="get" className="mt-2 flex items-center gap-2 text-xs">
-              <label>
-                Workspace:{" "}
-                <select
-                  name="workspace"
-                  defaultValue={defaultWorkspaceId ?? ""}
-                  className="rounded-md border px-2 py-1 text-xs"
-                  onChange={undefined}
-                >
-                  {workspaces.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {/* Preserve current filters when switching workspace. */}
-              {filters.q ? <input type="hidden" name="q" value={filters.q} /> : null}
-              {filters.country ? (
-                <input type="hidden" name="country" value={filters.country} />
-              ) : null}
-              {filters.source ? (
-                <input type="hidden" name="source" value={filters.source} />
-              ) : null}
-              {filters.status ? (
-                <input type="hidden" name="status" value={filters.status} />
-              ) : null}
-              {filters.deadlineWithinDays ? (
-                <input
-                  type="hidden"
-                  name="deadline"
-                  value={String(filters.deadlineWithinDays)}
-                />
-              ) : null}
-              {uiSort ? <input type="hidden" name="sort" value={uiSort} /> : null}
-              <button
-                type="submit"
-                className="rounded-md border px-2 py-1 hover:bg-accent"
-              >
-                Switch
-              </button>
-            </form>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <NotificationsBell />
-          {defaultWorkspaceId && savableQs ? (
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        title="Opportunities"
+        description={
+          activeWorkspace
+            ? `Public procurement notices graded for ${activeWorkspace.name}.`
+            : "Public procurement notices from World Bank, Bangladesh e-GP, and BPPA."
+        }
+        actions={
+          defaultWorkspaceId && savableQs ? (
             <Link
               href={`/workspaces/${defaultWorkspaceId}/saved-searches?from=?${savableQs}`}
             >
@@ -317,14 +264,9 @@ export default async function OpportunitiesPage({
                 Save this search
               </Button>
             </Link>
-          ) : null}
-          <Link href="/workspaces">
-            <Button variant="outline" size="sm">
-              Workspaces
-            </Button>
-          </Link>
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       <Card>
         <CardContent className="p-4">
@@ -529,48 +471,39 @@ export default async function OpportunitiesPage({
                         </Badge>
                       );
                     })()}
-                    <Badge variant="secondary">
-                      {SOURCE_LABEL[o.source_key] ?? o.source_key}
-                    </Badge>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-4">
-                  <div>
-                    <div className="font-semibold text-foreground">
-                      Country
-                    </div>
-                    <div>{o.country_name ?? o.country_code ?? "—"}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-foreground">Issuer</div>
-                    <div className="truncate">
-                      {o.ministry_name ??
-                        o.agency_name ??
-                        o.procuring_entity_name ??
-                        o.issuer_name ??
-                        "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-foreground">
-                      Published
-                    </div>
-                    <div>{formatDate(o.publication_at)}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-foreground">
-                      Deadline
-                    </div>
-                    <div>
-                      {formatDate(o.deadline_at)}
-                      {remaining !== null ? (
-                        <span className={`ml-1 ${deadlineToneClass(remaining)}`}>
-                          ({remaining >= 0 ? `${remaining}d` : `${-remaining}d past`})
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
+                {/* Metadata line — source label pulled out of a Badge so the
+                    verdict chips carry the visual weight, not source. */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span>{SOURCE_LABEL[o.source_key] ?? o.source_key}</span>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span>{o.country_name ?? o.country_code ?? "—"}</span>
+                  {o.ministry_name || o.agency_name || o.procuring_entity_name || o.issuer_name ? (
+                    <>
+                      <span className="text-muted-foreground/50">·</span>
+                      <span className="truncate">
+                        {o.ministry_name ??
+                          o.agency_name ??
+                          o.procuring_entity_name ??
+                          o.issuer_name}
+                      </span>
+                    </>
+                  ) : null}
+                  {o.deadline_at ? (
+                    <>
+                      <span className="text-muted-foreground/50">·</span>
+                      <span className={deadlineToneClass(remaining)}>
+                        Closes {formatDate(o.deadline_at)}
+                        {remaining !== null
+                          ? remaining >= 0
+                            ? ` (${remaining}d)`
+                            : ` (${-remaining}d past)`
+                          : ""}
+                      </span>
+                    </>
+                  ) : null}
                 </div>
 
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

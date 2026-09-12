@@ -12,8 +12,9 @@ import {
   listRequirements,
 } from "@/lib/assessment/repository";
 import { getUsage, type WorkspacePlan } from "@/lib/assessment/quota";
-import { NotificationsBell } from "@/components/NotificationsBell";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
+import { GradeChip } from "@/components/GradeChip";
+import { EligibilityChip } from "@/components/EligibilityChip";
 import { OpportunityDetailTabs } from "./detail-tabs";
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -86,38 +87,35 @@ export default async function OpportunityDetailPage({
     : "/opportunities";
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            {SOURCE_LABEL[opp.source_key] ?? opp.source_key}
-            {opp.reference_no ? (
-              <>
-                {" · Ref "}
-                <span className="font-mono text-foreground">
-                  {opp.reference_no}
-                </span>
-              </>
-            ) : null}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold leading-snug tracking-tight">
-            {opp.title}
-          </h1>
-          {activeWorkspace ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Grade for <strong>{activeWorkspace.name}</strong>
-            </p>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <NotificationsBell />
-          <Link href={backHref}>
-            <Button variant="outline" size="sm">
-              ← All opportunities
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        crumbs={[
+          { label: "Opportunities", href: backHref },
+          { label: SOURCE_LABEL[opp.source_key] ?? opp.source_key },
+        ]}
+        title={opp.title}
+        description={
+          activeWorkspace ? (
+            <>
+              Graded for <strong>{activeWorkspace.name}</strong>
+              {opp.reference_no ? (
+                <>
+                  {" · Ref "}
+                  <span className="font-mono">{opp.reference_no}</span>
+                </>
+              ) : null}
+            </>
+          ) : undefined
+        }
+        actions={
+          match ? (
+            <div className="flex items-center gap-2">
+              <GradeChip match={match} />
+              <EligibilityChip value={match.eligibility} />
+            </div>
+          ) : undefined
+        }
+      />
 
       <OpportunityDetailTabs
         opportunity={opp}
