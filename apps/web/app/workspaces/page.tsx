@@ -48,22 +48,36 @@ export default async function WorkspacesPage() {
             key={w.id}
             className="flex items-center justify-between gap-4 rounded-md border p-4"
           >
-            <div className="min-w-0 flex-1">
+            <Link
+              href={`/workspaces/${w.id}`}
+              className="min-w-0 flex-1 hover:underline"
+            >
               <p className="truncate font-medium">{w.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {w.workspace_type} · {w.plan} · created{" "}
                 {new Date(w.created_at).toLocaleDateString()}
               </p>
-            </div>
-            <Link
-              href={`/workspaces/${w.id}/onboarding`}
-              className="shrink-0 rounded-md border px-2 py-1 text-xs hover:bg-accent"
-            >
-              Import from e-GP
             </Link>
-            <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
-              {w.slug}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href={`/workspaces/${w.id}/monitoring`}
+                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+              >
+                Monitoring
+              </Link>
+              <Link
+                href={`/workspaces/${w.id}/onboarding`}
+                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+              >
+                Import from e-GP
+              </Link>
+              <Link
+                href={`/workspaces/${w.id}`}
+                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+              >
+                Open
+              </Link>
+            </div>
           </li>
         ))}
       </ul>
