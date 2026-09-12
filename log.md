@@ -183,6 +183,49 @@
 - Phase 1: **~15% of the phase** (schema done; 6 more code PRs to go)
 - MVP overall (§113 scope-reduced): **~17–19%**
 
+## Session 7 — 2026-09-12
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`
+**Phase:** Phase 1 — Source ingestion (step 3: adapter contract + normalizer + pii + http)
+**First collaborative-project session** — `Project_Status.md` now carries a `collaborators` field so the new rules in `.claude/rules/mew-*` fire on every future TenderSense session.
+
+### What shipped
+
+- **Issue #7 opened** as the shared workqueue item for this PR (per new "Issues first" rule).
+- **PR #8 open, awaiting Mohabbat's review** — no self-merge per collaborative rules.
+  - `lib/ingest/types.ts` — `ProcurementSourceAdapter`, `NormalizedOpportunity`, page/cursor/health/record/detail (SoT §14, §67)
+  - `lib/ingest/normalizer.ts` — `computeContentHash` over material fields (SoT §26); `withComputedHash`
+  - `lib/ingest/pii.ts` — `looksLikePII` + `redactOfficialContact` per ADR 0006 §8
+  - `lib/ingest/http.ts` — injectable-fetch client with UA, timeout, exp backoff, retry, min-interval throttle
+  - 31 new tests; 59 total unit + 10 integration all green
+- CI + Vercel preview both green on PR #8
+- Session started with correct collaborative flow: `git pull`, `gh issue list`, then Issue-first before any code
+
+### Attempted but blocked
+
+- **GitHub Ruleset for `main`** — API returns 403 on Free tier. Both classic branch protection and modern Rulesets are Pro-only for private repos. Options recorded: pay $4/mo Pro, or continue convention-only. User decision pending.
+
+### Not done (blocking Phase 1 exit)
+
+- Waiting for @mewking2099 review on PR #8; merge after approval
+- WB adapter + backfill (next PR)
+- Runner + revision detection
+- e-GP notices adapter
+- Cron workflows
+- eExperience lookup + profile-onboarding UI
+- Bonus `/opportunities` list (optional)
+- Remaining ADRs 0007–0010 + tag `v0.2.0-phase1`
+
+### Position vs Source of Truth
+
+- Phase 1: **~25%** (schema + adapter plumbing in review; 5 more code PRs)
+- MVP overall (§113 scope-reduced): **~19–21%**
+
+### Open threads
+
+- Branch protection: **decided 2026-09-12 — convention-only for now.** GitHub Pro deferred; "no self-merge" enforced by rule in `.claude/rules/mew-code/code-rules.md` and by convention among collaborators. Revisit if the team grows past two.
+- ADR 0006 §8 PII rule sign-off (now encoded in code + tests)
+- eExperience URL + selector reconnaissance (manual, not blocking until PR #8 in plan §5)
 ## Session 8 — 2026-09-12
 
 **Tier:** MewKing · **Plan:** `proposals/active/phase-1-source-ingestion/plan.md`

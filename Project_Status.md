@@ -1,9 +1,12 @@
 ---
-project: tender-sense
+project: tendersense
 started: 2026-09-11
 status: active
 stack: next + typescript + supabase + vercel + github
 tier: mewking
+collaborators:
+  - "shawon (itsmeshawon on GitHub, mahedisalim@gmail.com) — founder"
+  - "mohabbat (mewking2099 on GitHub, mohabbat2099@gmail.com) — engineer"
 plan_approved: true
 plan_approved_at: 2026-09-11
 gate_block_count: 0
@@ -22,7 +25,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 12 needs one of: (a) PR #8 merged; (b) eExperience 10-min dev-tools recon completed (only the browser-Network-tab portion remains after WebFetch pre-fill in session 11); (c) counsel question filed. Solo Claude-doable tasks fully exhausted."
+next_action: "Session 13 (Mohabbat joining): everything merged. Start Phase 1 step 4 — World Bank adapter + backfill + npm run sync:worldbank. Open a GitHub Issue first."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
