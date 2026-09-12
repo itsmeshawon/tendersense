@@ -90,5 +90,18 @@ export async function listRecentRevisions(
     .order("detected_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data as RecentRevisionWithOpp[] | null) ?? [];
+  // supabase-js types nested selects as arrays (fk relationships → 1..N
+  // at the type level). For opportunity_id → opportunities the row is
+  // effectively 1..1; normalize the array to the first element or null.
+  const rows = (data as unknown as Array<
+    Omit<RecentRevisionWithOpp, "opportunity"> & {
+      opportunity: RecentRevisionWithOpp["opportunity"][] | null;
+    }
+  > | null) ?? [];
+  return rows.map((r) => ({
+    ...r,
+    opportunity: Array.isArray(r.opportunity)
+      ? (r.opportunity[0] ?? null)
+      : r.opportunity,
+  }));
 }
