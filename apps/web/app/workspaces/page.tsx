@@ -62,6 +62,12 @@ export default async function WorkspacesPage() {
             </Link>
             <div className="flex shrink-0 items-center gap-2">
               <Link
+                href={`/opportunities?workspace=${w.id}`}
+                className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
+              >
+                Opportunities
+              </Link>
+              <Link
                 href={`/workspaces/${w.id}/monitoring`}
                 className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
               >

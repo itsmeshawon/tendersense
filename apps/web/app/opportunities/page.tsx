@@ -149,11 +149,21 @@ export default async function OpportunitiesPage({
   const sp = await searchParams;
   const filters = parseFilters(sp);
   const uiSort = typeof sp.sort === "string" ? sp.sort : undefined;
+  const workspaceParam =
+    typeof sp.workspace === "string" ? sp.workspace : undefined;
   const [opportunities, workspaces] = await Promise.all([
     listPublicOpportunities(filters),
     listMyWorkspaces(),
   ]);
-  const defaultWorkspaceId = workspaces[0]?.id;
+  // Prefer ?workspace=<id> when it's one the user is a member of;
+  // otherwise fall back to the first workspace so single-workspace
+  // users still see grades without having to add the param.
+  const requestedWs =
+    workspaceParam && workspaces.some((w) => w.id === workspaceParam)
+      ? workspaceParam
+      : undefined;
+  const defaultWorkspaceId = requestedWs ?? workspaces[0]?.id;
+  const activeWorkspace = workspaces.find((w) => w.id === defaultWorkspaceId);
 
   const supabase = await createServerSupabaseClient();
   const [revisionSummary, matches] = await Promise.all([
@@ -206,9 +216,58 @@ export default async function OpportunitiesPage({
             Opportunities
           </h1>
           <p className="text-sm text-muted-foreground">
-            Public procurement notices ingested from World Bank and Bangladesh
-            e-GP.
+            Public procurement notices ingested from World Bank, Bangladesh
+            e-GP, and BPPA.
+            {activeWorkspace ? (
+              <>
+                {" "}Grades for <strong>{activeWorkspace.name}</strong>.
+              </>
+            ) : null}
           </p>
+          {workspaces.length > 1 ? (
+            <form method="get" className="mt-2 flex items-center gap-2 text-xs">
+              <label>
+                Workspace:{" "}
+                <select
+                  name="workspace"
+                  defaultValue={defaultWorkspaceId ?? ""}
+                  className="rounded-md border px-2 py-1 text-xs"
+                  onChange={undefined}
+                >
+                  {workspaces.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {/* Preserve current filters when switching workspace. */}
+              {filters.q ? <input type="hidden" name="q" value={filters.q} /> : null}
+              {filters.country ? (
+                <input type="hidden" name="country" value={filters.country} />
+              ) : null}
+              {filters.source ? (
+                <input type="hidden" name="source" value={filters.source} />
+              ) : null}
+              {filters.status ? (
+                <input type="hidden" name="status" value={filters.status} />
+              ) : null}
+              {filters.deadlineWithinDays ? (
+                <input
+                  type="hidden"
+                  name="deadline"
+                  value={String(filters.deadlineWithinDays)}
+                />
+              ) : null}
+              {uiSort ? <input type="hidden" name="sort" value={uiSort} /> : null}
+              <button
+                type="submit"
+                className="rounded-md border px-2 py-1 hover:bg-accent"
+              >
+                Switch
+              </button>
+            </form>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <NotificationsBell />
