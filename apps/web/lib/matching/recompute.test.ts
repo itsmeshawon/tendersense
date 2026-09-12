@@ -21,7 +21,7 @@ const richProfile: WorkspaceProfile = {
   countries: ["BD"],
   keywords: ["road"],
   excludedKeywords: [],
-  projectTitles: [],
+  projectTitles: [], credentialKeys: [],
 };
 
 const opp: ScorableOpportunity = {

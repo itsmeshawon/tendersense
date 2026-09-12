@@ -8,6 +8,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMatchesByIds } from "@/lib/matching/repository";
 import { GradeChip } from "@/components/GradeChip";
+import { EligibilityChip } from "@/components/EligibilityChip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -95,23 +96,33 @@ const STATUSES = [
 
 const SORTS = [
   { value: "grade_desc", label: "Best fit (requires profile)" },
+  { value: "eligible_first", label: "Eligible first (requires assessments)" },
   { value: "publication_desc", label: "Newest first" },
   { value: "deadline_asc", label: "Deadline soonest" },
   { value: "value_desc", label: "Highest value" },
   { value: "relevance", label: "Best keyword match (requires search)" },
 ] as const;
 
-type UiSort = OpportunitySort | "grade_desc";
+type UiSort = OpportunitySort | "grade_desc" | "eligible_first";
 
 function isSort(v: string | undefined): v is UiSort {
   return (
     v === "grade_desc" ||
+    v === "eligible_first" ||
     v === "publication_desc" ||
     v === "deadline_asc" ||
     v === "value_desc" ||
     v === "relevance"
   );
 }
+
+const ELIGIBILITY_RANK: Record<string, number> = {
+  pass: 0,
+  partial: 1,
+  needs_verification: 2,
+  not_evaluated: 3,
+  fail: 4,
+};
 
 function parseFilters(
   sp: Record<string, string | string[] | undefined>,
@@ -130,11 +141,13 @@ function parseFilters(
   const q = typeof sp.q === "string" && sp.q.trim().length > 0 ? sp.q : undefined;
   const sortRaw = typeof sp.sort === "string" ? sp.sort : undefined;
   const uiSort = isSort(sortRaw) ? sortRaw : undefined;
-  // grade_desc is handled after the DB query (in-memory reorder on the
-  // matches table), so drop it from the repo params — DB gets a stable
-  // fallback of publication_desc while grade_desc reorders after.
+  // grade_desc and eligible_first are handled after the DB query
+  // (in-memory reorder against the matches table). DB gets a stable
+  // fallback of publication_desc while the client-side pass reorders.
   const dbSort: OpportunitySort | undefined =
-    uiSort === "grade_desc" ? undefined : uiSort;
+    uiSort === "grade_desc" || uiSort === "eligible_first"
+      ? undefined
+      : uiSort;
   return {
     country: country || undefined,
     source: source || undefined,
@@ -182,16 +195,33 @@ export default async function OpportunitiesPage({
   ]);
   const matchByOpp = new Map(matches.map((m) => [m.opportunity_id, m]));
 
-  // Client-side reorder when sort=grade_desc + user has a workspace.
-  // Not-yet-ranked opportunities go to the bottom; higher scores first.
-  const wantsGradeSort = uiSort === "grade_desc" && defaultWorkspaceId;
-  const orderedOpportunities = wantsGradeSort
-    ? [...opportunities].sort((a, b) => {
+  // Client-side reorder when sort=grade_desc | eligible_first + user
+  // has a workspace. Not-yet-ranked opportunities go to the bottom;
+  // eligible_first ranks pass → partial → needs_verify → not_evaluated → fail.
+  const orderedOpportunities = (() => {
+    if (!defaultWorkspaceId) return opportunities;
+    if (uiSort === "grade_desc") {
+      return [...opportunities].sort((a, b) => {
         const ga = matchByOpp.get(a.id)?.score ?? -1;
         const gb = matchByOpp.get(b.id)?.score ?? -1;
         return gb - ga;
-      })
-    : opportunities;
+      });
+    }
+    if (uiSort === "eligible_first") {
+      return [...opportunities].sort((a, b) => {
+        const ea = matchByOpp.get(a.id)?.eligibility ?? "not_evaluated";
+        const eb = matchByOpp.get(b.id)?.eligibility ?? "not_evaluated";
+        const ra = ELIGIBILITY_RANK[ea] ?? 99;
+        const rb = ELIGIBILITY_RANK[eb] ?? 99;
+        if (ra !== rb) return ra - rb;
+        return (
+          (matchByOpp.get(b.id)?.score ?? -1) -
+          (matchByOpp.get(a.id)?.score ?? -1)
+        );
+      });
+    }
+    return opportunities;
+  })();
 
   // Build the query string of current filters, allow-listed for saving.
   const savableUsp = new URLSearchParams();
@@ -387,7 +417,8 @@ export default async function OpportunitiesPage({
                     value={s.value}
                     disabled={
                       (s.value === "relevance" && !filters.q) ||
-                      (s.value === "grade_desc" && !defaultWorkspaceId)
+                      (s.value === "grade_desc" && !defaultWorkspaceId) ||
+                      (s.value === "eligible_first" && !defaultWorkspaceId)
                     }
                   >
                     {s.label}
@@ -471,7 +502,12 @@ export default async function OpportunitiesPage({
                   </h2>
                   <div className="flex shrink-0 items-center gap-2">
                     {defaultWorkspaceId ? (
-                      <GradeChip match={matchByOpp.get(o.id) ?? null} />
+                      <>
+                        <GradeChip match={matchByOpp.get(o.id) ?? null} />
+                        <EligibilityChip
+                          value={matchByOpp.get(o.id)?.eligibility}
+                        />
+                      </>
                     ) : null}
                     {(() => {
                       const summary = revisionSummary.get(o.id);

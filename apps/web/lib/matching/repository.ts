@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Grade, MatchReason } from "./types";
 
-/** Mirror of `public.opportunity_matches` (migration 0018). */
+export type Eligibility =
+  | "pass"
+  | "partial"
+  | "needs_verification"
+  | "fail"
+  | "not_evaluated";
+
+/** Mirror of `public.opportunity_matches` (migrations 0018, 0028). */
 export type OpportunityMatchRow = {
   id: string;
   workspace_id: string;
@@ -12,6 +19,8 @@ export type OpportunityMatchRow = {
   concerns: MatchReason[];
   scoring_version: number;
   computed_at: string;
+  eligibility: Eligibility;
+  eligibility_computed_at: string | null;
 };
 
 /** Mirror of `public.workspace_capabilities` (migration 0019). */

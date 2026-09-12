@@ -73,6 +73,37 @@ export async function recomputeForWorkspace(
  * Best-effort — errors on a single workspace are logged but do not
  * block the runner.
  */
+/**
+ * Sweep every workspace and rescore its match rows against the current
+ * `SCORING_VERSION`. Used once per weight-model bump (see ADR 0025 for
+ * the v1 → v2 rebalance) — not a hot path.
+ *
+ * Best-effort: an error on one workspace is logged and the loop
+ * continues so a single bad profile doesn't strand the fleet.
+ */
+export async function recomputeAllWorkspaces(
+  supabase: SupabaseClient,
+  opts: RecomputeForWorkspaceOptions = {},
+): Promise<{ workspaces: number; matched: number }> {
+  const { data, error } = await supabase.from("workspaces").select("id");
+  if (error) throw new Error(error.message);
+  const ids = ((data as Array<{ id: string }> | null) ?? []).map((r) => r.id);
+  let total = 0;
+  for (const id of ids) {
+    try {
+      const { matched } = await recomputeForWorkspace(supabase, id, opts);
+      total += matched;
+    } catch (err) {
+      console.warn(
+        "[recompute] failed for workspace",
+        id,
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+  return { workspaces: ids.length, matched: total };
+}
+
 export async function recomputeForOpportunity(
   supabase: SupabaseClient,
   opp: ScorableOpportunity,
