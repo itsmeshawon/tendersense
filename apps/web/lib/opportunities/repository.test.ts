@@ -41,20 +41,48 @@ const row: Opportunity = {
   updated_at: "2026-09-01T00:00:00Z",
 };
 
-function fakeClient(builder: { limit?: unknown }) {
-  const limitMock = vi.fn().mockResolvedValue(builder.limit);
+/**
+ * Fake Supabase client that supports the whole filter chain:
+ * from → select → eq/not/gte/lte (chained) → order → limit.
+ * Each spy records its arguments so tests can assert on them.
+ */
+function fakeClient(finalValue: unknown) {
+  const limitMock = vi.fn().mockResolvedValue(finalValue);
   const orderMock = vi.fn(() => ({ limit: limitMock }));
-  const selectMock = vi.fn(() => ({ order: orderMock }));
+
+  // Chain returned by every filter method — allows further chaining.
+  const chain: Record<string, ReturnType<typeof vi.fn>> = {
+    eq: vi.fn(),
+    not: vi.fn(),
+    gte: vi.fn(),
+    lte: vi.fn(),
+    order: orderMock,
+  };
+  // eq/not/gte/lte all return the same chain so calls compose.
+  for (const key of ["eq", "not", "gte", "lte"]) {
+    chain[key].mockReturnValue(chain);
+  }
+
+  const selectMock = vi.fn(() => chain);
   const fromMock = vi.fn(() => ({ select: selectMock }));
   return {
     from: fromMock,
-    _spies: { fromMock, selectMock, orderMock, limitMock },
+    _spies: {
+      fromMock,
+      selectMock,
+      eq: chain.eq,
+      not: chain.not,
+      gte: chain.gte,
+      lte: chain.lte,
+      orderMock,
+      limitMock,
+    },
   };
 }
 
-describe("listOpportunities", () => {
-  it("queries public.opportunities ordered by publication_at desc with default limit 50", async () => {
-    const client = fakeClient({ limit: { data: [row], error: null } });
+describe("listOpportunities — defaults", () => {
+  it("queries opportunities ordered by publication_at desc with default limit 50", async () => {
+    const client = fakeClient({ data: [row], error: null });
     const rows = await listOpportunities(
       client as unknown as Parameters<typeof listOpportunities>[0],
     );
@@ -65,10 +93,13 @@ describe("listOpportunities", () => {
       nullsFirst: false,
     });
     expect(client._spies.limitMock).toHaveBeenCalledWith(50);
+    // No filter methods called
+    expect(client._spies.eq).not.toHaveBeenCalled();
+    expect(client._spies.not).not.toHaveBeenCalled();
   });
 
   it("respects a custom limit", async () => {
-    const client = fakeClient({ limit: { data: [row], error: null } });
+    const client = fakeClient({ data: [row], error: null });
     await listOpportunities(
       client as unknown as Parameters<typeof listOpportunities>[0],
       { limit: 10 },
@@ -77,7 +108,7 @@ describe("listOpportunities", () => {
   });
 
   it("clamps limit at 200", async () => {
-    const client = fakeClient({ limit: { data: [], error: null } });
+    const client = fakeClient({ data: [], error: null });
     await listOpportunities(
       client as unknown as Parameters<typeof listOpportunities>[0],
       { limit: 500 },
@@ -86,7 +117,7 @@ describe("listOpportunities", () => {
   });
 
   it("returns [] when supabase returns null data", async () => {
-    const client = fakeClient({ limit: { data: null, error: null } });
+    const client = fakeClient({ data: null, error: null });
     await expect(
       listOpportunities(
         client as unknown as Parameters<typeof listOpportunities>[0],
@@ -96,12 +127,86 @@ describe("listOpportunities", () => {
 
   it("throws when supabase returns an error", async () => {
     const client = fakeClient({
-      limit: { data: null, error: { message: "boom" } },
+      data: null,
+      error: { message: "boom" },
     });
     await expect(
       listOpportunities(
         client as unknown as Parameters<typeof listOpportunities>[0],
       ),
     ).rejects.toThrow(/boom/);
+  });
+});
+
+describe("listOpportunities — filters", () => {
+  it("applies country filter with an eq on country_code", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { country: "BD" },
+    );
+    expect(client._spies.eq).toHaveBeenCalledWith("country_code", "BD");
+  });
+
+  it("applies source filter with an eq on source_key", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { source: "world_bank" },
+    );
+    expect(client._spies.eq).toHaveBeenCalledWith("source_key", "world_bank");
+  });
+
+  it("applies status filter with an eq on status", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { status: "open" },
+    );
+    expect(client._spies.eq).toHaveBeenCalledWith("status", "open");
+  });
+
+  it("applies deadlineWithinDays with not-null + gte(now) + lte(now+N)", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      { deadlineWithinDays: 30 },
+    );
+    expect(client._spies.not).toHaveBeenCalledWith(
+      "deadline_at",
+      "is",
+      null,
+    );
+    // gte + lte were called once each on deadline_at
+    expect(client._spies.gte).toHaveBeenCalledTimes(1);
+    expect(client._spies.gte.mock.calls[0][0]).toBe("deadline_at");
+    expect(client._spies.lte).toHaveBeenCalledTimes(1);
+    expect(client._spies.lte.mock.calls[0][0]).toBe("deadline_at");
+    // Sanity: the upper bound is roughly 30 days after the lower bound
+    const lower = new Date(String(client._spies.gte.mock.calls[0][1])).getTime();
+    const upper = new Date(String(client._spies.lte.mock.calls[0][1])).getTime();
+    const diffDays = Math.round((upper - lower) / (1000 * 60 * 60 * 24));
+    expect(diffDays).toBe(30);
+  });
+
+  it("combines source + country + status + deadline in one query", async () => {
+    const client = fakeClient({ data: [], error: null });
+    await listOpportunities(
+      client as unknown as Parameters<typeof listOpportunities>[0],
+      {
+        source: "bd_egp",
+        country: "BD",
+        status: "open",
+        deadlineWithinDays: 7,
+      },
+    );
+    // Three eq() calls: country, source, status (in the order the
+    // function invokes them — country, source, status)
+    expect(client._spies.eq).toHaveBeenCalledTimes(3);
+    expect(client._spies.not).toHaveBeenCalledTimes(1);
+    expect(client._spies.gte).toHaveBeenCalledTimes(1);
+    expect(client._spies.lte).toHaveBeenCalledTimes(1);
+    expect(client._spies.orderMock).toHaveBeenCalledTimes(1);
+    expect(client._spies.limitMock).toHaveBeenCalledTimes(1);
   });
 });
