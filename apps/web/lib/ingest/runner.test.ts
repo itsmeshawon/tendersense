@@ -24,6 +24,11 @@ const fanoutMocks = vi.hoisted(() => ({
 }));
 vi.mock("../notifications/fanout", () => fanoutMocks);
 
+const recomputeMocks = vi.hoisted(() => ({
+  recomputeForOpportunity: vi.fn(),
+}));
+vi.mock("../matching/recompute", () => recomputeMocks);
+
 import { runSync, type RunResult } from "./runner";
 
 // ---- helpers ----
@@ -90,6 +95,10 @@ describe("runSync", () => {
     fanoutMocks.fanoutRevisionNotifications.mockReset();
     fanoutMocks.fanoutRevisionNotifications.mockResolvedValue({
       workspacesNotified: 0,
+    });
+    recomputeMocks.recomputeForOpportunity.mockReset();
+    recomputeMocks.recomputeForOpportunity.mockResolvedValue({
+      workspacesUpdated: 0,
     });
   });
 

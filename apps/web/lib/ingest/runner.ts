@@ -10,6 +10,7 @@ import {
   writeRevision,
 } from "./persistence";
 import { fanoutRevisionNotifications } from "../notifications/fanout";
+import { recomputeForOpportunity } from "../matching/recompute";
 import type {
   NormalizedOpportunity,
   ProcurementSourceAdapter,
@@ -198,7 +199,27 @@ async function persistRecord(
 
   const opportunityId = await upsertOpportunity(supabase, normalized);
 
+  // Match-recompute is best-effort — logged failures do not fail the
+  // record. Runs for both created + updated (skipped in the unchanged
+  // branch to avoid pointless re-scoring on every cron tick).
+  const scorableOpp = {
+    id: opportunityId,
+    source_key: normalized.sourceKey,
+    country_code: normalized.countryCode ?? null,
+    sector: normalized.sector ?? null,
+    title: normalized.title,
+    description: normalized.description ?? null,
+  };
+
   if (!existing) {
+    try {
+      await recomputeForOpportunity(supabase, scorableOpp);
+    } catch (err) {
+      console.warn(
+        "[runner] recompute threw:",
+        err instanceof Error ? err.message : err,
+      );
+    }
     callbacks.onCreated();
     return;
   }
@@ -250,6 +271,15 @@ async function persistRecord(
   } catch (err) {
     console.warn(
       "[runner] fanout threw unexpectedly:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  try {
+    await recomputeForOpportunity(supabase, scorableOpp);
+  } catch (err) {
+    console.warn(
+      "[runner] recompute threw on update:",
       err instanceof Error ? err.message : err,
     );
   }
