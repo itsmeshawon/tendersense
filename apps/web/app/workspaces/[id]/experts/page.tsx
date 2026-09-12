@@ -1,0 +1,73 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getServerUser } from "@/lib/auth/session";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { listExperts } from "@/lib/experts/repository";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AddExpertForm } from "./add-form";
+import { ExpertRowUI } from "./row";
+
+export default async function ExpertsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const user = await getServerUser();
+  if (!user) redirect("/login");
+
+  const { id: workspaceId } = await params;
+  const supabase = await createServerSupabaseClient();
+  const rows = await listExperts(supabase, workspaceId);
+
+  return (
+    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Key experts</h1>
+          <p className="text-sm text-muted-foreground">
+            Named personnel you can propose for consultancy or delivery
+            engagements. Attach CVs as evidence documents (Phase 4 next).
+          </p>
+        </div>
+        <Link href={`/workspaces/${workspaceId}`}>
+          <Button variant="outline" size="sm">
+            ← Workspace
+          </Button>
+        </Link>
+      </header>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Add expert
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <AddExpertForm workspaceId={workspaceId} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Roster ({rows.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No experts recorded yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {rows.map((r) => (
+                <ExpertRowUI key={r.id} row={r} workspaceId={workspaceId} />
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
