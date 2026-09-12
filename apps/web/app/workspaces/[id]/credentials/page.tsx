@@ -80,7 +80,13 @@ export default async function CredentialsPage({
           ) : (
             <ul className="flex flex-col gap-2">
               {valid.map((r) => (
-                <CredentialRow key={r.id} row={r} workspaceId={workspaceId} formatDate={fmt} />
+                <CredentialRow
+                  key={r.id}
+                  row={r}
+                  workspaceId={workspaceId}
+                  issuedLabel={fmt(r.issue_date)}
+                  expiresLabel={fmt(r.expiry_date)}
+                />
               ))}
             </ul>
           )}
@@ -97,7 +103,13 @@ export default async function CredentialsPage({
           <CardContent className="pt-0">
             <ul className="flex flex-col gap-2">
               {other.map((r) => (
-                <CredentialRow key={r.id} row={r} workspaceId={workspaceId} formatDate={fmt} />
+                <CredentialRow
+                  key={r.id}
+                  row={r}
+                  workspaceId={workspaceId}
+                  issuedLabel={fmt(r.issue_date)}
+                  expiresLabel={fmt(r.expiry_date)}
+                />
               ))}
             </ul>
           </CardContent>

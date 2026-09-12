@@ -11,6 +11,10 @@ import { FinancialRow } from "./row";
 
 const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
+function fmtMoney(v: number | null): string {
+  return v == null ? "—" : fmt.format(v);
+}
+
 export default async function FinancialsPage({
   params,
 }: {
@@ -86,7 +90,12 @@ export default async function FinancialsPage({
                   key={r.id}
                   row={r}
                   workspaceId={workspaceId}
-                  format={fmt.format}
+                  formatted={{
+                    annual_turnover: fmtMoney(r.annual_turnover),
+                    net_worth: fmtMoney(r.net_worth),
+                    liquid_assets: fmtMoney(r.liquid_assets),
+                    largest_contract_value: fmtMoney(r.largest_contract_value),
+                  }}
                 />
               ))}
             </ul>
