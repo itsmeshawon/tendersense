@@ -52,12 +52,14 @@ function deadlineToneClass(days: number | null): string {
 const SOURCE_LABEL: Record<string, string> = {
   world_bank: "World Bank",
   bd_egp: "Bangladesh e-GP",
+  bd_bppa: "Bangladesh BPPA",
 };
 
 const SOURCES = [
   { value: "", label: "All sources" },
   { value: "world_bank", label: "World Bank" },
   { value: "bd_egp", label: "Bangladesh e-GP" },
+  { value: "bd_bppa", label: "Bangladesh BPPA" },
 ] as const;
 
 const COUNTRIES = [

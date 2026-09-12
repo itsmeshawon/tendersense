@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "sync:worldbank": "tsx scripts/sync-worldbank.ts",
     "sync:egp": "tsx scripts/sync-egp.ts",
+    "sync:bppa": "tsx scripts/sync-bppa.ts",
     "backfill:worldbank": "tsx scripts/backfill-worldbank.ts"
   },
   "dependencies": {
