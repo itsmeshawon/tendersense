@@ -6,6 +6,8 @@ import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { listMatchesByIds } from "@/lib/matching/repository";
+import { GradeChip } from "@/components/GradeChip";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -84,14 +86,18 @@ const STATUSES = [
 ] as const;
 
 const SORTS = [
+  { value: "grade_desc", label: "Best fit (requires profile)" },
   { value: "publication_desc", label: "Newest first" },
   { value: "deadline_asc", label: "Deadline soonest" },
   { value: "value_desc", label: "Highest value" },
-  { value: "relevance", label: "Best match (requires search)" },
+  { value: "relevance", label: "Best keyword match (requires search)" },
 ] as const;
 
-function isSort(v: string | undefined): v is OpportunitySort {
+type UiSort = OpportunitySort | "grade_desc";
+
+function isSort(v: string | undefined): v is UiSort {
   return (
+    v === "grade_desc" ||
     v === "publication_desc" ||
     v === "deadline_asc" ||
     v === "value_desc" ||
@@ -115,14 +121,19 @@ function parseFilters(
       : undefined;
   const q = typeof sp.q === "string" && sp.q.trim().length > 0 ? sp.q : undefined;
   const sortRaw = typeof sp.sort === "string" ? sp.sort : undefined;
-  const sort = isSort(sortRaw) ? sortRaw : undefined;
+  const uiSort = isSort(sortRaw) ? sortRaw : undefined;
+  // grade_desc is handled after the DB query (in-memory reorder on the
+  // matches table), so drop it from the repo params — DB gets a stable
+  // fallback of publication_desc while grade_desc reorders after.
+  const dbSort: OpportunitySort | undefined =
+    uiSort === "grade_desc" ? undefined : uiSort;
   return {
     country: country || undefined,
     source: source || undefined,
     status,
     deadlineWithinDays,
     q,
-    sort,
+    sort: dbSort,
     limit: 50,
   };
 }
@@ -137,6 +148,7 @@ export default async function OpportunitiesPage({
 
   const sp = await searchParams;
   const filters = parseFilters(sp);
+  const uiSort = typeof sp.sort === "string" ? sp.sort : undefined;
   const [opportunities, workspaces] = await Promise.all([
     listPublicOpportunities(filters),
     listMyWorkspaces(),
@@ -144,10 +156,24 @@ export default async function OpportunitiesPage({
   const defaultWorkspaceId = workspaces[0]?.id;
 
   const supabase = await createServerSupabaseClient();
-  const revisionSummary = await getRevisionSummaryForOpportunities(
-    supabase,
-    opportunities.map((o) => o.id),
-  );
+  const [revisionSummary, matches] = await Promise.all([
+    getRevisionSummaryForOpportunities(supabase, opportunities.map((o) => o.id)),
+    defaultWorkspaceId
+      ? listMatchesByIds(supabase, defaultWorkspaceId, opportunities.map((o) => o.id))
+      : Promise.resolve([]),
+  ]);
+  const matchByOpp = new Map(matches.map((m) => [m.opportunity_id, m]));
+
+  // Client-side reorder when sort=grade_desc + user has a workspace.
+  // Not-yet-ranked opportunities go to the bottom; higher scores first.
+  const wantsGradeSort = uiSort === "grade_desc" && defaultWorkspaceId;
+  const orderedOpportunities = wantsGradeSort
+    ? [...opportunities].sort((a, b) => {
+        const ga = matchByOpp.get(a.id)?.score ?? -1;
+        const gb = matchByOpp.get(b.id)?.score ?? -1;
+        return gb - ga;
+      })
+    : opportunities;
 
   // Build the query string of current filters, allow-listed for saving.
   const savableUsp = new URLSearchParams();
@@ -283,14 +309,17 @@ export default async function OpportunitiesPage({
           <span className="font-semibold text-foreground">Sort by</span>
           <select
             name="sort"
-            defaultValue={filters.sort ?? "publication_desc"}
+            defaultValue={uiSort ?? filters.sort ?? "publication_desc"}
             className="rounded-md border px-3 py-2 text-sm"
           >
             {SORTS.map((s) => (
               <option
                 key={s.value}
                 value={s.value}
-                disabled={s.value === "relevance" && !filters.q}
+                disabled={
+                  (s.value === "relevance" && !filters.q) ||
+                  (s.value === "grade_desc" && !defaultWorkspaceId)
+                }
               >
                 {s.label}
               </option>
@@ -346,7 +375,7 @@ export default async function OpportunitiesPage({
         </section>
       ) : (
         <ul className="flex flex-col gap-3">
-          {opportunities.map((o) => {
+          {orderedOpportunities.map((o) => {
             const remaining = daysUntil(o.deadline_at);
             return (
               <li
@@ -356,6 +385,9 @@ export default async function OpportunitiesPage({
                 <div className="flex items-baseline justify-between gap-4">
                   <h2 className="font-medium leading-snug">{o.title}</h2>
                   <div className="flex shrink-0 items-center gap-2">
+                    {defaultWorkspaceId ? (
+                      <GradeChip match={matchByOpp.get(o.id) ?? null} />
+                    ) : null}
                     {(() => {
                       const summary = revisionSummary.get(o.id);
                       if (!summary) return null;
