@@ -13,7 +13,7 @@ gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
 session_count: 19
-current_phase: "Phase 1 — Source ingestion (~95%, awaiting Mohabbat); Phase 2 v2 + Phase 3 v2 APPROVED 2026-09-12, execution unlocked after v0.2.0-phase1 tag"
+current_phase: "Phase 1 — Source ingestion (~99% — all 6 PRs merged; sync scripts + cron + tag remaining); Phase 2 v2 + Phase 3 v2 APPROVED 2026-09-12"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
@@ -31,7 +31,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 20: Phase 2 execution begins as soon as Mohabbat merges the 6-PR queue + runs docs/phase-1-finalization-checklist.md → v0.2.0-phase1. First Phase 2 PR = migrations 0012-0015 (monitoring_profiles + saved_searches + notifications). All 9 plan open questions resolved this session."
+next_action: "Session 20 — close Phase 1 then start Phase 2. Order: (1) draft feat/phase1-sync-scripts (tsx + sync-worldbank.ts + sync-egp.ts + backfill-worldbank.ts, ~90 lines) → PR → merge; (2) draft feat/phase1-cron-workflows (2 YAML files, ~50 lines) → user adds SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to GitHub Actions Secrets → PR → merge; (3) manual workflow dispatch → verify data lands in Supabase + /opportunities renders on Vercel prod; (4) tag v0.2.0-phase1; (5) open Phase 2 migrations PR (0012-0015: monitoring_profiles + saved_searches + notifications)."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"

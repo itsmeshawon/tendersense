@@ -561,3 +561,49 @@ User explicitly directed Claude to walk through the open questions solo, waiving
 - **2026-09-12 07:45** — auto-wrap: session ended [auto-wrap]
 
 - **2026-09-12 07:49** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:50** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:52** — auto-wrap: session ended [auto-wrap]
+
+## Session 19 (cont.) — 2026-09-12 · queue drained
+
+### Rule change
+
+- **ADR 0011** committed (`4e237e9`): scope-limited waiver of no-self-merge on tendersense while Mohabbat is fully occupied on another project. Branch → PR → CI still required. Reversion trigger: Mohabbat returns to active review capacity. Memory + CLAUDE.md updated to match.
+
+### Six PRs merged (all Phase 1)
+
+- **#19** — runner + persistence + revision detection (`60e0ac8`)
+- **#23** — e-GP notices adapter (`9cef243`)
+- **#25** — /opportunities filter bar (`4cff20a`)
+- **#15** — World Bank adapter (`a133e71`) — rebased over log.md/Project_Status.md conflicts
+- **#17** — eExperience UI wrap / Peak 1 (`d3582ad`) — rebased, 9 commits collapsed to 7 after wrap-commit no-ops
+- **#21** — /workspaces/[id] detail page (`7f70a14`) — rebased
+
+All squash-merged with `--delete-branch`. Force-pushes used `--force-with-lease`. All CI green pre-merge.
+
+### State on `main` at wrap
+
+- Every Phase 1 code deliverable landed: adapters (WB, e-GP notices, eExperience lookup), runner, persistence, `/opportunities` list + filters, `/workspaces/[id]` detail, onboarding UI
+- **Not yet on main:** sync scripts (Phase 1 checklist step 2), cron workflows (step 3), backfill (step 4), tag `v0.2.0-phase1` (step 6)
+- Vercel prod `/opportunities` still empty until cron runs
+
+### Phase 2 open threads confirmed
+
+- Recompute discipline still holds: monitoring profile match = server-side query on load (§Q2)
+- Notifications: 30d in bell, permanent in `/notifications` (§Q5)
+- Free-plan gate wording drafted (§Q6)
+
+### Position vs Source of Truth
+
+- Phase 1: **~99%** (code complete; just needs sync scripts + cron + tag)
+- MVP overall (§113 scope-reduced): **~50%**
+
+### Open threads carried into session 20
+
+- Phase 1 finalization: sync scripts + cron workflows + GitHub Actions Secrets + backfill + tag v0.2.0-phase1
+- Phase 2 first PR: migrations 0012–0015 (monitoring_profiles + saved_searches + notifications)
+- e-GP `procNature`/`procMethod` numeric codes — 5-min recon before cron floods with Goods-only results
+- Revision auto-numbering fix (runner.ts hardcodes `revisionNo: 1`)
+- BRAC IT name mismatch on e-GP (pilot demo blocker)
