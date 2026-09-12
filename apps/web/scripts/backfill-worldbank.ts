@@ -10,7 +10,7 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const adapter = createWorldBankAdapter({ fetchImpl: fetch, pageSize: 1000 });
+  const adapter = createWorldBankAdapter({ fetchImpl: fetch, pageSize: 100 });
   const result = await runSync(adapter, supabase, { maxPages: 50 });
 
   console.log("[backfill-worldbank]", result);
