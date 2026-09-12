@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { listPublicOpportunities } from "@/lib/opportunities/service";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
+import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -137,6 +139,12 @@ export default async function OpportunitiesPage({
     listMyWorkspaces(),
   ]);
   const defaultWorkspaceId = workspaces[0]?.id;
+
+  const supabase = await createServerSupabaseClient();
+  const revisionSummary = await getRevisionSummaryForOpportunities(
+    supabase,
+    opportunities.map((o) => o.id),
+  );
 
   // Build the query string of current filters, allow-listed for saving.
   const savableUsp = new URLSearchParams();
@@ -343,9 +351,34 @@ export default async function OpportunitiesPage({
               >
                 <div className="flex items-baseline justify-between gap-4">
                   <h2 className="font-medium leading-snug">{o.title}</h2>
-                  <span className="shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
-                    {SOURCE_LABEL[o.source_key] ?? o.source_key}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {(() => {
+                      const summary = revisionSummary.get(o.id);
+                      if (!summary) return null;
+                      const isDeadline = summary.hasDeadlineChange;
+                      const cls = isDeadline
+                        ? "rounded-full border border-red-600 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+                        : "rounded-full border px-2 py-0.5 text-xs text-muted-foreground";
+                      const label = isDeadline
+                        ? `Deadline changed · ${summary.count}`
+                        : `Amended · ${summary.count}`;
+                      return (
+                        <span
+                          className={cls}
+                          title={
+                            isDeadline
+                              ? "Deadline has been amended since first ingest"
+                              : "This tender has been amended since first ingest"
+                          }
+                        >
+                          {label}
+                        </span>
+                      );
+                    })()}
+                    <span className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                      {SOURCE_LABEL[o.source_key] ?? o.source_key}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-4">
