@@ -436,3 +436,53 @@ Mohabbat is clearing the 6-PR queue + running the finalization checklist to clos
 - Phase 3 plan awaiting approval (open questions in plan)
 - 6 PRs awaiting Mohabbat's review
 - Phase 1 finalization checklist awaiting Mohabbat's execution
+
+- **2026-09-12 06:56** — auto-wrap: modified log.md, Project_Status.md, plan.md +1 more [auto-wrap]
+
+- **2026-09-12 06:59** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:02** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:05** — auto-wrap: modified plan.md [auto-wrap]
+
+- **2026-09-12 07:06** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:08** — auto-wrap: modified plan.md [auto-wrap]
+
+- **2026-09-12 07:14** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:17** — auto-wrap: modified plan.md [auto-wrap]
+
+## Session 18 — 2026-09-12
+
+**Phase:** Phase 2 + Phase 3 plan revisions (v2)
+
+### What shipped
+
+- **Phase 2 plan v2** (`168f3e1`) — cut NOA + APP adapters (§1a rationale: neither serves §113 exit criterion; APP has unquantified PDF blocker; Phase 3 matters more). Kept BPPA. Locked 3 open-question decisions as pending ADRs 0012–0014 (`websearch_to_tsquery` for FTS; red-badge-for-deadline-only; NOA/APP deferral into future `awards` + `procurement_plans` tables). Sequencing 10 PRs → 8 PRs. Size 3–5 weeks → **~3 weeks**.
+- **Phase 3 plan v2** (`470a10f`) — trimmed scoring model 9 → 5 dimensions. Cut: credential signal (Phase 4 data), source preference (redundant with monitoring-profile filter), method preference (same), timeline suitability (kept as sort/chip in Phase 2, not scored). Reweighted remaining 5 to 100. Added cold-start capability auto-derive from imported eExperience projects (§2b) — solves fresh-workspace "Need more info" wall on day 1. Dropped on-demand recompute API (defer to ops/Phase 6). Replaced impossible "80% agreement" calibration gate with ~12 hand-labeled tenders + `scoring_version` telemetry for post-launch retune. Size 4–6 weeks → **~3 weeks + 1–2 week calibration tail**.
+
+### Deferrals recorded (so nothing silently drops)
+
+- Phase 3 §2a "Deferred / cut signals" table — 4 signals with weight + reason + recovery path
+- Phase 3 §11 "Explicitly deferred (with owner path)" — restated in blocker section
+- ADR 0016 (`0016-deferred-scoring-signals.md`, to be written at execution time) will lock the recovery paths in decisions/
+- Credential signal restore is a **Phase 4 dependency** — flagged so it doesn't get forgotten when Phase 4 lands the credentials table
+
+### Phase 1 status (unchanged from session 17)
+
+- 6 PRs still open awaiting Mohabbat's review (#15, #17, #19, #21, #23, #25)
+- Finalization steps 2–6 (sync scripts, cron YAML, backfill, verify, tag) blocked on those merges
+- No self-merge — Session 12's override was explicitly a one-time exception
+
+### Position vs Source of Truth
+
+- Phase 1: **~95%** (unchanged; blocked on Mohabbat)
+- MVP overall (§113 scope-reduced): **~45%** (planning ≠ shipping)
+
+### Open threads carried into session 19
+
+- Phase 2 plan v2 awaiting approval (open questions: Q2 recompute path, Q5 notification decay, Q6 free-plan wording)
+- Phase 3 plan v2 awaiting approval (open questions: Q1 taxonomy, Q2 excluded-keywords, Q3 no-profile chip, Q5 blocking-vs-eventual, Q6 shortlist grade, Q7 auto-derive precision)
+- 6 PRs awaiting Mohabbat's review
+- Phase 1 finalization checklist awaiting Mohabbat's execution
