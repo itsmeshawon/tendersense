@@ -16,6 +16,7 @@ import { listSavedSearches } from "@/lib/saved-searches/repository";
 import { listCredentials } from "@/lib/credentials/repository";
 import { listExperts } from "@/lib/experts/repository";
 import { getWorkforce } from "@/lib/workforce/repository";
+import { listFinancials } from "@/lib/financials/repository";
 
 // Inlined `projects` reader — the shared `lib/workspaces/projects-repository`
 // lands via PR #17. Once that merges, this reader collapses to a single
@@ -88,6 +89,7 @@ export default async function WorkspaceDetailPage({
     credentials,
     experts,
     workforce,
+    financials,
   ] = await Promise.all([
     listWorkspaceMembers(supabase, id),
     listProjectsForWorkspace(supabase, id),
@@ -97,7 +99,9 @@ export default async function WorkspaceDetailPage({
     listCredentials(supabase, id),
     listExperts(supabase, id),
     getWorkforce(supabase, id),
+    listFinancials(supabase, id),
   ]);
+  const latestFinancial = financials[0] ?? null;
 
   const confirmedCaps = capabilities.filter((c) => c.source === "user").length;
   const suggestedCaps = capabilities.filter(
@@ -310,6 +314,36 @@ export default async function WorkspaceDetailPage({
             >
               <Button variant="outline" size="sm">
                 {workforce ? "Update" : "Set up"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Financials
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">
+              {latestFinancial?.annual_turnover != null
+                ? `${latestFinancial.currency ?? ""} ${bdtFmt.format(latestFinancial.annual_turnover)}`.trim()
+                : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {latestFinancial
+                ? `FY${latestFinancial.fiscal_year}${
+                    latestFinancial.is_audited ? " · audited" : ""
+                  }`
+                : "Turnover + audited-statement flag"}
+            </p>
+            <Link
+              href={`/workspaces/${id}/financials`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {financials.length === 0 ? "Add financials" : "Manage"}
               </Button>
             </Link>
           </CardContent>
