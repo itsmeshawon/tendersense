@@ -19,9 +19,25 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "TenderSense — Daily tender shortlist",
+  metadataBase: new URL("https://tendersense.app"),
+  title: {
+    default: "TenderSense — Daily tender shortlist",
+    template: "%s · TenderSense",
+  },
   description:
     "TenderSense grades and monitors public procurement notices for Bangladesh organisations.",
+  openGraph: {
+    title: "TenderSense",
+    description:
+      "Daily curated shortlist of public procurement tenders, graded against your organisation's profile.",
+    url: "https://tendersense.app",
+    siteName: "TenderSense",
+    type: "website",
+  },
+  robots: {
+    index: false, // pilot phase — keep out of search until public launch
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

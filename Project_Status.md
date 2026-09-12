@@ -22,7 +22,8 @@ phase_3_plan_approved: true
 phase_3_plan_approved_at: 2026-09-12
 phase_4_plan_approved: true
 phase_4_plan_approved_at: 2026-09-13
-production_url: "https://tendersense-delta.vercel.app"
+production_url: "https://tendersense.app"
+production_url_legacy: "https://tendersense-delta.vercel.app"
 email_provider: "Resend (noreply@tendersense.app)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
