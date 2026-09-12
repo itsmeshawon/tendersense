@@ -6,10 +6,9 @@ import { lookupByCompanyName } from "@/lib/experience/egp-experience-client";
 import type { ExperienceRecord } from "@/lib/experience/types";
 import { importExperienceRecords } from "@/lib/workspaces/projects-service";
 
-// e-GP servlet responses run 3-8s in practice. Vercel's default 10s ceiling
-// leaves no headroom for the two round-trips (session GET + search POST) plus
-// parsing. Bump to 30s so the search completes on serverless runs.
-export const maxDuration = 30;
+// NOTE: `maxDuration` cannot be exported from a "use server" file
+// ("use server" files may only export async functions). Route-segment
+// config lives on `layout.tsx` for this segment instead.
 
 export type WorkStatusFilter = "All" | "Completed" | "Ongoing";
 
