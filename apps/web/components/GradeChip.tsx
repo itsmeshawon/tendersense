@@ -23,14 +23,25 @@ export function GradeChip({ match }: { match: OpportunityMatchRow | null }) {
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
-    const rect = btnRef.current.getBoundingClientRect();
     const popW = 288; // matches w-72
-    // Anchor top under the button, right-aligned to its right edge.
-    const left = Math.min(
-      Math.max(8, rect.right - popW),
-      window.innerWidth - popW - 8,
-    );
-    setCoords({ top: rect.bottom + 6, left });
+    function reposition() {
+      if (!btnRef.current) return;
+      const rect = btnRef.current.getBoundingClientRect();
+      const left = Math.min(
+        Math.max(8, rect.right - popW),
+        window.innerWidth - popW - 8,
+      );
+      setCoords({ top: rect.bottom + 6, left });
+    }
+    reposition();
+    // Keep the popover anchored to the trigger as the user scrolls
+    // or resizes. `capture: true` so nested scroll containers fire.
+    window.addEventListener("scroll", reposition, { passive: true, capture: true });
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, { capture: true });
+      window.removeEventListener("resize", reposition);
+    };
   }, [open]);
 
   useEffect(() => {

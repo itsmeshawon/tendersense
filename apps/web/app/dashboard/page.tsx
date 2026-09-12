@@ -34,14 +34,24 @@ function daysUntil(iso: string | null | undefined): number | null {
   return Math.round((then - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await getServerUser();
   if (!user) redirect("/login");
 
   const workspaces = await listMyWorkspaces();
   if (workspaces.length === 0) redirect("/workspaces/new");
 
-  const primary = workspaces[0];
+  // Respect ?workspace= so the top-bar switcher actually changes what
+  // this page renders. Falls back to first workspace when the param
+  // is missing or doesn't match a member workspace.
+  const sp = await searchParams;
+  const requested = typeof sp.workspace === "string" ? sp.workspace : undefined;
+  const primary =
+    (requested && workspaces.find((w) => w.id === requested)) || workspaces[0];
   const supabase = await createServerSupabaseClient();
 
   const [recentRevisions, upcoming, profiles, recommended] = await Promise.all([
