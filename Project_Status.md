@@ -12,8 +12,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
-session_count: 19
-current_phase: "Phase 1 — Source ingestion (~99% — all 6 PRs merged; sync scripts + cron + tag remaining); Phase 2 v2 + Phase 3 v2 APPROVED 2026-09-12"
+session_count: 20
+current_phase: "Phase 2 — Discovery (~72% — 5 of 7 PRs shipped; notifications + BPPA adapter remaining). Phase 1 tagged v0.2.0-phase1 2026-09-12."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
@@ -25,13 +25,13 @@ email_provider: "Resend (noreply@tendersense.app)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
   - "proposals/active/phase-0-foundation/plan.md (COMPLETE — shipped at v0.1.0-phase0 on 2026-09-11)"
-  - "proposals/active/phase-1-source-ingestion/plan.md (APPROVED 2026-09-11, ~95% shipped; finalization by Mohabbat)"
-  - "proposals/active/phase-2-discovery/plan.md (APPROVED v2 2026-09-12 — NOA+APP cut; ~3 weeks; execution after v0.2.0-phase1)"
+  - "proposals/active/phase-1-source-ingestion/plan.md (COMPLETE — shipped at v0.2.0-phase1 on 2026-09-12)"
+  - "proposals/active/phase-2-discovery/plan.md (IN PROGRESS v2 — 5/7 PRs shipped 2026-09-12; notifications + BPPA remaining)"
   - "proposals/active/phase-3-matching/plan.md (APPROVED v2 2026-09-12 — 5-dim scoring; ~3 weeks + calibration tail; execution after v0.3.0-phase2)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 20 — close Phase 1 then start Phase 2. Order: (1) draft feat/phase1-sync-scripts (tsx + sync-worldbank.ts + sync-egp.ts + backfill-worldbank.ts, ~90 lines) → PR → merge; (2) draft feat/phase1-cron-workflows (2 YAML files, ~50 lines) → user adds SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to GitHub Actions Secrets → PR → merge; (3) manual workflow dispatch → verify data lands in Supabase + /opportunities renders on Vercel prod; (4) tag v0.2.0-phase1; (5) open Phase 2 migrations PR (0012-0015: monitoring_profiles + saved_searches + notifications)."
+next_action: "Session 21 — Phase 2 PR #6 (notifications). Bell UI in header + /notifications route + runner integration to fan out notifications on opportunity_revisions writes for workspaces with matching monitoring profiles OR shortlisted opportunities. Retention: 30d in bell, permanent in list (Phase 2 v2 §Q5). Then PR #7 (BPPA adapter with recon-first) → tag v0.3.0-phase2."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"

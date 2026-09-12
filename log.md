@@ -607,3 +607,106 @@ All squash-merged with `--delete-branch`. Force-pushes used `--force-with-lease`
 - e-GP `procNature`/`procMethod` numeric codes — 5-min recon before cron floods with Goods-only results
 - Revision auto-numbering fix (runner.ts hardcodes `revisionNo: 1`)
 - BRAC IT name mismatch on e-GP (pilot demo blocker)
+
+- **2026-09-12 08:02** — auto-wrap: modified sync-worldbank.ts, sync-egp.ts, backfill-worldbank.ts +3 more [auto-wrap]
+
+- **2026-09-12 08:07** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:23** — auto-wrap: modified runner.ts, persistence.ts, persistence.test.ts +1 more [auto-wrap]
+
+- **2026-09-12 08:26** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:31** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:43** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:44** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:46** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 08:59** — auto-wrap: modified sync-worldbank.ts, backfill-worldbank.ts, sync-egp.ts [auto-wrap]
+
+- **2026-09-12 09:04** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 09:11** — auto-wrap: modified 20260911170011_projects.sql, 20260912100012_monitoring_profiles.sql, 20260912100013_saved_searches.sql +1 more [auto-wrap]
+
+- **2026-09-12 09:20** — auto-wrap: modified repository.ts, repository.test.ts, page.tsx +1 more [auto-wrap]
+
+- **2026-09-12 09:35** — auto-wrap: modified egp-notices.ts, repository.ts, repository.test.ts +1 more [auto-wrap]
+
+- **2026-09-12 09:42** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 09:45** — auto-wrap: modified egp-notices-fragment.html [auto-wrap]
+
+- **2026-09-12 10:09** — auto-wrap: modified persistence.ts, types.ts, 20260912100015_opportunity_source_metadata.sql +5 more [auto-wrap]
+
+- **2026-09-12 10:12** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 10:22** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 10:24** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 10:30** — auto-wrap: modified 20260912100016_create_monitoring_profile_rpc.sql, repository.test.ts, repository.ts +5 more [auto-wrap]
+
+- **2026-09-12 10:37** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 10:41** — auto-wrap: modified page.tsx [auto-wrap]
+
+- **2026-09-12 10:43** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 10:51** — auto-wrap: modified repository.test.ts, repository.ts, actions.ts +5 more [auto-wrap]
+
+- **2026-09-12 11:02** — auto-wrap: modified 20260911170010_revisions_and_syncs.sql, repository.test.ts, repository.ts +2 more [auto-wrap]
+
+## Session 20 — 2026-09-12
+
+**Phase:** Phase 1 close → Phase 2 execution (biggest single session of the project)
+
+### Phase 1 tagged 🎯
+
+- **`v0.2.0-phase1`** pushed. All Phase 1 code + hosted cron + verified prod ingestion.
+- `#26` sync scripts (WB / e-GP / backfill glue + tsx devDep)
+- `#27` cron workflows (daily WB + 4h e-GP with concurrency guards)
+- `#28` revision auto-numbering fix (persistence.nextRevisionNo — was hardcoded 1, UNIQUE-violated on 2nd amendment)
+- `#29` batch-size trim (pageSize 1000→100, maxPages 5→2 to fit inside the 15-min Actions timeout — round-trip latency from US Actions to ap-south-1 Supabase = ~600ms/record)
+- Manual dispatch verified: both WB + e-GP populated `opportunities` on hosted; `/opportunities` on prod renders real tenders
+
+### Phase 2 shipped: 5 of 7 approved PRs
+
+- **`#30` PR #1** — schema (migrations 0012-0014: monitoring_profiles + saved_searches + notifications + notification_kind enum). Migration 0015 placeholder skipped.
+- **`#31` PR #2** — FTS + sort + urgency chip on `/opportunities`. Uses `websearch_to_tsquery` per ADR 0012.
+- **`#32` fix** — FTS config mismatch (query was `english`, trigger was `simple` — silent zero-match) + honest e-GP link label
+- **`#33` bonus** — direct e-GP tender-detail link (Option C). Live recon confirmed the `ViewTender.jsp` POST accepts `id=<n>&h=t` cross-session. Migration 0015 adds `opportunities.source_metadata jsonb` + backfills existing bd_egp rows from `external_id`. UI renders a client-side POST form.
+- **`#34` PR #3** — monitoring profiles UI (`/workspaces/[id]/monitoring`) + SECURITY DEFINER RPC `create_monitoring_profile` with server-side free-plan gate. Copy for the reject message matches Phase 2 v2 §Q6 verbatim.
+- **`#35` fix** — workspace card was unclickable, blocking users from reaching Monitoring. Added Open + Monitoring + Import shortcuts on the card.
+- **`#36` PR #4** — saved searches. `/workspaces/[id]/saved-searches` list + delete. "Save this search" button on `/opportunities` when a filter is active. Allow-listed URL params only.
+- **`#37` PR #5** — amendment badges on `/opportunities` (red for deadline changes per ADR 0013, gray otherwise) + real `/dashboard` hub with recent-amendments pane + upcoming-deadlines pane + Phase 4 placeholder.
+- **`#38` fix** — CI failure on #37: supabase-js types nested-select as array; runtime is single object. Normalize array→object in `listRecentRevisions`. **Lesson: `npm test` doesn't run `next build`; must build locally before pushing when touching type-heavy code.**
+
+### Migrations applied to hosted
+
+By user during session: 0012, 0013, 0014, 0015, 0016. All verified with SELECT queries.
+
+### Ingestion pipeline verified end-to-end
+
+- `Sync World Bank` GitHub Actions run → 200 records written → visible on Vercel prod `/opportunities`
+- `Sync e-GP` GitHub Actions run → visible with real reference numbers + direct detail links
+
+### Rule change in force
+
+- ADR 0011: solo-merge exception waived on tendersense while Mohabbat is on another project. All 13 PRs merged this session by shawon per that ADR.
+
+### Position vs Source of Truth
+
+- Phase 1: **100%** ✓ shipped at `v0.2.0-phase1`
+- Phase 2: **~72%** — 5 of 7 approved PRs merged; notifications + BPPA adapter remaining
+- MVP overall (§113 scope-reduced): **~65%**
+
+### Open threads carried into session 21
+
+- Phase 2 PR #6: notifications (bell + `/notifications` route + runner fan-out on revision writes)
+- Phase 2 PR #7: BPPA adapter (recon-first, similar shape to e-GP notices)
+- Follow-up idea: batch supabase writes in `persistence.ts` to cut sync round-trips ~3× — would let us bump `pageSize` back up
+- e-GP `procNature`/`procMethod` numeric codes recon (only `1`=Goods confirmed)
+- BRAC IT name mismatch on e-GP (pilot demo blocker)
+- Grade vocabulary sanity check with BRAC IT (Phase 3 prep)
