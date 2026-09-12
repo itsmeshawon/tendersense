@@ -13,6 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { listWorkspaceCapabilities } from "@/lib/matching/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listSavedSearches } from "@/lib/saved-searches/repository";
+import { listCredentials } from "@/lib/credentials/repository";
+import { listExperts } from "@/lib/experts/repository";
+import { getWorkforce } from "@/lib/workforce/repository";
 
 // Inlined `projects` reader — the shared `lib/workspaces/projects-repository`
 // lands via PR #17. Once that merges, this reader collapses to a single
@@ -76,14 +79,25 @@ export default async function WorkspaceDetailPage({
   const workspace = await getWorkspaceById(supabase, id);
   if (!workspace) notFound();
 
-  const [members, projects, capabilities, monitoringProfiles, savedSearches] =
-    await Promise.all([
-      listWorkspaceMembers(supabase, id),
-      listProjectsForWorkspace(supabase, id),
-      listWorkspaceCapabilities(supabase, id),
-      listMonitoringProfiles(supabase, id),
-      listSavedSearches(supabase, id),
-    ]);
+  const [
+    members,
+    projects,
+    capabilities,
+    monitoringProfiles,
+    savedSearches,
+    credentials,
+    experts,
+    workforce,
+  ] = await Promise.all([
+    listWorkspaceMembers(supabase, id),
+    listProjectsForWorkspace(supabase, id),
+    listWorkspaceCapabilities(supabase, id),
+    listMonitoringProfiles(supabase, id),
+    listSavedSearches(supabase, id),
+    listCredentials(supabase, id),
+    listExperts(supabase, id),
+    getWorkforce(supabase, id),
+  ]);
 
   const confirmedCaps = capabilities.filter((c) => c.source === "user").length;
   const suggestedCaps = capabilities.filter(
@@ -91,6 +105,9 @@ export default async function WorkspaceDetailPage({
   ).length;
   const activeProfileCount = monitoringProfiles.filter(
     (p) => p.is_active,
+  ).length;
+  const validCredentials = credentials.filter(
+    (c) => c.status === "valid",
   ).length;
 
   return (
@@ -125,9 +142,9 @@ export default async function WorkspaceDetailPage({
               Capabilities
             </Button>
           </Link>
-          <Link href={`/workspaces/${id}/saved-searches`}>
+          <Link href={`/workspaces/${id}/credentials`}>
             <Button variant="outline" size="sm">
-              Saved searches
+              Credentials
             </Button>
           </Link>
           <Link href="/workspaces">
@@ -139,7 +156,7 @@ export default async function WorkspaceDetailPage({
       </header>
 
       {/* Profile-at-a-glance — SoT §6 Workspace → Profile landing */}
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -213,6 +230,86 @@ export default async function WorkspaceDetailPage({
             >
               <Button variant="outline" size="sm">
                 {savedSearches.length === 0 ? "Save your first" : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Credentials
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">
+              {validCredentials}
+              {credentials.length !== validCredentials ? (
+                <span className="text-sm font-normal text-muted-foreground">
+                  {" "}
+                  / {credentials.length}
+                </span>
+              ) : null}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {validCredentials === 0
+                ? "ISO, CMMI, licences — proves eligibility"
+                : "Valid certifications"}
+            </p>
+            <Link
+              href={`/workspaces/${id}/credentials`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {credentials.length === 0 ? "Add credentials" : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Key experts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">{experts.length}</p>
+            <p className="text-xs text-muted-foreground">
+              Named personnel with CVs
+            </p>
+            <Link
+              href={`/workspaces/${id}/experts`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {experts.length === 0 ? "Add experts" : "Manage"}
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Workforce
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-2xl font-semibold">
+              {workforce?.total_employees ?? "—"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {workforce?.total_employees
+                ? "Total employees"
+                : "Team size + role breakdown"}
+            </p>
+            <Link
+              href={`/workspaces/${id}/workforce`}
+              className="mt-3 inline-block"
+            >
+              <Button variant="outline" size="sm">
+                {workforce ? "Update" : "Set up"}
               </Button>
             </Link>
           </CardContent>
