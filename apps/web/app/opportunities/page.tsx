@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { listPublicOpportunities } from "@/lib/opportunities/service";
+import { listMyWorkspaces } from "@/lib/workspaces/service";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
@@ -131,7 +132,22 @@ export default async function OpportunitiesPage({
 
   const sp = await searchParams;
   const filters = parseFilters(sp);
-  const opportunities = await listPublicOpportunities(filters);
+  const [opportunities, workspaces] = await Promise.all([
+    listPublicOpportunities(filters),
+    listMyWorkspaces(),
+  ]);
+  const defaultWorkspaceId = workspaces[0]?.id;
+
+  // Build the query string of current filters, allow-listed for saving.
+  const savableUsp = new URLSearchParams();
+  if (filters.q) savableUsp.set("q", filters.q);
+  if (filters.country) savableUsp.set("country", filters.country);
+  if (filters.source) savableUsp.set("source", filters.source);
+  if (filters.status) savableUsp.set("status", filters.status);
+  if (filters.deadlineWithinDays)
+    savableUsp.set("deadline", String(filters.deadlineWithinDays));
+  if (filters.sort) savableUsp.set("sort", filters.sort);
+  const savableQs = savableUsp.toString();
 
   const activeFilters = [
     filters.source && SOURCE_LABEL[filters.source],
@@ -157,12 +173,22 @@ export default async function OpportunitiesPage({
             e-GP.
           </p>
         </div>
-        <Link
-          href="/workspaces"
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          Workspaces
-        </Link>
+        <div className="flex items-center gap-2">
+          {defaultWorkspaceId && savableQs ? (
+            <Link
+              href={`/workspaces/${defaultWorkspaceId}/saved-searches?from=?${savableQs}`}
+              className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+            >
+              Save this search
+            </Link>
+          ) : null}
+          <Link
+            href="/workspaces"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Workspaces
+          </Link>
+        </div>
       </header>
 
       <form
