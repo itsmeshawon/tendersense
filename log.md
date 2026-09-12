@@ -486,3 +486,62 @@ Mohabbat is clearing the 6-PR queue + running the finalization checklist to clos
 - Phase 3 plan v2 awaiting approval (open questions: Q1 taxonomy, Q2 excluded-keywords, Q3 no-profile chip, Q5 blocking-vs-eventual, Q6 shortlist grade, Q7 auto-derive precision)
 - 6 PRs awaiting Mohabbat's review
 - Phase 1 finalization checklist awaiting Mohabbat's execution
+
+- **2026-09-12 07:19** — auto-wrap: modified Project_Status.md [auto-wrap]
+
+- **2026-09-12 07:20** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:22** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:23** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 07:28** — auto-wrap: modified plan.md, plan.md, Project_Status.md [auto-wrap]
+
+## Session 19 — 2026-09-12
+
+**Phase:** Phase 2 + Phase 3 plan approval
+
+### What shipped
+
+- **All 9 remaining open questions resolved** in one working session (3 Phase 2 + 6 Phase 3)
+- **Phase 2 plan v2 APPROVED** — §6 flipped from "open questions" to "decisions" with resolutions locked in-file
+- **Phase 3 plan v2 APPROVED** — §7 same treatment
+- `Project_Status.md`: added `phase_2_plan_approved: true` + `phase_3_plan_approved: true` (both dated 2026-09-12)
+- Commit `4a796f4` on `main`
+
+### Key decisions locked
+
+**Phase 2:**
+- Monitoring profile match: server-side query on `/opportunities` load (promote to materialized view only when volume forces it)
+- Notification decay: 30 days in bell, permanent in `/notifications` audit list
+- Free-plan gate wording: offers "deactivate existing profile" as in-plan action alongside the upgrade path
+
+**Phase 3:**
+- Capability taxonomy: SoT §16.7's 10 keys as fixed seed for MVP; custom disallowed until Pro (preserves scorer comparability)
+- Excluded_keywords: case-insensitive, word-boundary aware (`\b<kw>\b` + `i` flag)
+- No-profile chip: synthetic "Not yet ranked" in gray + "Complete your profile" CTA (not null-hidden)
+- Grade recompute timing: eventual with optimistic UI + `revalidatePath` after chunks (Vercel timeout makes blocking non-viable)
+- Shortlist grade after re-score drop: show new grade + `↓ was A` delta marker
+- Cold-start auto-derive precision: ≥ 2 signal words per bucket + "Suggested" badge (precision over recall)
+
+### Rule override this session
+
+User explicitly directed Claude to walk through the open questions solo, waiving the collaborator-review preamble ("ignore the Collaborator rule. I can do it myself"). Plan approval done as founder decision, not collaborative sign-off. Recorded here for the shared brain. Does not extend to PR merges.
+
+### Phase 1 status (unchanged from sessions 17–18)
+
+- 6 PRs still open awaiting Mohabbat (#15/17/19/21/23/25)
+- No self-merge — session 12's override remains the single one-time exception
+- Finalization steps 2–6 blocked on those merges
+
+### Position vs Source of Truth
+
+- Phase 1: **~95%** (unchanged; blocked on Mohabbat)
+- MVP overall (§113 scope-reduced): **~45%** (unchanged; approval ≠ shipping)
+
+### Open threads carried into session 20
+
+- Phase 2 execution starts as soon as Phase 1 tags `v0.2.0-phase1`
+- First Phase 2 PR: migrations 0012–0015 (monitoring_profiles + saved_searches + notifications)
+- Phase 3 execution starts after `v0.3.0-phase2`
+- 6 Phase 1 PRs still awaiting Mohabbat's review
