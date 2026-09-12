@@ -13,21 +13,25 @@ gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
 session_count: 18
-current_phase: "Phase 1 — Source ingestion (~95%, awaiting Mohabbat); Phase 2 + Phase 3 plans revised to v2, awaiting approval"
+current_phase: "Phase 1 — Source ingestion (~95%, awaiting Mohabbat); Phase 2 v2 + Phase 3 v2 APPROVED 2026-09-12, execution unlocked after v0.2.0-phase1 tag"
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
+phase_2_plan_approved: true
+phase_2_plan_approved_at: 2026-09-12
+phase_3_plan_approved: true
+phase_3_plan_approved_at: 2026-09-12
 production_url: "https://tendersense-delta.vercel.app"
 email_provider: "Resend (noreply@tendersense.app)"
 master_spec: "raw/TenderSense_MVP_Source_of_Truth.md"
 active_plans:
   - "proposals/active/phase-0-foundation/plan.md (COMPLETE — shipped at v0.1.0-phase0 on 2026-09-11)"
   - "proposals/active/phase-1-source-ingestion/plan.md (APPROVED 2026-09-11, ~95% shipped; finalization by Mohabbat)"
-  - "proposals/active/phase-2-discovery/plan.md (DRAFT v2 2026-09-12 — NOA+APP cut; awaiting approval)"
-  - "proposals/active/phase-3-matching/plan.md (DRAFT v2 2026-09-12 — scoring model 9→5 dims; awaiting approval)"
+  - "proposals/active/phase-2-discovery/plan.md (APPROVED v2 2026-09-12 — NOA+APP cut; ~3 weeks; execution after v0.2.0-phase1)"
+  - "proposals/active/phase-3-matching/plan.md (APPROVED v2 2026-09-12 — 5-dim scoring; ~3 weeks + calibration tail; execution after v0.3.0-phase2)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 19: user reviews Phase 2 v2 (3 remaining Qs) + Phase 3 v2 (6 remaining Qs), sets plan_approved. Meanwhile Mohabbat clears 6-PR queue + runs docs/phase-1-finalization-checklist.md to close Phase 1 and tag v0.2.0-phase1."
+next_action: "Session 20: Phase 2 execution begins as soon as Mohabbat merges the 6-PR queue + runs docs/phase-1-finalization-checklist.md → v0.2.0-phase1. First Phase 2 PR = migrations 0012-0015 (monitoring_profiles + saved_searches + notifications). All 9 plan open questions resolved this session."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"

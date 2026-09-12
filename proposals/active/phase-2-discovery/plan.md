@@ -1,7 +1,7 @@
 # Plan: Phase 2 — Discovery
 
 **Tier:** MewKing
-**Status:** Draft v2 (2026-09-12) — NOA + APP cut per recommendation; awaiting approval after Phase 1 tags `v0.2.0-phase1`
+**Status:** APPROVED v2 (2026-09-12) — NOA + APP cut; all open questions resolved. Execution starts after Phase 1 tags `v0.2.0-phase1`.
 **Master spec:** `raw/TenderSense_MVP_Source_of_Truth.md` + `raw/TenderSense-SOT-Changes (1).md`
 **SoT sections:** §6 IA (Discover branch), §16.16 monitoring_profiles, §16.17 saved_searches, §18 search, §26 amendments, §37 monitoring APIs
 **Exit criteria (SoT §113):** *"user can reliably find opportunities"*
@@ -112,14 +112,14 @@ Same as Phase 1. `lib/` files get tests first.
 7. **PR — BPPA adapter (recon first)** + cron workflow
 8. **Tag `v0.3.0-phase2`**
 
-## 6. Open questions (need answers before approval)
+## 6. Decisions (all questions resolved 2026-09-12)
 
-1. ~~**NOA + APP normalize into `opportunities` or into new tables?**~~ Moot — both cut from Phase 2. When re-planned: separate `awards` + `procurement_plans` tables (recorded in ADR 0014).
-2. **Monitoring profile match evaluation — server-side query or in-app?** For a small pilot, run it as a query on `/opportunities` load. Later, materialize a per-workspace ranked view. **Recommendation: server-side query.**
-3. ~~**Full-text query dialect** — `plainto_tsquery` vs `websearch_to_tsquery`?~~ **Decided: `websearch_to_tsquery`** (matches user intuition, supports quoted phrases + OR). Recorded in ADR 0012.
-4. ~~**Amendment badge severity levels**~~ **Decided: red = deadline change only, gray = other material changes.** Recorded in ADR 0013.
-5. **Notification decay** — how long do amendment notifications stay in the bell? Recommendation: 30 days, auto-hide but keep in `/notifications` list.
-6. **Free-plan gate wording** — when the second profile is rejected, what does the UI say? Draft: "Free plan supports one active monitoring profile. Upgrade to Pro for unlimited."
+1. ~~**NOA + APP normalize into `opportunities` or into new tables?**~~ Moot — both cut from Phase 2. When re-planned: separate `awards` + `procurement_plans` tables (ADR 0014).
+2. **Monitoring profile match evaluation** — **server-side query on `/opportunities` load**. Postgres GIN handles 5-way AND in single-digit ms at pilot volume. If we ever hit 100k opps/workspace, promote to a materialized ranked view — problem-driven, not preventive.
+3. ~~**Full-text query dialect**~~ **`websearch_to_tsquery`** (ADR 0012).
+4. ~~**Amendment badge severity**~~ **Red = deadline change only, gray = other material changes** (ADR 0013).
+5. **Notification decay** — **30 days in the bell, permanent in `/notifications`**. Bell = "what needs your attention now"; full list = audit history.
+6. **Free-plan gate wording** — **"Free plan supports one active monitoring profile. Deactivate the existing profile, or upgrade to Pro for unlimited."** Offers an in-plan action (deactivate) as well as the upgrade path.
 
 ## 7. Exit checklist
 

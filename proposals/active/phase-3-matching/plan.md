@@ -1,7 +1,7 @@
 # Plan: Phase 3 — Matching
 
 **Tier:** MewKing
-**Status:** Draft v2 (2026-09-12) — scoring model trimmed 9→5 dimensions, calibration gate softened, cold-start auto-derive added
+**Status:** APPROVED v2 (2026-09-12) — scoring model trimmed 9→5 dimensions, calibration gate softened, cold-start auto-derive added, all open questions resolved. Execution starts after Phase 2 tags `v0.3.0-phase2`.
 **Master spec:** `raw/TenderSense_MVP_Source_of_Truth.md` + `raw/TenderSense-SOT-Changes (1).md`
 **SoT sections:** §7.5 Match, §16.18 opportunity_matches, §19 Matching Engine, §24 Recommendation
 **Governing ADR:** `decisions/0006-sot-2026-09-09-scope.md` §5 (grade + decision, no percentages) and §6 (hardcoded thresholds)
@@ -178,15 +178,15 @@ Same as before. `lib/matching/` files get tests first. Signal tests use hand-cra
 6. **PR — grade calibration doc + weight tune (if needed)**
 7. **PR — Cross-cutting review pass + tag `v0.4.0-phase3`**
 
-## 7. Open questions (need answers before approval)
+## 7. Decisions (all questions resolved 2026-09-12)
 
-1. **Capability taxonomy source** — SoT §16.7 lists 10 example keys. Do we ship those + let users add custom, or fix the list for MVP? Recommend: ship SoT's 10 as seed, disallow custom until Pro.
-2. **Excluded_keywords normalization** — case-sensitive? word-boundary aware? Recommend case-insensitive, exact-word match (regex `\b`) to avoid "SME" excluding "SMEs".
-3. **Score for new-workspace-no-profile** — before any recompute has run, do rows show `null` grade (hide chip) or synthetic "Not yet ranked"? Recommend the latter — explicit UX.
-4. ~~**Recompute-on-profile-change scope**~~ **Decided: last 90 days.** Older is unlikely to be actionable (recorded in ADR 0018).
-5. **Timing** — should grade recompute be blocking (user sees loader) or eventual (grade shows up seconds later)? Recommend eventual — Vercel serverless doesn't want long-blocking work; `revalidatePath` after chunks.
-6. **Grade for the ranked feed vs shortlist** — do shortlisted opportunities always show their grade even if it drops to D after a re-score? Recommend yes; users want to see the change.
-7. **Cold-start auto-derive precision** — how aggressive should keyword bucketing be? A single mention of "SAP" enough to auto-add ERP? Recommend: require ≥ 2 signal words per bucket, err on the side of fewer suggestions (better to under-suggest than mislabel).
+1. **Capability taxonomy** — **Ship SoT §16.7's 10 keys as a fixed seed for MVP; disallow custom until Pro.** Locking to a shared 10-item space keeps every workspace's capability vector comparable; custom entries would introduce semantic drift ("ERP implementation" vs "ERP integration") that the scorer can't handle. Reopen the question in Phase 5 or when a Pro user hits the wall.
+2. **Excluded_keywords normalization** — **Case-insensitive, word-boundary aware** (regex `\b<kw>\b` with `i` flag). Rules out the "SME excludes SMEs" false-positive; matches intuition ("no fintech" catches Fintech/FINTECH but not fintechnology).
+3. **New-workspace-no-profile chip** — **Synthetic "Not yet ranked" chip in gray** with a "Complete your profile" CTA. Explicit is better than hidden. With cold-start auto-derive (§2b), this state should only appear for workspaces that haven't imported anything yet — the chip doubles as a nudge back to Peak 1.
+4. ~~**Recompute-on-profile-change scope**~~ **Decided: last 90 days.** Older is unlikely to be actionable (ADR 0018).
+5. **Grade recompute timing** — **Eventual with optimistic UI.** Server action returns immediately; chunks fire in the background; `revalidatePath("/opportunities")` after each chunk; subtle "Recomputing matches…" toast dismisses when done. Vercel serverless timeout makes blocking non-viable at production volume.
+6. **Grade for shortlisted opportunities after re-score drop** — **Show the new grade + a delta marker.** Shortlisted rows display current grade with a small `↓ was A` marker if it changed in the last N days. Hiding grade drops on shortlisted items is dishonest and hides a review moment.
+7. **Cold-start auto-derive precision** — **Conservative: require ≥ 2 signal words per capability bucket; mark all auto-derived rows as "Suggested" (not "Confirmed") in the capabilities tab.** A wrongly-suggested capability silently mis-scores every future match — worse than a missing one. Precision over recall on first login.
 
 ## 8. Exit checklist
 
