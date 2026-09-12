@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listFinancials } from "@/lib/financials/repository";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageHeader";
 import { UpsertFinancialForm } from "./upsert-form";
 import { FinancialRow } from "./row";
 
@@ -28,22 +29,20 @@ export default async function FinancialsPage({
   const rows = await listFinancials(supabase, workspaceId);
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Financial capacity
-          </h1>
-          <p className="text-sm text-muted-foreground">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Financial capacity"
+        description={
+          <>
             Annual turnover, contract history, and audit status — used
-            for tender eligibility rules like &ldquo;3-year turnover
-            &ge; BDT 500M.&rdquo;
-            <span className="font-medium text-foreground">
-              {" "}Admin-only.
-            </span>
-          </p>
-        </div>
-      </header>
+            for tender eligibility rules like &ldquo;3-year turnover &ge;
+            BDT 500M.&rdquo;{" "}
+            <span className="font-medium text-foreground">Admin-only.</span>
+          </>
+        }
+      />
 
       <Card>
         <CardHeader className="pb-3">

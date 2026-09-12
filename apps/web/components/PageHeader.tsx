@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export interface Crumb {
   label: string;
@@ -18,11 +19,17 @@ export function PageHeader({
   title,
   description,
   actions,
+  backHref,
+  backLabel = "Back",
 }: {
   crumbs?: Crumb[];
   title: React.ReactNode;
   description?: React.ReactNode;
   actions?: React.ReactNode;
+  /** If set, renders a small arrow-only link before the title. */
+  backHref?: string;
+  /** Accessible label for the back arrow. */
+  backLabel?: string;
 }) {
   return (
     <header className="flex flex-col gap-3 pb-4">
@@ -60,15 +67,26 @@ export function PageHeader({
         </nav>
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight text-foreground">
-            {title}
-          </h1>
-          {description ? (
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              {description}
-            </p>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          {backHref ? (
+            <Link
+              href={backHref}
+              aria-label={backLabel}
+              className="mt-1 grid size-8 shrink-0 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" aria-hidden />
+            </Link>
           ) : null}
+          <div className="min-w-0 flex-1">
+            <h1 className="font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight text-foreground">
+              {title}
+            </h1>
+            {description ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                {description}
+              </p>
+            ) : null}
+          </div>
         </div>
         {actions ? (
           <div className="flex shrink-0 items-center gap-2">{actions}</div>

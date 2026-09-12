@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
+import { PageHeader } from "@/components/PageHeader";
 import { NewProfileForm } from "./new-profile-form";
 import { ProfileRowActions } from "./profile-row-actions";
 
@@ -20,18 +21,13 @@ export default async function MonitoringPage({
   const activeCount = profiles.filter((p) => p.is_active).length;
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Monitoring profiles
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Save a filter set so we can flag new tenders + amendments that
-            match. Free plan supports one active profile.
-          </p>
-        </div>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Monitoring profiles"
+        description="Save a filter set so we can flag new tenders and amendments that match. Free plan supports one active profile."
+      />
 
       <section className="rounded-md border p-4">
         <h2 className="text-sm font-semibold">New profile</h2>

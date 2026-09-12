@@ -3,6 +3,7 @@ import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listExperts } from "@/lib/experts/repository";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { AddExpertForm } from "./add-form";
 import { ExpertRowUI } from "./row";
 
@@ -19,16 +20,13 @@ export default async function ExpertsPage({
   const rows = await listExperts(supabase, workspaceId);
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Key experts</h1>
-          <p className="text-sm text-muted-foreground">
-            Named personnel you can propose for consultancy or delivery
-            engagements.
-          </p>
-        </div>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Key experts"
+        description="Named personnel you can propose for consultancy or delivery engagements."
+      />
 
       <Card>
         <CardHeader className="pb-3">

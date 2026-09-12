@@ -4,6 +4,7 @@ import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listWorkspaceCapabilities } from "@/lib/matching/repository";
 import { CAPABILITY_TAXONOMY } from "@/lib/matching/taxonomy";
+import { PageHeader } from "@/components/PageHeader";
 import { AddCapabilityForm } from "./add-capability-form";
 import { CapabilityRow } from "./capability-row";
 
@@ -25,18 +26,13 @@ export default async function CapabilitiesPage({
   const available = CAPABILITY_TAXONOMY.filter((c) => !existing.has(c.key));
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Capabilities
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            What this workspace can deliver. This is the biggest signal
-            we use to grade opportunities (35 of 100 points).
-          </p>
-        </div>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Capabilities"
+        description="What this workspace can deliver. The biggest signal we use to grade opportunities (33 of 100 points)."
+      />
 
       {suggested.length > 0 ? (
         <section className="flex flex-col gap-3 rounded-md border p-4">

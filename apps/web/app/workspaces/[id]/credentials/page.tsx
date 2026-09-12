@@ -7,6 +7,7 @@ import {
   type CredentialType,
 } from "@/lib/credentials/repository";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { AddCredentialForm } from "./add-form";
 import { CredentialRow } from "./row";
 
@@ -37,16 +38,13 @@ export default async function CredentialsPage({
   const other = rows.filter((r) => r.status !== "valid");
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Credentials</h1>
-          <p className="text-sm text-muted-foreground">
-            Certifications, licences, and accreditations you can point to
-            when eligibility rules ask for one.
-          </p>
-        </div>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Credentials"
+        description="Certifications, licences, and accreditations you can point to when eligibility rules ask for one."
+      />
 
       <Card>
         <CardHeader className="pb-3">
