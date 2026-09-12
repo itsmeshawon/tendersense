@@ -50,7 +50,7 @@ export default function LoginPage() {
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">
             TenderSense ingests procurement notices from World Bank, Bangladesh
-            e-GP, and BPPA — then grades each one against your organisation's
+            e-GP, and BPPA — then grades each one against your organisation&rsquo;s
             profile and surfaces the shortlist worth bidding on.
           </p>
           <ul className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">

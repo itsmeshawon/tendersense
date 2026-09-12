@@ -9,7 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GradeChip } from "@/components/GradeChip";
-import { EligibilityChip } from "@/components/EligibilityChip";
 import type { Opportunity } from "@/lib/opportunities/repository";
 import type { OpportunityMatchRow } from "@/lib/matching/repository";
 import type { RevisionRow } from "@/lib/revisions/repository";
