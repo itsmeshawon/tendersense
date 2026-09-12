@@ -53,6 +53,19 @@ export type Opportunity = {
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
+export async function getOpportunityById(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<Opportunity | null> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as Opportunity | null) ?? null;
+}
+
 export type OpportunityStatusFilter = "open" | "closed";
 
 /**

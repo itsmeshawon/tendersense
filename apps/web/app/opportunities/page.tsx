@@ -457,7 +457,18 @@ export default async function OpportunitiesPage({
                 <Card className="transition-colors hover:bg-accent/30">
                   <CardContent className="flex flex-col gap-2 p-4 text-sm">
                 <div className="flex items-baseline justify-between gap-4">
-                  <h2 className="font-medium leading-snug">{o.title}</h2>
+                  <h2 className="font-medium leading-snug">
+                    <Link
+                      href={
+                        defaultWorkspaceId
+                          ? `/opportunities/${o.id}?workspace=${defaultWorkspaceId}`
+                          : `/opportunities/${o.id}`
+                      }
+                      className="hover:underline"
+                    >
+                      {o.title}
+                    </Link>
+                  </h2>
                   <div className="flex shrink-0 items-center gap-2">
                     {defaultWorkspaceId ? (
                       <GradeChip match={matchByOpp.get(o.id) ?? null} />

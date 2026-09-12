@@ -33,6 +33,20 @@ export interface RevisionSummary {
  * For each opportunity id, return `{ count, hasDeadlineChange }`.
  * Omits ids with no revisions. Returns an empty Map when input is [].
  */
+/** All revisions for one opportunity, newest first. */
+export async function listRevisionsForOpportunity(
+  supabase: SupabaseClient,
+  opportunityId: string,
+): Promise<RevisionRow[]> {
+  const { data, error } = await supabase
+    .from("opportunity_revisions")
+    .select("id, opportunity_id, revision_no, changed_fields, detected_at")
+    .eq("opportunity_id", opportunityId)
+    .order("detected_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as RevisionRow[] | null) ?? [];
+}
+
 export async function getRevisionSummaryForOpportunities(
   supabase: SupabaseClient,
   opportunityIds: string[],
