@@ -35,6 +35,7 @@ const row: Opportunity = {
   language: null,
   content_hash: "hash",
   source_updated_at: null,
+  source_metadata: null,
   first_seen_at: "2026-09-01T00:00:00Z",
   last_seen_at: "2026-09-01T00:00:00Z",
   created_at: "2026-09-01T00:00:00Z",

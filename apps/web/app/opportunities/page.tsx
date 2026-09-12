@@ -369,16 +369,40 @@ export default async function OpportunitiesPage({
                       </span>
                     </span>
                   ) : null}
-                  <a
-                    href={o.source_url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="underline hover:text-foreground"
-                  >
-                    {o.source_key === "bd_egp"
-                      ? "Open e-GP search page (look up by ref no)"
-                      : "View original notice"}
-                  </a>
+                  {o.source_key === "bd_egp" &&
+                  typeof (o.source_metadata as { egpId?: string } | null)
+                    ?.egpId === "string" ? (
+                    <form
+                      action="https://www.eprocure.gov.bd/resources/common/ViewTender.jsp"
+                      method="POST"
+                      target="_blank"
+                      className="inline"
+                    >
+                      <input
+                        type="hidden"
+                        name="id"
+                        value={
+                          (o.source_metadata as { egpId: string }).egpId
+                        }
+                      />
+                      <input type="hidden" name="h" value="t" />
+                      <button
+                        type="submit"
+                        className="underline hover:text-foreground"
+                      >
+                        Open tender on e-GP →
+                      </button>
+                    </form>
+                  ) : (
+                    <a
+                      href={o.source_url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="underline hover:text-foreground"
+                    >
+                      View original notice
+                    </a>
+                  )}
                 </div>
               </li>
             );

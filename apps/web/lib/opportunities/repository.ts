@@ -42,6 +42,8 @@ export type Opportunity = {
 
   content_hash: string;
   source_updated_at: string | null;
+  /** Adapter-specific extras (migration 0015). Example: bd_egp stores `{ egpId }`. */
+  source_metadata: Record<string, unknown> | null;
   first_seen_at: string;
   last_seen_at: string;
   created_at: string;
