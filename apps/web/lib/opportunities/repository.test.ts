@@ -191,16 +191,17 @@ describe("listOpportunities — filters", () => {
     expect(diffDays).toBe(30);
   });
 
-  it("applies text search via .textSearch on search_text with websearch dialect", async () => {
+  it("applies text search via .textSearch on search_text with websearch/simple", async () => {
     const client = fakeClient({ data: [], error: null });
     await listOpportunities(
       client as unknown as Parameters<typeof listOpportunities>[0],
       { q: "ERP implementation" },
     );
+    // Config must match migration 0009's 'simple' tsvector trigger.
     expect(client._spies.textSearch).toHaveBeenCalledWith(
       "search_text",
       "ERP implementation",
-      { type: "websearch", config: "english" },
+      { type: "websearch", config: "simple" },
     );
   });
 
