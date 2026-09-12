@@ -87,20 +87,42 @@ export async function lookupByCompanyName(
 
   const html = await searchRes.text();
 
-  // Server-side diagnostic — surfaces in `vercel logs` output. Length +
-  // small snippet is enough to distinguish "session expired" (~500 char
-  // page) from "no rows" (~few KB with an empty table) from "real
-  // results" (~10-100 KB).
+  // Server-side diagnostic — surfaces in Vercel runtime logs. Grep for
+  // `[eexp]` to inspect the raw response when searches return zero rows.
+  //   len <1 KB    → session-timeout / redirect
+  //   a few KB, no `bgColor-white` → servlet said "no rows"
+  //   10-100+ KB → real results (parser drift, not payload issue)
+  //   `bgColor-white` present but parser returns 0 → structure drifted
+  //
+  // Also logs whether the response contains `bgColor-white` (the row
+  // selector) and `AdvSearcheCMSServlet` (self-referencing form on error
+  // pages) so Mohabbat can classify without eyeballing 3 KB of HTML.
+  const hasRowClass = html.includes("bgColor-white");
+  const hasSelfRef = html.includes("AdvSearcheCMSServlet");
   console.log(
-    `[eexp] search response: len=${html.length} snippet=${JSON.stringify(
-      html.slice(0, 200),
-    )}`,
+    `[eexp] response len=${html.length} hasRowClass=${hasRowClass} hasSelfRef=${hasSelfRef}`,
   );
+  console.log(`[eexp] snippet=${html.slice(0, 3000)}`);
 
   detectErrorPage(html);
 
   const records = parseExperienceRows(html);
-  return { records, pageNo, pageSize };
+  return {
+    records,
+    pageNo,
+    pageSize,
+    // Diagnostic: attach a snippet when zero rows came back, so the UI
+    // can render it in a debug panel. Kept in the return type as
+    // optional so the type shape stays backwards-compatible.
+    diagnostic:
+      records.length === 0
+        ? {
+            responseLength: html.length,
+            hasRowClass: html.includes("bgColor-white"),
+            snippet: html.slice(0, 3000),
+          }
+        : undefined,
+  };
 }
 
 /**

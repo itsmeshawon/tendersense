@@ -60,4 +60,14 @@ export interface LookupResult {
   records: ExperienceRecord[];
   pageNo: number;
   pageSize: number;
+  /**
+   * Optional diagnostic payload attached when zero rows come back. Lets
+   * callers render a debug panel without a second round-trip. Present
+   * only in the empty case; undefined when records were found.
+   */
+  diagnostic?: {
+    responseLength: number;
+    hasRowClass: boolean;
+    snippet: string;
+  };
 }

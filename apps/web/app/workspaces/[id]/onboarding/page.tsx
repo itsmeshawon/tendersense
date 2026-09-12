@@ -151,10 +151,24 @@ export default function OnboardingPage({
           </div>
 
           {state.records.length === 0 ? (
-            <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              No contracts found on e-GP for &quot;{state.query}&quot;. Try a
-              different spelling or the shorter version of your company name.
-            </div>
+            <>
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
+                No contracts found on e-GP for &quot;{state.query}&quot;. Try a
+                different spelling or the shorter version of your company name.
+              </div>
+              {state.diagnostic ? (
+                <details className="rounded-md border border-dashed p-4 text-xs">
+                  <summary className="cursor-pointer text-muted-foreground">
+                    Debug: raw response ({state.diagnostic.responseLength}{" "}
+                    bytes, hasRowClass=
+                    {String(state.diagnostic.hasRowClass)})
+                  </summary>
+                  <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-all rounded bg-muted p-3 text-[10px] leading-relaxed">
+                    {state.diagnostic.snippet}
+                  </pre>
+                </details>
+              ) : null}
+            </>
           ) : (
             <ul className="flex flex-col gap-2">
               {state.records.map((r) => (

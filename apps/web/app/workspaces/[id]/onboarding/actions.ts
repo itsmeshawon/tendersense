@@ -20,6 +20,11 @@ export type SearchState =
       records: ExperienceRecord[];
       query: string;
       workStatus: WorkStatusFilter;
+      diagnostic?: {
+        responseLength: number;
+        hasRowClass: boolean;
+        snippet: string;
+      };
     }
   | { status: "error"; message: string };
 
@@ -57,7 +62,13 @@ export async function searchCompanyContracts(
       workStatus,
       pageSize: 25,
     });
-    return { status: "results", records: result.records, query, workStatus };
+    return {
+      status: "results",
+      records: result.records,
+      query,
+      workStatus,
+      diagnostic: result.diagnostic,
+    };
   } catch (err) {
     return {
       status: "error",
