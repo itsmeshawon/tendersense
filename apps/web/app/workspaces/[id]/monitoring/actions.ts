@@ -10,6 +10,7 @@ import {
   FreePlanLimitError,
   setMonitoringProfileActive,
 } from "@/lib/monitoring/repository";
+import { recomputeForWorkspace } from "@/lib/matching/recompute";
 
 export type CreateMonitoringProfileState =
   | { status: "idle" }
@@ -60,6 +61,16 @@ export async function createProfileAction(
       isActive: formData.get("is_active") === "on",
     });
     revalidatePath(`/workspaces/${workspaceId}/monitoring`);
+    // Fire-and-log: rescore last-90d opportunities against the new
+    // profile so /opportunities shows grades on next visit.
+    try {
+      await recomputeForWorkspace(supabase, workspaceId);
+    } catch (recomputeErr) {
+      console.warn(
+        "[monitoring] recompute after create failed:",
+        recomputeErr instanceof Error ? recomputeErr.message : recomputeErr,
+      );
+    }
     return { status: "created", profileId: profile.id };
   } catch (err) {
     if (err instanceof FreePlanLimitError) {
@@ -83,6 +94,14 @@ export async function toggleProfileActiveAction(
   const supabase = await createServerSupabaseClient();
   await setMonitoringProfileActive(supabase, profileId, isActive);
   revalidatePath(`/workspaces/${workspaceId}/monitoring`);
+  try {
+    await recomputeForWorkspace(supabase, workspaceId);
+  } catch (err) {
+    console.warn(
+      "[monitoring] recompute after toggle failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
 
 export async function deleteProfileAction(
@@ -95,4 +114,12 @@ export async function deleteProfileAction(
   const supabase = await createServerSupabaseClient();
   await deleteMonitoringProfile(supabase, profileId);
   revalidatePath(`/workspaces/${workspaceId}/monitoring`);
+  try {
+    await recomputeForWorkspace(supabase, workspaceId);
+  } catch (err) {
+    console.warn(
+      "[monitoring] recompute after delete failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
