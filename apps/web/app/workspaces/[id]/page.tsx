@@ -7,6 +7,9 @@ import {
   getWorkspaceById,
   listWorkspaceMembers,
 } from "@/lib/workspaces/repository";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 // Inlined `projects` reader — the shared `lib/workspaces/projects-repository`
 // lands via PR #17. Once that merges, this reader collapses to a single
@@ -92,113 +95,119 @@ export default async function WorkspaceDetailPage({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Link
-            href={`/workspaces/${id}/monitoring`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Monitoring
+          <Link href={`/opportunities?workspace=${id}`}>
+            <Button variant="secondary" size="sm">
+              Opportunities
+            </Button>
           </Link>
-          <Link
-            href={`/workspaces/${id}/capabilities`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Capabilities
+          <Link href={`/workspaces/${id}/monitoring`}>
+            <Button variant="outline" size="sm">
+              Monitoring
+            </Button>
           </Link>
-          <Link
-            href={`/workspaces/${id}/saved-searches`}
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Saved searches
+          <Link href={`/workspaces/${id}/capabilities`}>
+            <Button variant="outline" size="sm">
+              Capabilities
+            </Button>
           </Link>
-          <Link
-            href="/workspaces"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Back
+          <Link href={`/workspaces/${id}/saved-searches`}>
+            <Button variant="outline" size="sm">
+              Saved searches
+            </Button>
+          </Link>
+          <Link href="/workspaces">
+            <Button variant="outline" size="sm">
+              Back
+            </Button>
           </Link>
         </div>
       </header>
 
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Members ({members.length})
-          </h2>
-        </div>
-        <ul className="flex flex-col gap-1 rounded-md border p-3 text-sm">
-          {members.map((m) => (
-            <li
-              key={m.id}
-              className="flex items-center justify-between gap-4"
-            >
-              <span className="truncate font-mono text-xs">{m.user_id}</span>
-              <span className="text-xs text-muted-foreground">
-                {m.role} · {m.status}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-xs text-muted-foreground">
-          Member management (invite / remove) is deferred to Pro tier — see
-          ADR 0006 §7.
-        </p>
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Past projects ({projects.length})
-          </h2>
-          <Link
-            href={`/workspaces/${id}/onboarding`}
-            className="rounded-md border px-2 py-1 text-xs hover:bg-accent"
-          >
-            Import from e-GP
-          </Link>
-        </div>
-
-        {projects.length === 0 ? (
-          <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">No projects yet.</p>
-            <p className="mt-1">
-              Import your past contracts from Bangladesh e-GP — type your
-              company name and pick which ones are yours. No manual entry.
-            </p>
-            <Link
-              href={`/workspaces/${id}/onboarding`}
-              className="mt-3 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-            >
-              Start import
-            </Link>
-          </div>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {projects.map((p) => (
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ul className="flex flex-col gap-1 text-sm">
+            {members.map((m) => (
               <li
-                key={p.id}
-                className="flex flex-col gap-1 rounded-md border p-4 text-sm"
+                key={m.id}
+                className="flex items-center justify-between gap-4"
               >
-                <p className="font-medium leading-snug">{p.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {p.client_name ?? "—"} · {formatDate(p.start_date)}
-                  {" — "}
-                  {formatDate(p.end_date)} ·{" "}
-                  {p.contract_value !== null && p.currency
-                    ? `${p.currency === "BDT" ? "৳" : ""}${bdtFmt.format(
-                        p.contract_value,
-                      )}`
-                    : "—"}
-                </p>
-                {p.evidence_credential_number ? (
-                  <p className="font-mono text-xs text-muted-foreground">
-                    Cert: {p.evidence_credential_number}
-                  </p>
-                ) : null}
+                <span className="truncate font-mono text-xs">{m.user_id}</span>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="secondary">{m.role}</Badge>
+                  <Badge variant="outline">{m.status}</Badge>
+                </div>
               </li>
             ))}
           </ul>
-        )}
-      </section>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Member management (invite / remove) is deferred to Pro tier — see
+            ADR 0006 §7.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-baseline justify-between gap-4">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Past projects ({projects.length})
+            </CardTitle>
+            <Link href={`/workspaces/${id}/onboarding`}>
+              <Button variant="outline" size="xs">
+                Import from e-GP
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {projects.length === 0 ? (
+            <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">No projects yet.</p>
+              <p className="mt-1">
+                Import your past contracts from Bangladesh e-GP — type your
+                company name and pick which ones are yours. No manual entry.
+              </p>
+              <Link
+                href={`/workspaces/${id}/onboarding`}
+                className="mt-3 inline-block"
+              >
+                <Button size="sm">Start import</Button>
+              </Link>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {projects.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex flex-col gap-1 rounded-md border bg-card p-4 text-sm"
+                >
+                  <p className="font-medium leading-snug">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.client_name ?? "—"} · {formatDate(p.start_date)}
+                    {" — "}
+                    {formatDate(p.end_date)} ·{" "}
+                    {p.contract_value !== null && p.currency
+                      ? `${p.currency === "BDT" ? "৳" : ""}${bdtFmt.format(
+                          p.contract_value,
+                        )}`
+                      : "—"}
+                  </p>
+                  {p.evidence_credential_number ? (
+                    <p className="font-mono text-xs text-muted-foreground">
+                      Cert: {p.evidence_credential_number}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

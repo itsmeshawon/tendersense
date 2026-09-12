@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { markReadAction } from "./actions";
 import type { NotificationRow } from "@/lib/notifications/repository";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export function NotificationItem({
   n,
@@ -21,50 +24,42 @@ export function NotificationItem({
   const markRead = () => startTransition(() => markReadAction(n.id));
 
   return (
-    <li
-      className={`flex flex-col gap-1 rounded-md border p-4 text-sm ${
-        isRead ? "opacity-60" : ""
-      }`}
-    >
-      <div className="flex items-baseline justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <span
-              className={
-                isDeadline
-                  ? "shrink-0 rounded-full border border-red-600 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-                  : "shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
-              }
-            >
-              {n.title}
-            </span>
-            <p className="truncate text-sm">{n.body}</p>
+    <li>
+      <Card className={isRead ? "opacity-60" : ""}>
+        <CardContent className="flex items-baseline justify-between gap-4 p-4 text-sm">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline gap-2">
+              <Badge variant={isDeadline ? "destructive" : "outline"}>
+                {n.title}
+              </Badge>
+              <p className="truncate text-sm">{n.body}</p>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {formatDate(n.created_at)}
+            </p>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {formatDate(n.created_at)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs">
-          {n.opportunity_id ? (
-            <Link
-              href="/opportunities"
-              className="rounded-md border px-2 py-1 hover:bg-accent"
-            >
-              View
-            </Link>
-          ) : null}
-          {!isRead ? (
-            <button
-              type="button"
-              onClick={markRead}
-              disabled={pending}
-              className="rounded-md border px-2 py-1 hover:bg-accent disabled:opacity-50"
-            >
-              Mark read
-            </button>
-          ) : null}
-        </div>
-      </div>
+          <div className="flex shrink-0 items-center gap-2 text-xs">
+            {n.opportunity_id ? (
+              <Link href="/opportunities">
+                <Button variant="outline" size="xs">
+                  View
+                </Button>
+              </Link>
+            ) : null}
+            {!isRead ? (
+              <Button
+                type="button"
+                onClick={markRead}
+                disabled={pending}
+                variant="outline"
+                size="xs"
+              >
+                Mark read
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
     </li>
   );
 }

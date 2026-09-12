@@ -7,6 +7,14 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const DHAKA_DATE = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dhaka",
@@ -65,136 +73,133 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <NotificationsBell />
-          <Link
-            href="/opportunities"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Opportunities
+          <Link href="/opportunities">
+            <Button variant="outline" size="sm">
+              Opportunities
+            </Button>
           </Link>
-          <Link
-            href="/workspaces"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Workspaces
+          <Link href="/workspaces">
+            <Button variant="outline" size="sm">
+              Workspaces
+            </Button>
           </Link>
         </div>
       </header>
 
-      <section className="flex flex-col gap-3 rounded-md border p-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Recent amendments (last 7 days)
-          </h2>
-          <Link
-            href="/opportunities"
-            className="text-xs text-muted-foreground underline hover:text-foreground"
-          >
-            All opportunities →
-          </Link>
-        </div>
-        {recentRevisions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No amendments in the last 7 days.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2 text-sm">
-            {recentRevisions.map((r) => {
-              const deadlineChange = r.changed_fields.includes("deadline_at");
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-baseline justify-between gap-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate">{r.opportunity?.title ?? "—"}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {r.opportunity?.source_key} · Rev {r.revision_no} ·{" "}
-                      {fmt(r.detected_at)}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      deadlineChange
-                        ? "shrink-0 rounded-full border border-red-600 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-                        : "shrink-0 rounded-full border px-2 py-0.5 text-xs text-muted-foreground"
-                    }
-                  >
-                    {deadlineChange ? "Deadline changed" : "Amended"}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3 rounded-md border p-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Upcoming deadlines (next 14 days)
-          </h2>
-          {activeProfile ? (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-baseline justify-between">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Recent amendments (last 7 days)
+            </CardTitle>
             <Link
-              href={`/workspaces/${primary.id}/monitoring`}
+              href="/opportunities"
               className="text-xs text-muted-foreground underline hover:text-foreground"
             >
-              Profile: {activeProfile.name} →
+              All opportunities →
             </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {recentRevisions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No amendments in the last 7 days.
+            </p>
           ) : (
+            <ul className="flex flex-col gap-2 text-sm">
+              {recentRevisions.map((r) => {
+                const deadlineChange = r.changed_fields.includes("deadline_at");
+                return (
+                  <li
+                    key={r.id}
+                    className="flex items-baseline justify-between gap-4"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">{r.opportunity?.title ?? "—"}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.opportunity?.source_key} · Rev {r.revision_no} ·{" "}
+                        {fmt(r.detected_at)}
+                      </p>
+                    </div>
+                    <Badge variant={deadlineChange ? "destructive" : "outline"}>
+                      {deadlineChange ? "Deadline changed" : "Amended"}
+                    </Badge>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-baseline justify-between">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Upcoming deadlines (next 14 days)
+            </CardTitle>
             <Link
               href={`/workspaces/${primary.id}/monitoring`}
               className="text-xs text-muted-foreground underline hover:text-foreground"
             >
-              Set up a monitoring profile →
+              {activeProfile
+                ? `Profile: ${activeProfile.name} →`
+                : "Set up a monitoring profile →"}
             </Link>
-          )}
-        </div>
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nothing closes in the next 14 days.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2 text-sm">
-            {upcoming.map((o) => {
-              const days = daysUntil(o.deadline_at);
-              return (
-                <li
-                  key={o.id}
-                  className="flex items-baseline justify-between gap-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate">{o.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {o.source_key} · {o.country_name ?? o.country_code ?? "—"}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      days !== null && days < 7
-                        ? "shrink-0 text-xs font-medium text-red-600 dark:text-red-400"
-                        : "shrink-0 text-xs text-muted-foreground"
-                    }
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nothing closes in the next 14 days.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2 text-sm">
+              {upcoming.map((o) => {
+                const days = daysUntil(o.deadline_at);
+                return (
+                  <li
+                    key={o.id}
+                    className="flex items-baseline justify-between gap-4"
                   >
-                    {fmt(o.deadline_at)}
-                    {days !== null ? ` (${days}d)` : ""}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">{o.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {o.source_key} · {o.country_name ?? o.country_code ?? "—"}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        days !== null && days < 7
+                          ? "shrink-0 text-xs font-medium text-red-600 dark:text-red-400"
+                          : "shrink-0 text-xs text-muted-foreground"
+                      }
+                    >
+                      {fmt(o.deadline_at)}
+                      {days !== null ? ` (${days}d)` : ""}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="flex flex-col gap-3 rounded-md border p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Assessment usage
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Assessment lands in Phase 4 — deep qualification against selected
-          opportunities with LLM-based requirement extraction and a per-plan
-          quota.
-        </p>
-      </section>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Assessment usage
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-sm text-muted-foreground">
+            Assessment lands in Phase 4 — deep qualification against selected
+            opportunities with LLM-based requirement extraction and a per-plan
+            quota.
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }

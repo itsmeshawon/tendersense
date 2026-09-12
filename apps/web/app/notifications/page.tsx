@@ -6,6 +6,8 @@ import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { listNotifications } from "@/lib/notifications/repository";
 import { NotificationItem } from "./notification-item";
 import { MarkAllRead } from "./mark-all-read";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DHAKA_DATE = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dhaka",
@@ -40,33 +42,36 @@ export default async function NotificationsPage() {
     <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Notifications
+          </h1>
           <p className="text-sm text-muted-foreground">
             {primary.name} · {rows.length} total · {unreadCount} unread
           </p>
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 ? <MarkAllRead workspaceId={primary.id} /> : null}
-          <Link
-            href="/dashboard"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            ← Dashboard
+          <Link href="/dashboard">
+            <Button variant="outline" size="sm">
+              ← Dashboard
+            </Button>
           </Link>
         </div>
       </header>
 
       {rows.length === 0 ? (
-        <p className="rounded-md border border-dashed p-8 text-sm text-muted-foreground">
-          No notifications yet. Set up a{" "}
-          <Link
-            href={`/workspaces/${primary.id}/monitoring`}
-            className="underline hover:text-foreground"
-          >
-            monitoring profile
-          </Link>{" "}
-          — you&rsquo;ll get pinged here when a matching tender is amended.
-        </p>
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-sm text-muted-foreground">
+            No notifications yet. Set up a{" "}
+            <Link
+              href={`/workspaces/${primary.id}/monitoring`}
+              className="underline hover:text-foreground"
+            >
+              monitoring profile
+            </Link>{" "}
+            — you&rsquo;ll get pinged here when a matching tender is amended.
+          </CardContent>
+        </Card>
       ) : (
         <ul className="flex flex-col gap-2">
           {rows.map((n) => (

@@ -2,17 +2,19 @@
 
 import { useTransition } from "react";
 import { markAllReadAction } from "./actions";
+import { Button } from "@/components/ui/button";
 
 export function MarkAllRead({ workspaceId }: { workspaceId: string }) {
   const [pending, startTransition] = useTransition();
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       onClick={() => startTransition(() => markAllReadAction(workspaceId))}
       disabled={pending}
-      className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
     >
       {pending ? "Marking…" : "Mark all read"}
-    </button>
+    </Button>
   );
 }
