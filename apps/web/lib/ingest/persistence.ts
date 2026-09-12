@@ -123,6 +123,27 @@ export async function upsertOpportunity(
   return (data as { id: string }).id;
 }
 
+/**
+ * Compute the next revision number for an opportunity.
+ * Returns `max(revision_no) + 1`, or `1` if no revisions exist yet.
+ */
+export async function nextRevisionNo(
+  supabase: SupabaseClient,
+  opportunityId: string,
+): Promise<number> {
+  const { data, error } = await supabase
+    .from("opportunity_revisions")
+    .select("revision_no")
+    .eq("opportunity_id", opportunityId)
+    .order("revision_no", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`nextRevisionNo: ${error.message}`);
+  if (!data) return 1;
+  const row = data as { revision_no: number };
+  return row.revision_no + 1;
+}
+
 /** Append an `opportunity_revisions` row for a detected material change. */
 export async function writeRevision(
   supabase: SupabaseClient,

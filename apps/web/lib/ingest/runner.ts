@@ -3,6 +3,7 @@ import {
   beginSyncRun,
   endSyncRun,
   findOpportunityByExternalId,
+  nextRevisionNo,
   updateSourceCursor,
   upsertOpportunity,
   upsertSourceRecord,
@@ -206,11 +207,10 @@ async function persistRecord(
     return;
   }
 
-  // Material change — write a revision. Revision number is naively
-  // sequential; a follow-up can compute it from the current max.
+  const revisionNo = await nextRevisionNo(supabase, opportunityId);
   await writeRevision(supabase, {
     opportunityId,
-    revisionNo: nextRevisionNo(),
+    revisionNo,
     previousHash: existing.contentHash,
     newHash: normalized.contentHash,
     // For MVP the changed_fields list is left empty — computing the
@@ -222,16 +222,4 @@ async function persistRecord(
   });
 
   callbacks.onUpdated();
-}
-
-/**
- * Placeholder revision numbering. The DB has a UNIQUE on
- * (opportunity_id, revision_no), so a naive `1` will collide on second
- * amendment. Follow-up: compute `max(revision_no)+1` for the
- * opportunity within the same tx. For MVP the collision is fine — it
- * loud-fails on the second amendment of the same opportunity, alerting
- * us to implement properly.
- */
-function nextRevisionNo(): number {
-  return 1;
 }

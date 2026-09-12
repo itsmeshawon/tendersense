@@ -3,6 +3,7 @@ import {
   beginSyncRun,
   endSyncRun,
   findOpportunityByExternalId,
+  nextRevisionNo,
   updateSourceCursor,
   upsertOpportunity,
   upsertSourceRecord,
@@ -22,13 +23,15 @@ function buildChain(finalValue: unknown) {
     update: vi.fn(),
     upsert: vi.fn(),
     eq: vi.fn(),
+    order: vi.fn(),
+    limit: vi.fn(),
     single,
     maybeSingle,
     // Support await chain.something() by resolving to finalValue
     then,
   };
   // Every builder method returns the same chain object (except terminals)
-  for (const key of ["select", "insert", "update", "upsert", "eq"]) {
+  for (const key of ["select", "insert", "update", "upsert", "eq", "order", "limit"]) {
     (chain[key] as ReturnType<typeof vi.fn>).mockReturnValue(chain);
   }
   return chain as Record<string, ReturnType<typeof vi.fn>> & {
@@ -179,6 +182,33 @@ describe("upsertOpportunity", () => {
         onConflict: "source_key,external_id",
       }),
     );
+  });
+});
+
+describe("nextRevisionNo", () => {
+  it("returns 1 when no revisions exist for the opportunity", async () => {
+    const chain = buildChain({ data: null, error: null });
+    const client = fakeClient(chain);
+    const n = await nextRevisionNo(client, "op-1");
+    expect(n).toBe(1);
+    expect(chain.eq).toHaveBeenCalledWith("opportunity_id", "op-1");
+    expect(chain.order).toHaveBeenCalledWith("revision_no", {
+      ascending: false,
+    });
+    expect(chain.limit).toHaveBeenCalledWith(1);
+  });
+
+  it("returns max(revision_no) + 1 when revisions exist", async () => {
+    const chain = buildChain({ data: { revision_no: 4 }, error: null });
+    const client = fakeClient(chain);
+    const n = await nextRevisionNo(client, "op-1");
+    expect(n).toBe(5);
+  });
+
+  it("throws on supabase error", async () => {
+    const chain = buildChain({ data: null, error: { message: "db down" } });
+    const client = fakeClient(chain);
+    await expect(nextRevisionNo(client, "op-1")).rejects.toThrow(/db down/);
   });
 });
 
