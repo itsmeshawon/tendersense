@@ -5,6 +5,7 @@ import {
   type WorkspaceProfile,
 } from "./types";
 import { CAPABILITY_TAXONOMY } from "./taxonomy";
+import { extractRequirements } from "@/lib/assessment/rulesExtractor";
 
 /**
  * Pure per-dimension signal functions. Each returns
@@ -25,7 +26,53 @@ export function computeSignals(
     keywordSignal(ws, opp),
     pastProjectSignal(ws, opp),
     countrySignal(ws, opp),
+    credentialSignal(ws, opp),
   ];
+}
+
+// -------------------------------------------------------------------
+// Credential — 7 points. Runs the assessment rules extractor over the
+// opportunity text to identify required certifications, then checks
+// whether the workspace holds ≥1 matching valid credential. Phase 4
+// §2h restored this signal after Phase 3 deferred it.
+// -------------------------------------------------------------------
+function credentialSignal(
+  ws: WorkspaceProfile,
+  opp: ScorableOpportunity,
+): SignalOutcome {
+  const weight = DIMENSION_WEIGHTS.credential;
+  const required = extractRequirements(`${opp.title}. ${opp.description ?? ""}`)
+    .filter((r) => r.category === "certification" && r.normalizedKey)
+    .map((r) => r.normalizedKey!);
+  if (required.length === 0) {
+    return applicableFalse(
+      "credential",
+      "Opportunity lists no specific certifications — inapplicable",
+    );
+  }
+  if (ws.credentialKeys.length === 0) {
+    return {
+      dimension: "credential",
+      contribution: 0,
+      applicable: true,
+      evidence: `Opportunity asks for ${required.join(", ")}; workspace has no credentials on file`,
+    };
+  }
+  const overlap = required.filter((k) => ws.credentialKeys.includes(k));
+  if (overlap.length === 0) {
+    return {
+      dimension: "credential",
+      contribution: 0,
+      applicable: true,
+      evidence: `Missing required credentials: ${required.join(", ")}`,
+    };
+  }
+  return {
+    dimension: "credential",
+    contribution: weight,
+    applicable: true,
+    evidence: `Credential match: ${overlap.join(", ")}`,
+  };
 }
 
 // -------------------------------------------------------------------

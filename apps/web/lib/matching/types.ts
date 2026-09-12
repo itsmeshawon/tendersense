@@ -18,27 +18,33 @@ export const GRADE_BOUNDARIES = {
 } as const;
 
 /**
- * The five in-scope scoring dimensions. Weight sum = 100.
- * Deferred (Phase 3 §2a): credential (5, Phase 4), source-preference (5),
- * method-preference (5), timeline (5, stays as sort-only).
+ * The six in-scope scoring dimensions. Weight sum = 100.
+ * Phase 4 §2h restores the `credential` signal (deferred in Phase 3)
+ * and rebalances the other five. Still deferred: source-preference,
+ * method-preference, timeline (sort-only).
  */
 export type Dimension =
   | "capability"
   | "sector"
   | "keyword"
   | "past_project"
-  | "country";
+  | "country"
+  | "credential";
 
 export const DIMENSION_WEIGHTS: Record<Dimension, number> = {
-  capability: 35,
-  sector: 20,
-  keyword: 20,
-  past_project: 15,
+  capability: 33,
+  sector: 18,
+  keyword: 18,
+  past_project: 14,
   country: 10,
+  credential: 7,
 } as const;
 
-/** Current scoring version. Bump when weights or logic change materially. */
-export const SCORING_VERSION = 1;
+/**
+ * Current scoring version. Phase 4 bumps to 2 with the 6-dim rebalance
+ * (ADR 0025). Every existing match row is recomputed on migration.
+ */
+export const SCORING_VERSION = 2;
 
 /** One dimension's output: matched score contribution + evidence for the popover. */
 export interface SignalOutcome {
@@ -92,4 +98,10 @@ export interface WorkspaceProfile {
   excludedKeywords: string[];
   /** Titles of past projects — used for the past_project similarity signal. */
   projectTitles: string[];
+  /**
+   * Normalized keys of workspace credentials in `valid` status.
+   * Matches the assessment engine's key convention (e.g. `iso_27001`,
+   * `cmmi_dev`). Feeds the credential signal.
+   */
+  credentialKeys: string[];
 }

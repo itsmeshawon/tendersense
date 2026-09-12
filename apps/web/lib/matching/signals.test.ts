@@ -10,6 +10,7 @@ const baseWorkspace: WorkspaceProfile = {
   keywords: [],
   excludedKeywords: [],
   projectTitles: [],
+  credentialKeys: [],
 };
 
 const baseOpp: ScorableOpportunity = {
@@ -75,7 +76,7 @@ describe("computeSignals — sector", () => {
     );
     const s = outcomes.find((o) => o.dimension === "sector");
     expect(s?.applicable).toBe(true);
-    expect(s!.contribution).toBe(20);
+    expect(s!.contribution).toBe(18);
   });
 
   it("zero contribution when opportunity has sectors but no overlap", () => {
@@ -105,8 +106,8 @@ describe("computeSignals — keyword", () => {
     );
     const k = outcomes.find((o) => o.dimension === "keyword");
     expect(k?.applicable).toBe(true);
-    // 1 of 2 keywords hit → 20 * 0.5 = 10
-    expect(k!.contribution).toBe(10);
+    // 1 of 2 keywords hit → 18 * 0.5 = 9
+    expect(k!.contribution).toBe(9);
   });
 
   it("word-boundary aware (SME does not match SMEs)", () => {

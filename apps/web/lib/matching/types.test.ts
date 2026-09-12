@@ -12,9 +12,9 @@ describe("scoring constants", () => {
     expect(total).toBe(100);
   });
 
-  it("has five dimensions (trimmed from SoT §19.2 nine — see plan §2a)", () => {
+  it("has six dimensions (Phase 4 §2h restored credential)", () => {
     const dims = Object.keys(DIMENSION_WEIGHTS) as Dimension[];
-    expect(dims).toHaveLength(5);
+    expect(dims).toHaveLength(6);
     expect(dims).toEqual(
       expect.arrayContaining([
         "capability",
@@ -22,6 +22,7 @@ describe("scoring constants", () => {
         "keyword",
         "past_project",
         "country",
+        "credential",
       ]),
     );
   });

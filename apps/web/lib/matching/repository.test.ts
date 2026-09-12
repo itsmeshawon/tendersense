@@ -18,6 +18,8 @@ const sampleMatch: OpportunityMatchRow = {
   concerns: [],
   scoring_version: 1,
   computed_at: "2026-09-12T00:00:00Z",
+  eligibility: "not_evaluated",
+  eligibility_computed_at: null,
 };
 
 const sampleCap: WorkspaceCapabilityRow = {

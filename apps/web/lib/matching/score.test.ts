@@ -9,7 +9,7 @@ const richWorkspace: WorkspaceProfile = {
   countries: ["BD"],
   keywords: ["road", "bridge"],
   excludedKeywords: [],
-  projectTitles: ["Feeder road construction Sylhet"],
+  projectTitles: ["Feeder road construction Sylhet"], credentialKeys: [],
 };
 
 const roadOpp: ScorableOpportunity = {
@@ -37,7 +37,7 @@ describe("scoreOpportunity — grade mapping", () => {
       countries: ["BD"], // hits
       keywords: ["ERP"], // won't hit
       excludedKeywords: [],
-      projectTitles: [], // inapplicable
+      projectTitles: [], credentialKeys: [], // inapplicable
     };
     const r = scoreOpportunity(partialWs, roadOpp);
     // Applicable: capability(35, 0 hits) + sector(20, no overlap) +
@@ -54,7 +54,7 @@ describe("scoreOpportunity — grade mapping", () => {
       countries: [],
       keywords: [],
       excludedKeywords: [],
-      projectTitles: [],
+      projectTitles: [], credentialKeys: [],
     };
     const r = scoreOpportunity(empty, roadOpp);
     expect(r.grade).toBe("need_more_info");
@@ -81,7 +81,7 @@ describe("scoreOpportunity — redistribution", () => {
       countries: [],
       keywords: [],
       excludedKeywords: [],
-      projectTitles: [],
+      projectTitles: [], credentialKeys: [],
     };
     const r = scoreOpportunity(ws, roadOpp);
     // Only 1 signal applicable (capability, 35 raw pts) fully hit →
@@ -99,7 +99,7 @@ describe("scoreOpportunity — redistribution", () => {
       countries: [], // inapplicable
       keywords: [],
       excludedKeywords: [],
-      projectTitles: [],
+      projectTitles: [], credentialKeys: [],
     };
     const r = scoreOpportunity(ws, roadOpp);
     // Applicable weight = capability (35) + sector (20) = 55
