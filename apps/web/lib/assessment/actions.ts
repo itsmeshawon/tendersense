@@ -17,13 +17,7 @@ import { REQUIREMENT_CATEGORIES } from "./types";
 import { nextExtractionMethodForManualAdd } from "./extractionMethod";
 import { getUsage, incrementUsage, type WorkspacePlan } from "./quota";
 import { runAssessment } from "./run";
-
-export class QuotaExceededError extends Error {
-  constructor(message = "Assessment quota exhausted for this month") {
-    super(message);
-    this.name = "QuotaExceededError";
-  }
-}
+import { QuotaExceededError } from "./errors";
 
 async function authorizeAssessment(assessmentId: string): Promise<{
   workspaceId: string;
