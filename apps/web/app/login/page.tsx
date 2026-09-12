@@ -8,7 +8,7 @@ import {
   type PasswordSignInState,
 } from "./actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,15 +28,77 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"password" | "magic">("password");
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign in</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Use your email + password, or request a magic link.
+    <main className="grid min-h-svh grid-cols-1 lg:grid-cols-2">
+      {/* Right panel on desktop; hidden on mobile — the form has to
+          come first when space is tight. Left on md+ for LTR reading. */}
+      <section className="hidden flex-col justify-between border-r border-border/60 bg-muted/40 p-10 lg:flex">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            T
+          </span>
+          <span className="font-[family-name:var(--font-heading)] text-base font-semibold tracking-tight">
+            TenderSense
+          </span>
+        </div>
+        <div className="flex flex-col gap-4 pr-8">
+          <h1 className="font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight tracking-tight text-foreground">
+            Every public tender that matters. Graded before you open it.
+          </h1>
+          <p className="max-w-md text-sm text-muted-foreground">
+            TenderSense ingests procurement notices from World Bank, Bangladesh
+            e-GP, and BPPA — then grades each one against your organisation&rsquo;s
+            profile and surfaces the shortlist worth bidding on.
           </p>
-        </CardHeader>
-        <CardContent>
+          <ul className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">
+            <li className="flex items-baseline gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              A/B/C/D fit grade, per your monitoring profile
+            </li>
+            <li className="flex items-baseline gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              Rule-based assessment against your credentials, financials, and past projects
+            </li>
+            <li className="flex items-baseline gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              Amendment tracking with deadline-change alerts
+            </li>
+          </ul>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Pilot with BRAC IT Services · 2026
+        </p>
+      </section>
+
+      <section className="flex flex-col justify-center px-6 py-10 lg:px-12">
+        <div className="mx-auto w-full max-w-sm">
+          <div className="mb-6 lg:hidden">
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className="grid h-6 w-6 place-items-center rounded-md bg-primary text-primary-foreground"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                T
+              </span>
+              <span className="font-[family-name:var(--font-heading)] text-base font-semibold tracking-tight">
+                TenderSense
+              </span>
+            </div>
+          </div>
+          <div className="mb-6">
+            <h2 className="font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight">
+              Sign in
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Use your email + password, or request a magic link.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
           {magicState.status === "sent" ? (
             <div
               className="rounded-md border bg-accent/30 p-4 text-sm"
@@ -127,8 +189,10 @@ export default function LoginPage() {
               </TabsContent>
             </Tabs>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </main>
   );
 }

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -7,8 +6,8 @@ import {
   CREDENTIAL_TYPE_LABEL,
   type CredentialType,
 } from "@/lib/credentials/repository";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { AddCredentialForm } from "./add-form";
 import { CredentialRow } from "./row";
 
@@ -39,25 +38,17 @@ export default async function CredentialsPage({
   const other = rows.filter((r) => r.status !== "valid");
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Credentials</h1>
-          <p className="text-sm text-muted-foreground">
-            Certifications, licences, and accreditations you can point to
-            when eligibility rules ask for one.
-          </p>
-        </div>
-        <Link href={`/workspaces/${workspaceId}`}>
-          <Button variant="outline" size="sm">
-            ← Workspace
-          </Button>
-        </Link>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Credentials"
+        description="Certifications, licences, and accreditations you can point to when eligibility rules ask for one."
+      />
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Add credential
           </CardTitle>
         </CardHeader>
@@ -68,7 +59,7 @@ export default async function CredentialsPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Valid ({valid.length})
           </CardTitle>
         </CardHeader>
@@ -96,7 +87,7 @@ export default async function CredentialsPage({
       {other.length > 0 ? (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Expired / revoked ({other.length})
             </CardTitle>
           </CardHeader>

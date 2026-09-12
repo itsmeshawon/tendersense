@@ -41,7 +41,7 @@ export function WorkforceForm({
         />
       </div>
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="mb-2 text-xs font-semibold tracking-tight text-foreground">
           Role breakdown (optional)
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

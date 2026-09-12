@@ -23,8 +23,8 @@ export function RunAssessmentButton({
   return (
     <div className="flex flex-col items-end gap-1">
       <Button
-        size="sm"
         disabled={disabled || pending}
+        className="min-w-40 shadow-sm"
         onClick={() =>
           startTransition(async () => {
             setError(null);

@@ -5,11 +5,17 @@ import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   getWorkspaceById,
-  listWorkspaceMembers,
+  listWorkspaceMembersWithProfile,
 } from "@/lib/workspaces/repository";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageHeader";
 import { listWorkspaceCapabilities } from "@/lib/matching/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listSavedSearches } from "@/lib/saved-searches/repository";
@@ -91,7 +97,7 @@ export default async function WorkspaceDetailPage({
     workforce,
     financials,
   ] = await Promise.all([
-    listWorkspaceMembers(supabase, id),
+    listWorkspaceMembersWithProfile(supabase, id),
     listProjectsForWorkspace(supabase, id),
     listWorkspaceCapabilities(supabase, id),
     listMonitoringProfiles(supabase, id),
@@ -115,55 +121,32 @@ export default async function WorkspaceDetailPage({
   ).length;
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Workspace
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {workspace.name}
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        crumbs={[
+          { label: "Workspaces", href: "/workspaces" },
+          { label: workspace.name },
+        ]}
+        title={workspace.name}
+        description={
+          <>
             {workspace.workspace_type} · {workspace.plan} · created{" "}
             {formatDate(workspace.created_at)} ·{" "}
             <span className="font-mono">{workspace.slug}</span>
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+          </>
+        }
+        actions={
           <Link href={`/opportunities?workspace=${id}`}>
-            <Button variant="secondary" size="sm">
-              Opportunities
-            </Button>
+            <Button size="sm">Opportunities →</Button>
           </Link>
-          <Link href={`/workspaces/${id}/monitoring`}>
-            <Button variant="outline" size="sm">
-              Monitoring
-            </Button>
-          </Link>
-          <Link href={`/workspaces/${id}/capabilities`}>
-            <Button variant="outline" size="sm">
-              Capabilities
-            </Button>
-          </Link>
-          <Link href={`/workspaces/${id}/credentials`}>
-            <Button variant="outline" size="sm">
-              Credentials
-            </Button>
-          </Link>
-          <Link href="/workspaces">
-            <Button variant="outline" size="sm">
-              Back
-            </Button>
-          </Link>
-        </div>
-      </header>
+        }
+      />
 
       {/* Profile-at-a-glance — SoT §6 Workspace → Profile landing */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Capabilities
             </CardTitle>
           </CardHeader>
@@ -187,7 +170,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Monitoring
             </CardTitle>
           </CardHeader>
@@ -219,7 +202,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Saved searches
             </CardTitle>
           </CardHeader>
@@ -241,7 +224,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Credentials
             </CardTitle>
           </CardHeader>
@@ -273,7 +256,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Key experts
             </CardTitle>
           </CardHeader>
@@ -295,7 +278,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Workforce
             </CardTitle>
           </CardHeader>
@@ -321,7 +304,7 @@ export default async function WorkspaceDetailPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Financials
             </CardTitle>
           </CardHeader>
@@ -352,36 +335,71 @@ export default async function WorkspaceDetailPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
             Members ({members.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <ul className="flex flex-col gap-1 text-sm">
-            {members.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center justify-between gap-4"
-              >
-                <span className="truncate font-mono text-xs">{m.user_id}</span>
-                <div className="flex items-center gap-1.5">
-                  <Badge variant="secondary">{m.role}</Badge>
-                  <Badge variant="outline">{m.status}</Badge>
-                </div>
-              </li>
-            ))}
+          <ul className="flex flex-col gap-2 text-sm">
+            {members.map((m) => {
+              const name = m.display_name?.trim() || null;
+              const initial = (name ?? "?")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((s) => s[0]?.toUpperCase() ?? "")
+                .join("") || "?";
+              return (
+                <li
+                  key={m.id}
+                  className="flex items-center gap-3"
+                >
+                  {m.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={m.avatar_url}
+                      alt=""
+                      className="size-8 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground"
+                    >
+                      {initial}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {name ?? "Unnamed member"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      Joined{" "}
+                      {m.joined_at
+                        ? new Date(m.joined_at).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "recently"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant="secondary">{m.role}</Badge>
+                    {m.status !== "active" ? (
+                      <Badge variant="outline">{m.status}</Badge>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Member management (invite / remove) is deferred to Pro tier — see
-            ADR 0006 §7.
-          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-baseline justify-between gap-4">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Past projects ({projects.length})
             </CardTitle>
             <Link href={`/workspaces/${id}/onboarding`}>

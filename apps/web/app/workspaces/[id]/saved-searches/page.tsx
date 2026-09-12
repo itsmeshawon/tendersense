@@ -6,6 +6,7 @@ import {
   listSavedSearches,
   queryParamsToSearchString,
 } from "@/lib/saved-searches/repository";
+import { PageHeader } from "@/components/PageHeader";
 import { SavedSearchForm } from "./saved-search-form";
 import { DeleteButton } from "./delete-button";
 
@@ -29,24 +30,18 @@ export default async function SavedSearchesPage({
   const searches = await listSavedSearches(supabase, workspaceId);
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-4xl flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Saved searches
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Named filter snapshots for <code>/opportunities</code>. Click one
-            to restore its state.
-          </p>
-        </div>
-        <Link
-          href={`/workspaces/${workspaceId}`}
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          ← Workspace
-        </Link>
-      </header>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <PageHeader
+        backHref={`/workspaces/${workspaceId}`}
+        backLabel="Back to workspace"
+        title="Saved searches"
+        description={
+          <>
+            Named filter snapshots for <code>/opportunities</code>. Click
+            one to restore its state.
+          </>
+        }
+      />
 
       {from ? (
         <section className="rounded-md border p-4">

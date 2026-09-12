@@ -9,7 +9,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GradeChip } from "@/components/GradeChip";
-import { EligibilityChip } from "@/components/EligibilityChip";
 import type { Opportunity } from "@/lib/opportunities/repository";
 import type { OpportunityMatchRow } from "@/lib/matching/repository";
 import type { RevisionRow } from "@/lib/revisions/repository";
@@ -78,22 +77,25 @@ export function OpportunityDetailTabs({
     ?.egpId;
 
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-7">
+    <Tabs defaultValue="verdict" className="w-full">
+      <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsTrigger value="verdict">Verdict</TabsTrigger>
+        <TabsTrigger value="requirements">
+          Requirements
+          {requirements.length > 0 ? (
+            <span className="ml-1.5 text-muted-foreground">
+              {requirements.length}
+            </span>
+          ) : null}
+        </TabsTrigger>
         <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="match">Match</TabsTrigger>
-        <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
-        <TabsTrigger value="requirements">Requirements</TabsTrigger>
-        <TabsTrigger value="documents">Documents</TabsTrigger>
-        <TabsTrigger value="timeline">Timeline</TabsTrigger>
-        <TabsTrigger value="source">Source</TabsTrigger>
       </TabsList>
 
       {/* ---------- Overview ---------- */}
       <TabsContent value="overview" className="mt-6 flex flex-col gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
               Details
             </CardTitle>
           </CardHeader>
@@ -154,7 +156,7 @@ export function OpportunityDetailTabs({
         {opportunity.description ? (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
                 Description
               </CardTitle>
             </CardHeader>
@@ -169,7 +171,7 @@ export function OpportunityDetailTabs({
         {Array.isArray(opportunity.tags) && opportunity.tags.length > 0 ? (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
                 Tags
               </CardTitle>
             </CardHeader>
@@ -182,89 +184,92 @@ export function OpportunityDetailTabs({
             </CardContent>
           </Card>
         ) : null}
+
+        {/* Activity + source — compact strip. Replaces the old Timeline
+            and Source tabs; the deep source metadata rarely earned its
+            own top-level nav slot. */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
+                Activity
+              </CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {revisions.length} revision{revisions.length === 1 ? "" : "s"} · {opportunity.source_key}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 pt-0 text-sm">
+            {revisions.length > 0 ? (
+              <ol className="flex flex-col gap-1.5 border-l pl-4">
+                {revisions.slice(0, 3).map((r) => {
+                  const deadlineChange =
+                    r.changed_fields.includes("deadline_at");
+                  return (
+                    <li key={r.id} className="flex items-baseline gap-2">
+                      <Badge
+                        variant={deadlineChange ? "destructive" : "outline"}
+                        className="shrink-0"
+                      >
+                        Rev {r.revision_no}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {fmt(r.detected_at)}
+                        {deadlineChange
+                          ? " · deadline changed"
+                          : r.changed_fields.length > 0
+                            ? ` · ${r.changed_fields.join(", ")}`
+                            : ""}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              {isEgpBppa && egpId ? (
+                <form
+                  action="https://www.eprocure.gov.bd/resources/common/ViewTender.jsp"
+                  method="POST"
+                  target="_blank"
+                  className="inline"
+                >
+                  <input type="hidden" name="id" value={egpId} />
+                  <input type="hidden" name="h" value="t" />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1 rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                  >
+                    Open tender on e-GP →
+                  </button>
+                </form>
+              ) : opportunity.source_url ? (
+                <a
+                  href={opportunity.source_url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-1 rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                >
+                  Open original notice →
+                </a>
+              ) : null}
+              <span className="text-xs text-muted-foreground">
+                {opportunity.reference_no ? (
+                  <>
+                    Ref{" "}
+                    <span className="font-mono text-foreground">
+                      {opportunity.reference_no}
+                    </span>
+                  </>
+                ) : null}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
 
-      {/* ---------- Match ---------- */}
-      <TabsContent value="match" className="mt-6 flex flex-col gap-4">
-        {match ? (
-          <>
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-baseline justify-between gap-4">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    Verdict
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <GradeChip match={match} />
-                    <EligibilityChip value={match.eligibility} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-2xl font-semibold">{match.score}/100</p>
-                <p className="text-xs text-muted-foreground">
-                  Scoring version {match.scoring_version} · computed{" "}
-                  {fmt(match.computed_at)}
-                </p>
-              </CardContent>
-            </Card>
-
-            {match.reasons.length > 0 ? (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    Fit signals ({match.reasons.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <ul className="flex flex-col gap-2 text-sm">
-                    {match.reasons.map((r, i) => (
-                      <li key={i} className="flex gap-3">
-                        <span className="shrink-0 font-mono text-xs text-green-700 dark:text-green-400">
-                          +{r.contribution}
-                        </span>
-                        <span className="text-muted-foreground">{r.evidence}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {match.concerns.length > 0 ? (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    Concerns
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-                    {match.concerns.map((c, i) => (
-                      <li key={i}>{c.evidence}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ) : null}
-          </>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="p-8 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">
-                No match computed for this workspace yet.
-              </p>
-              <p className="mt-2">
-                Trigger a recompute by updating your monitoring profile or
-                capabilities.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </TabsContent>
-
-      {/* ---------- Eligibility ---------- */}
-      <TabsContent value="eligibility" className="mt-6 flex flex-col gap-4">
+      {/* ---------- Verdict (fit + eligibility together) ---------- */}
+      <TabsContent value="verdict" className="mt-6 flex flex-col gap-4">
         {workspaceId ? (
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
@@ -287,7 +292,7 @@ export function OpportunityDetailTabs({
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-baseline justify-between gap-4">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
                     Eligibility verdict
                   </CardTitle>
                   <div className="flex items-center gap-2">
@@ -317,7 +322,7 @@ export function OpportunityDetailTabs({
             {Object.keys(assessment.category_scores).length > 0 ? (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
                     Category scores
                   </CardTitle>
                 </CardHeader>
@@ -349,11 +354,59 @@ export function OpportunityDetailTabs({
               </p>
               <p className="mt-2">
                 Run one to see per-requirement eligibility and a recommendation.
-                {workspaceId ? " Use the Run Assessment button (coming next)." : ""}
               </p>
             </CardContent>
           </Card>
         )}
+
+        {/* Fit signals from the matching engine — one axis of the two-signal
+            verdict. Coexists with the eligibility card above. */}
+        {match ? (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
+                  Fit — {match.score}/100
+                </CardTitle>
+                <GradeChip match={match} />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="mb-3 text-xs text-muted-foreground">
+                Scoring v{match.scoring_version} · computed {fmt(match.computed_at)}
+              </p>
+              {match.reasons.length > 0 ? (
+                <>
+                  <p className="mb-1.5 text-xs font-medium text-foreground">
+                    Signals ({match.reasons.length})
+                  </p>
+                  <ul className="mb-3 flex flex-col gap-1.5 text-sm">
+                    {match.reasons.map((r, i) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="shrink-0 font-mono text-xs text-green-700 dark:text-green-400">
+                          +{r.contribution}
+                        </span>
+                        <span className="text-muted-foreground">{r.evidence}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+              {match.concerns.length > 0 ? (
+                <>
+                  <p className="mb-1.5 text-xs font-medium text-foreground">
+                    Concerns
+                  </p>
+                  <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                    {match.concerns.map((c, i) => (
+                      <li key={i}>{c.evidence}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : null}
       </TabsContent>
 
       {/* ---------- Requirements ---------- */}
@@ -374,7 +427,7 @@ export function OpportunityDetailTabs({
           Object.entries(requirementsByCategory).map(([cat, reqs]) => (
             <Card key={cat}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <CardTitle className="text-sm font-semibold tracking-tight text-foreground">
                   {cat.replace(/_/g, " ")} ({reqs.length})
                 </CardTitle>
               </CardHeader>
@@ -417,157 +470,6 @@ export function OpportunityDetailTabs({
         )}
       </TabsContent>
 
-      {/* ---------- Documents ---------- */}
-      <TabsContent value="documents" className="mt-6">
-        <Card className="border-dashed">
-          <CardContent className="p-8 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">
-              Evidence documents — coming soon.
-            </p>
-            <p className="mt-2">
-              Upload audited financials, certification PDFs, and past-project
-              proofs; the assessment engine will attach them to matching
-              requirements automatically.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* ---------- Timeline ---------- */}
-      <TabsContent value="timeline" className="mt-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Timeline ({revisions.length + 2} events)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ol className="flex flex-col gap-3 border-l pl-4 text-sm">
-              {/* Deadline (future or past) */}
-              {opportunity.deadline_at ? (
-                <li>
-                  <div className="flex items-baseline gap-2">
-                    <Badge
-                      variant={
-                        remaining !== null && remaining >= 0 && remaining < 7
-                          ? "destructive"
-                          : "outline"
-                      }
-                    >
-                      Deadline
-                    </Badge>
-                    <span className="font-medium">
-                      {fmt(opportunity.deadline_at)}
-                    </span>
-                  </div>
-                </li>
-              ) : null}
-
-              {/* Revisions newest-first */}
-              {revisions.map((r) => {
-                const deadlineChange =
-                  r.changed_fields.includes("deadline_at");
-                return (
-                  <li key={r.id}>
-                    <div className="flex items-baseline gap-2">
-                      <Badge variant={deadlineChange ? "destructive" : "outline"}>
-                        Rev {r.revision_no}
-                      </Badge>
-                      <span className="font-medium">
-                        {fmt(r.detected_at)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {deadlineChange
-                        ? "Deadline changed"
-                        : r.changed_fields.length > 0
-                          ? `Changed: ${r.changed_fields.join(", ")}`
-                          : "Amended"}
-                    </p>
-                  </li>
-                );
-              })}
-
-              {/* Publication event */}
-              {opportunity.publication_at ? (
-                <li>
-                  <div className="flex items-baseline gap-2">
-                    <Badge variant="secondary">Published</Badge>
-                    <span className="font-medium">
-                      {fmt(opportunity.publication_at)}
-                    </span>
-                  </div>
-                </li>
-              ) : null}
-            </ol>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* ---------- Source ---------- */}
-      <TabsContent value="source" className="mt-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Source
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 pt-0">
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <Cell label="Source">{opportunity.source_key}</Cell>
-              <Cell label="External id">
-                <span className="font-mono text-xs">
-                  {opportunity.external_id}
-                </span>
-              </Cell>
-              <Cell label="First seen">
-                {fmt(opportunity.first_seen_at)}
-              </Cell>
-              <Cell label="Last seen">{fmt(opportunity.last_seen_at)}</Cell>
-              <Cell label="Content hash">
-                <span className="font-mono text-xs">
-                  {opportunity.content_hash.slice(0, 16)}…
-                </span>
-              </Cell>
-            </dl>
-            <div className="pt-2">
-              {isEgpBppa && egpId ? (
-                <form
-                  action="https://www.eprocure.gov.bd/resources/common/ViewTender.jsp"
-                  method="POST"
-                  target="_blank"
-                  className="inline"
-                >
-                  <input type="hidden" name="id" value={egpId} />
-                  <input type="hidden" name="h" value="t" />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-1 rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20"
-                  >
-                    Open tender on e-GP →
-                  </button>
-                </form>
-              ) : opportunity.source_url ? (
-                <a
-                  href={opportunity.source_url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1 rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20"
-                >
-                  Open original notice →
-                </a>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  No source URL available. Look up by reference number:{" "}
-                  <span className="font-mono">
-                    {opportunity.reference_no ?? "n/a"}
-                  </span>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
     </Tabs>
   );
 }

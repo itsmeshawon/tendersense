@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerSupabaseClient } from "../supabase/server";
 import {
   createWorkspaceViaRpc,
@@ -17,10 +18,14 @@ export type CreateWorkspaceResult =
   | { ok: true; id: string }
   | { ok: false; message: string; field?: "name" | "type" };
 
-export async function listMyWorkspaces(): Promise<Workspace[]> {
+/**
+ * Per-request cached. AppShell + page + NotificationsBell all need
+ * the workspace list; without `cache()` that's 3 DB round-trips.
+ */
+export const listMyWorkspaces = cache(async (): Promise<Workspace[]> => {
   const supabase = await createServerSupabaseClient();
   return listWorkspacesForCurrentUser(supabase);
-}
+});
 
 export async function createMyWorkspace(input: {
   name: string;
