@@ -91,12 +91,20 @@ export default async function WorkspaceDetailPage({
             <span className="font-mono">{workspace.slug}</span>
           </p>
         </div>
-        <Link
-          href="/workspaces"
-          className="shrink-0 rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          Back
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href={`/workspaces/${id}/monitoring`}
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Monitoring
+          </Link>
+          <Link
+            href="/workspaces"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Back
+          </Link>
+        </div>
       </header>
 
       <section className="flex flex-col gap-3">
