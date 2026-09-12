@@ -10,7 +10,7 @@
  */
 
 /** Known procurement sources. Grows when new adapters are added. */
-export type SourceKey = "world_bank" | "bd_egp";
+export type SourceKey = "world_bank" | "bd_egp" | "bd_bppa";
 
 export type OpportunityStatus =
   | "open"
