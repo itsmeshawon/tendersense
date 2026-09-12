@@ -12,23 +12,26 @@ import {
 import { recomputeForWorkspace } from "@/lib/matching/recompute";
 import { CAPABILITY_TAXONOMY } from "@/lib/matching/taxonomy";
 
-export async function addCapabilityAction(
+export async function addCapabilitiesAction(
   workspaceId: string,
-  label: string,
+  labels: string[],
 ): Promise<void> {
   const user = await getServerUser();
   if (!user) redirect("/login");
 
-  // Guard: label must be one of the taxonomy keys (SoT §16.7 fixed set,
-  // Phase 3 v2 §Q1 decision — no custom until Pro).
-  if (!CAPABILITY_TAXONOMY.some((c) => c.key === label)) {
-    throw new Error(`Unknown capability: ${label}`);
-  }
+  // Guard: every label must be one of the taxonomy keys (SoT §16.7,
+  // Phase 3 v2 §Q1 — no custom until Pro).
+  const validLabels = labels.filter((label) =>
+    CAPABILITY_TAXONOMY.some((c) => c.key === label),
+  );
+  if (validLabels.length === 0) return;
 
   const supabase = await createServerSupabaseClient();
-  await upsertWorkspaceCapabilities(supabase, workspaceId, [
-    { label, source: "user" },
-  ]);
+  await upsertWorkspaceCapabilities(
+    supabase,
+    workspaceId,
+    validLabels.map((label) => ({ label, source: "user" as const })),
+  );
   revalidatePath(`/workspaces/${workspaceId}/capabilities`);
 
   // Recompute — service-role bypass because opportunity_matches

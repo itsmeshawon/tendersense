@@ -292,6 +292,10 @@ export default async function OpportunitiesPage({
         method="get"
         className="flex flex-col gap-3 rounded-md border p-4"
       >
+        {/* Preserve the active workspace context across filter submits. */}
+        {defaultWorkspaceId ? (
+          <input type="hidden" name="workspace" value={defaultWorkspaceId} />
+        ) : null}
         <label className="flex flex-col gap-1 text-xs">
           <span className="font-semibold text-foreground">Search</span>
           <input
@@ -394,7 +398,11 @@ export default async function OpportunitiesPage({
           <div className="flex items-center gap-2">
             {activeFilters.length > 0 ? (
               <Link
-                href="/opportunities"
+                href={
+                  defaultWorkspaceId
+                    ? `/opportunities?workspace=${defaultWorkspaceId}`
+                    : "/opportunities"
+                }
                 className="text-xs text-muted-foreground underline hover:text-foreground"
               >
                 Clear all
