@@ -6,10 +6,17 @@ import { lookupByCompanyName } from "@/lib/experience/egp-experience-client";
 import type { ExperienceRecord } from "@/lib/experience/types";
 import { importExperienceRecords } from "@/lib/workspaces/projects-service";
 
+export type WorkStatusFilter = "All" | "Completed" | "Ongoing";
+
 export type SearchState =
   | { status: "idle" }
   | { status: "searching" }
-  | { status: "results"; records: ExperienceRecord[]; query: string }
+  | {
+      status: "results";
+      records: ExperienceRecord[];
+      query: string;
+      workStatus: WorkStatusFilter;
+    }
   | { status: "error"; message: string };
 
 export async function searchCompanyContracts(
@@ -18,13 +25,20 @@ export async function searchCompanyContracts(
   formData: FormData,
 ): Promise<SearchState> {
   const query = String(formData.get("companyName") ?? "").trim();
+  const workStatusRaw = String(formData.get("workStatus") ?? "All");
+  const workStatus: WorkStatusFilter =
+    workStatusRaw === "Completed" || workStatusRaw === "Ongoing"
+      ? workStatusRaw
+      : "All";
+
   if (query.length === 0) {
     return { status: "error", message: "Type a company name to search." };
   }
   if (query.length < 3) {
     return {
       status: "error",
-      message: "Enter at least 3 characters — 'Contains' match still needs a real name.",
+      message:
+        "Enter at least 3 characters — 'Contains' match still needs a real name.",
     };
   }
 
@@ -36,10 +50,10 @@ export async function searchCompanyContracts(
     const result = await lookupByCompanyName({
       companyName: query,
       match: "Contains",
-      workStatus: "Completed",
+      workStatus,
       pageSize: 25,
     });
-    return { status: "results", records: result.records, query };
+    return { status: "results", records: result.records, query, workStatus };
   } catch (err) {
     return {
       status: "error",

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { use, useState, useTransition } from "react";
-import type { ExperienceRecord } from "@/lib/experience/types";
 import {
   importSelectedContracts,
   searchCompanyContracts,
@@ -87,9 +86,15 @@ export default function OnboardingPage({
       </header>
 
       <form action={handleSearch} className="flex flex-col gap-3">
-        <label htmlFor="companyName" className="text-sm font-medium">
-          Company name
-        </label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="companyName" className="text-sm font-medium">
+            Company name
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Match is <span className="font-mono">Contains</span> — try the
+            shortest distinctive word if the full legal name returns nothing.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <input
             id="companyName"
@@ -98,9 +103,19 @@ export default function OnboardingPage({
             required
             minLength={3}
             autoFocus
-            placeholder="e.g. Beximco Computers"
+            placeholder="e.g. Beximco, Sayma"
             className="flex-1 rounded-md border px-3 py-2 text-sm"
           />
+          <select
+            name="workStatus"
+            defaultValue="All"
+            aria-label="Work status filter"
+            className="rounded-md border px-3 py-2 text-sm"
+          >
+            <option value="All">All</option>
+            <option value="Completed">Completed</option>
+            <option value="Ongoing">Ongoing</option>
+          </select>
           <button
             type="submit"
             disabled={isSearching}

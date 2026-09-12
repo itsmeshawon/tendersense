@@ -202,4 +202,25 @@ describe("lookupByCompanyName", () => {
       lookupByCompanyName({ companyName: "X" }, { fetchImpl }),
     ).rejects.toThrow(/session/i);
   });
+
+  it("extracts JSESSIONID when it is not the first Set-Cookie header", async () => {
+    // Real e-GP responses send multiple set-cookie headers. Node's
+    // Headers.get('set-cookie') returns only the first — we must use
+    // getSetCookie() to scan all of them.
+    const headers = new Headers({ "content-type": "text/html" });
+    headers.append("set-cookie", "tracker=abc; Path=/");
+    headers.append("set-cookie", "JSESSIONID=REAL_SESSION; Path=/; HttpOnly");
+    const sessionRes = new Response("<html></html>", { status: 200, headers });
+
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionRes)
+      .mockResolvedValueOnce(makeResponse(fixture("empty-results.html")));
+
+    await lookupByCompanyName({ companyName: "X" }, { fetchImpl });
+    const cookieHeader = new Headers(fetchImpl.mock.calls[1][1]?.headers).get(
+      "cookie",
+    );
+    expect(cookieHeader).toContain("JSESSIONID=REAL_SESSION");
+  });
 });

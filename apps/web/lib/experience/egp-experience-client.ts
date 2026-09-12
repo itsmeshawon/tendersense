@@ -106,10 +106,20 @@ function buildPayload(
 }
 
 function extractJsessionId(headers: Headers): string | null {
-  // `set-cookie` in a Response Headers object may be multiple values
-  // joined with commas. Look for JSESSIONID=xxx up to the next ; or ,
-  const setCookie =
-    headers.get("set-cookie") ?? headers.get("Set-Cookie") ?? "";
-  const m = /JSESSIONID=([^;,\s]+)/i.exec(setCookie);
-  return m ? m[1] : null;
+  // Node's fetch `Headers.get('set-cookie')` returns only the first
+  // set-cookie header. Servers commonly send multiple (JSESSIONID plus
+  // application cookies). Use `getSetCookie()` when available (Node 22+,
+  // undici) so we can scan every cookie for JSESSIONID.
+  const withGetSetCookie = headers as Headers & {
+    getSetCookie?: () => string[];
+  };
+  const cookies: string[] = withGetSetCookie.getSetCookie
+    ? withGetSetCookie.getSetCookie()
+    : [headers.get("set-cookie") ?? headers.get("Set-Cookie") ?? ""];
+
+  for (const cookie of cookies) {
+    const m = /JSESSIONID=([^;,\s]+)/i.exec(cookie);
+    if (m) return m[1];
+  }
+  return null;
 }
