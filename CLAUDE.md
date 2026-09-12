@@ -2,7 +2,9 @@
 
 Stack: next + typescript + supabase + vercel + github
 Started: 2026-09-11
-Collaborative: yes (see `Project_Status.md` collaborators list). Follow the collaborative-project rules in `.claude/rules/mew-common/vault-rules.md` and `.claude/rules/mew-code/code-rules.md` — `git pull` first, GitHub Issues before Stalk/MewKing work, never self-merge PRs.
+Collaborative: yes (see `Project_Status.md` collaborators list). Follow the collaborative-project rules in `.claude/rules/mew-common/vault-rules.md` and `.claude/rules/mew-code/code-rules.md` — `git pull` first, GitHub Issues before Stalk/MewKing work.
+
+**Merge policy (scope-limited exception):** Per `decisions/0011-solo-merge-during-mohabbat-hiatus.md`, shawon may self-merge his own PRs on this repo while Mohabbat is unavailable. Branch → PR → CI green → merge still required; only the reviewer requirement is waived. Reinstate no-self-merge when Mohabbat returns.
 
 ## What to read first
 
