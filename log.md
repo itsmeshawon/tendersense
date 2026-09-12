@@ -766,3 +766,67 @@ Definition of MVP Done (SoT §114): items 1-9 checked.
 - BPPA works/services/physical-service categories (post-MVP)
 - Data-residency counsel question (drafted, awaiting filing)
 - T&C automated-access clause at eprocure.gov.bd
+
+- **2026-09-12 11:38** — auto-wrap: modified Project_Status.md [auto-wrap]
+
+- **2026-09-12 11:48** — auto-wrap: modified 20260912100018_opportunity_matches.sql, 20260912100019_workspace_capabilities.sql, types.test.ts +7 more [auto-wrap]
+
+- **2026-09-12 12:00** — auto-wrap: modified repository.test.ts, repository.ts, profile-loader.test.ts +8 more [auto-wrap]
+
+- **2026-09-12 12:11** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 12:29** — auto-wrap: modified actions.ts [auto-wrap]
+
+- **2026-09-12 12:34** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 12:40** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 12:45** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 12:50** — auto-wrap: modified page.tsx, page.tsx [auto-wrap]
+
+- **2026-09-12 12:52** — auto-wrap: session ended [auto-wrap]
+
+## Session 22 — 2026-09-12
+
+**Phase:** Phase 3 (Matching) kickoff — first 4 PRs shipped
+
+### What shipped
+
+- **`#42` PR #1 Schema** — migrations 0018 (opportunity_matches with grade check constraint locking ADR 0006 §5 vocabulary, unique on workspace+opp, `scoring_version` field for post-launch retune observability) + 0019 (workspace_capabilities with `source` = user | auto_derived for cold-start §2b).
+- **`#43` PR #2 Scoring library** — `lib/matching/`:
+  - `types.ts` locks `GRADE_BOUNDARIES` + `DIMENSION_WEIGHTS` (5 dims sum to 100, per plan v2 §2). `SCORING_VERSION=1`.
+  - `taxonomy.ts` — SoT §16.7's 10-item fixed capability list + `bucketProjectToCapabilities` (cold-start heuristic, ≥ 2 signal-word hits per §Q7).
+  - `signals.ts` — 5 pure per-dimension functions returning `{ applicable, contribution, evidence }` so score can redistribute weight (§2 ambiguity rule).
+  - `score.ts` — combines + short-circuits (`not_eligible` on excluded-keyword hit; `need_more_info` on empty profile) + partitions signals into top-3 reasons + top-2 concerns for the popover.
+- **`#44` PR #3 Recompute engine** — repository (upsertMatch onConflict workspace+opp) + profile-loader (composes WorkspaceProfile from monitoring_profiles + workspace_capabilities + projects) + `recomputeForWorkspace` (last-90d window per §Q4, chunked 100 per pass) + `recomputeForOpportunity` (fanout to every active-monitoring-profile workspace). Runner calls it on both create and update paths. Monitoring server actions (create/toggle/delete) trigger workspace-wide recompute.
+- **`#45` PR #4 Grade UI** — `components/GradeChip.tsx` client component with click-to-expand popover. Labels per ADR 0006 §5 — never renders the letter alone (always "A — Strong fit"). Not-eligible visually distinct from D (dashed border + strikethrough). New `grade_desc` sort option; unranked rows sink; option disabled without a workspace.
+
+### Two prod bugs surfaced + fixed
+
+- **`#46` fix(monitoring)** — `recomputeForWorkspace` was called with the user's session client, but `opportunity_matches` grants insert/update only to `service_role`. RLS silently blocked every upsert → prod table stayed empty → every row said "Not yet ranked". Fix: switch to service-role client for the recompute step only (the profile mutation still uses user-session so workspace membership is enforced).
+- **`#47` fix(opportunities)** — `/opportunities` was reading matches for `workspaces[0]`, but the user's Monitoring page belongs to a *specific* workspace. Recompute wrote 70 D grades for BRAC IT; page asked for a different workspace's matches → all "Not yet ranked". Fix: accept `?workspace=<id>` URL param + inline picker + subtitle "Grades for &lt;name&gt;". Workspace card gets an "Opportunities" shortcut carrying the param.
+
+### Position vs Source of Truth
+
+- Phase 1: **100%** ✓ (`v0.2.0-phase1`)
+- Phase 2: **100%** ✓ (`v0.3.0-phase2`)
+- Phase 3: **~57%** — 4 of 7 PRs shipped + core scoring pipeline live
+- MVP overall (§113 scope-reduced): **~85%**
+
+### Migrations applied to hosted
+
+By user during session: 0018 + 0019.
+
+### Verified on prod
+
+- BRAC IT: 70 opportunity_matches rows, all grade D. Grade chips render on `/opportunities?workspace=<brac-it-uuid>`. Popover works. Expected: all-D distribution reflects that BRAC IT's monitoring-profile keywords don't yet hit the BD tender pool's civil-works/sewage/wiring language. PR #5 (auto-derive from eExperience-imported projects) is the natural next step to broaden the grade distribution.
+
+### Open threads carried into session 23
+
+- Phase 3 PR #5: `/workspaces/[id]/profile` capabilities tab + auto-derive from eExperience import on Peak 1 (the plan §2b cold-start-fix). Expected impact: BRAC IT grades stop being uniformly D once imported projects populate capabilities.
+- Phase 3 PR #6: grade calibration doc — needs BRAC IT bid-team session (~12 hand-labeled tenders + disagreement notes; not a release gate).
+- Phase 3 PR #7: cross-cutting review + tag `v0.4.0-phase3`.
+- Follow-up: batch supabase writes in persistence.ts + upsertMatch — cuts round-trips for both ingest cron and workspace recompute.
+- Grade vocabulary sanity check with BRAC IT before v0.4.0-phase3 ships.
+- BRAC IT name mismatch on e-GP (pilot demo blocker).

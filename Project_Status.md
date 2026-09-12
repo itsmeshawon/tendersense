@@ -12,8 +12,8 @@ plan_approved_at: 2026-09-11
 gate_block_count: 0
 last_session: 2026-09-12
 last_wrap: 2026-09-12
-session_count: 21
-current_phase: "Phase 2 — Discovery COMPLETE ✓ shipped at v0.3.0-phase2 on 2026-09-12. Phase 3 (Matching) approved, execution unblocked."
+session_count: 22
+current_phase: "Phase 3 — Matching (~57% — schema + scoring library + recompute + grade UI live on prod). Remaining: capabilities tab + calibration + review + tag v0.4.0-phase3."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
@@ -27,11 +27,11 @@ active_plans:
   - "proposals/active/phase-0-foundation/plan.md (COMPLETE — shipped at v0.1.0-phase0 on 2026-09-11)"
   - "proposals/active/phase-1-source-ingestion/plan.md (COMPLETE — shipped at v0.2.0-phase1 on 2026-09-12)"
   - "proposals/active/phase-2-discovery/plan.md (COMPLETE — shipped at v0.3.0-phase2 on 2026-09-12)"
-  - "proposals/active/phase-3-matching/plan.md (APPROVED v2 2026-09-12 — 5-dim scoring; execution unblocked)"
+  - "proposals/active/phase-3-matching/plan.md (IN PROGRESS v2 — 4/7 PRs shipped 2026-09-12; capabilities tab + calibration + review remaining)"
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 22 — kick off Phase 3 (Matching). First PR: schema migrations 0018 (opportunity_matches) + 0019 (workspace_capabilities) per proposals/active/phase-3-matching/plan.md §6.1. Then scoring library (5 signals + capability-derive) with unit tests using real e-GP + WB fixtures. Deliverable target: BRAC IT logs in, /opportunities feed is graded (A/B/C/D + Not eligible + Need more info) with 'Why this grade?' popover surfacing top reasons."
+next_action: "Session 23 — Phase 3 PR #5: capabilities tab at /workspaces/[id]/profile + auto-derive from imported eExperience projects on Peak 1 (plan v2 §2b cold-start). Expected impact on BRAC IT prod: current all-D grade distribution broadens once auto-derived capabilities land, because their real past-contract keywords will start hitting BD tender language. Then PR #6 (calibration doc — needs bid-team session) and PR #7 (review + tag v0.4.0-phase3)."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
