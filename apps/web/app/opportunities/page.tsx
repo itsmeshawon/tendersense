@@ -8,11 +8,19 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { listMatchesByIds } from "@/lib/matching/repository";
 import { GradeChip } from "@/components/GradeChip";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import type {
   ListOpportunitiesParams,
   OpportunitySort,
   OpportunityStatusFilter,
 } from "@/lib/opportunities/repository";
+
+// Shared native <select> styling that matches shadcn Input tokens.
+const SELECT_CLASS =
+  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
 
 const DHAKA_DATE = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dhaka",
@@ -274,149 +282,147 @@ export default async function OpportunitiesPage({
           {defaultWorkspaceId && savableQs ? (
             <Link
               href={`/workspaces/${defaultWorkspaceId}/saved-searches?from=?${savableQs}`}
-              className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
             >
-              Save this search
+              <Button variant="outline" size="sm">
+                Save this search
+              </Button>
             </Link>
           ) : null}
-          <Link
-            href="/workspaces"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
-          >
-            Workspaces
+          <Link href="/workspaces">
+            <Button variant="outline" size="sm">
+              Workspaces
+            </Button>
           </Link>
         </div>
       </header>
 
-      <form
-        method="get"
-        className="flex flex-col gap-3 rounded-md border p-4"
-      >
-        {/* Preserve the active workspace context across filter submits. */}
-        {defaultWorkspaceId ? (
-          <input type="hidden" name="workspace" value={defaultWorkspaceId} />
-        ) : null}
-        <label className="flex flex-col gap-1 text-xs">
-          <span className="font-semibold text-foreground">Search</span>
-          <input
-            type="search"
-            name="q"
-            defaultValue={filters.q ?? ""}
-            placeholder='Try "ERP" or "solar OR wind"'
-            className="rounded-md border px-3 py-2 text-sm"
-          />
-        </label>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-semibold text-foreground">Source</span>
-            <select
-              name="source"
-              defaultValue={filters.source ?? ""}
-              className="rounded-md border px-3 py-2 text-sm"
-            >
-              {SOURCES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-semibold text-foreground">Country</span>
-            <select
-              name="country"
-              defaultValue={filters.country ?? ""}
-              className="rounded-md border px-3 py-2 text-sm"
-            >
-              {COUNTRIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-semibold text-foreground">Deadline</span>
-            <select
-              name="deadline"
-              defaultValue={
-                filters.deadlineWithinDays
-                  ? String(filters.deadlineWithinDays)
-                  : ""
-              }
-              className="rounded-md border px-3 py-2 text-sm"
-            >
-              {DEADLINE_RANGES.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-semibold text-foreground">Status</span>
-            <select
-              name="status"
-              defaultValue={filters.status ?? ""}
-              className="rounded-md border px-3 py-2 text-sm"
-            >
-              {STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label className="flex flex-col gap-1 text-xs sm:max-w-xs">
-          <span className="font-semibold text-foreground">Sort by</span>
-          <select
-            name="sort"
-            defaultValue={uiSort ?? filters.sort ?? "publication_desc"}
-            className="rounded-md border px-3 py-2 text-sm"
-          >
-            {SORTS.map((s) => (
-              <option
-                key={s.value}
-                value={s.value}
-                disabled={
-                  (s.value === "relevance" && !filters.q) ||
-                  (s.value === "grade_desc" && !defaultWorkspaceId)
-                }
-              >
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            {activeFilters.length > 0
-              ? `Filters: ${activeFilters.join(" · ")}`
-              : "No filters"}
-          </p>
-          <div className="flex items-center gap-2">
-            {activeFilters.length > 0 ? (
-              <Link
-                href={
-                  defaultWorkspaceId
-                    ? `/opportunities?workspace=${defaultWorkspaceId}`
-                    : "/opportunities"
-                }
-                className="text-xs text-muted-foreground underline hover:text-foreground"
-              >
-                Clear all
-              </Link>
+      <Card>
+        <CardContent className="p-4">
+          <form method="get" className="flex flex-col gap-4">
+            {/* Preserve the active workspace context across filter submits. */}
+            {defaultWorkspaceId ? (
+              <input type="hidden" name="workspace" value={defaultWorkspaceId} />
             ) : null}
-            <button
-              type="submit"
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-      </form>
+            <label className="flex flex-col gap-1.5 text-xs">
+              <span className="font-semibold text-foreground">Search</span>
+              <Input
+                type="search"
+                name="q"
+                defaultValue={filters.q ?? ""}
+                placeholder='Try "ERP" or "solar OR wind"'
+              />
+            </label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+              <label className="flex flex-col gap-1.5 text-xs">
+                <span className="font-semibold text-foreground">Source</span>
+                <select
+                  name="source"
+                  defaultValue={filters.source ?? ""}
+                  className={SELECT_CLASS}
+                >
+                  {SOURCES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs">
+                <span className="font-semibold text-foreground">Country</span>
+                <select
+                  name="country"
+                  defaultValue={filters.country ?? ""}
+                  className={SELECT_CLASS}
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs">
+                <span className="font-semibold text-foreground">Deadline</span>
+                <select
+                  name="deadline"
+                  defaultValue={
+                    filters.deadlineWithinDays
+                      ? String(filters.deadlineWithinDays)
+                      : ""
+                  }
+                  className={SELECT_CLASS}
+                >
+                  {DEADLINE_RANGES.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs">
+                <span className="font-semibold text-foreground">Status</span>
+                <select
+                  name="status"
+                  defaultValue={filters.status ?? ""}
+                  className={SELECT_CLASS}
+                >
+                  {STATUSES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="flex flex-col gap-1.5 text-xs sm:max-w-xs">
+              <span className="font-semibold text-foreground">Sort by</span>
+              <select
+                name="sort"
+                defaultValue={uiSort ?? filters.sort ?? "publication_desc"}
+                className={SELECT_CLASS}
+              >
+                {SORTS.map((s) => (
+                  <option
+                    key={s.value}
+                    value={s.value}
+                    disabled={
+                      (s.value === "relevance" && !filters.q) ||
+                      (s.value === "grade_desc" && !defaultWorkspaceId)
+                    }
+                  >
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <p className="text-xs text-muted-foreground">
+                {activeFilters.length > 0
+                  ? `Filters: ${activeFilters.join(" · ")}`
+                  : "No filters"}
+              </p>
+              <div className="flex items-center gap-2">
+                {activeFilters.length > 0 ? (
+                  <Link
+                    href={
+                      defaultWorkspaceId
+                        ? `/opportunities?workspace=${defaultWorkspaceId}`
+                        : "/opportunities"
+                    }
+                  >
+                    <Button variant="ghost" size="sm">
+                      Clear all
+                    </Button>
+                  </Link>
+                ) : null}
+                <Button type="submit" size="sm">
+                  Apply
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <p className="text-xs text-muted-foreground">
         Showing {opportunities.length} result
@@ -425,30 +431,31 @@ export default async function OpportunitiesPage({
       </p>
 
       {opportunities.length === 0 ? (
-        <section
+        <Card
           data-testid="opportunities-empty"
-          className="rounded-md border border-dashed p-8 text-sm text-muted-foreground"
+          className="border-dashed"
         >
-          <p className="font-medium text-foreground">
-            {activeFilters.length > 0
-              ? "No opportunities match these filters."
-              : "No opportunities yet."}
-          </p>
-          <p className="mt-2">
-            {activeFilters.length > 0
-              ? "Try broadening the filters, or clear them to see everything."
-              : "Sync jobs populate this list on a daily and 4-hourly cadence for World Bank and Bangladesh e-GP respectively."}
-          </p>
-        </section>
+          <CardContent className="p-8 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">
+              {activeFilters.length > 0
+                ? "No opportunities match these filters."
+                : "No opportunities yet."}
+            </p>
+            <p className="mt-2">
+              {activeFilters.length > 0
+                ? "Try broadening the filters, or clear them to see everything."
+                : "Sync jobs populate this list on a daily and 4-hourly cadence for World Bank and Bangladesh e-GP respectively."}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <ul className="flex flex-col gap-3">
           {orderedOpportunities.map((o) => {
             const remaining = daysUntil(o.deadline_at);
             return (
-              <li
-                key={o.id}
-                className="flex flex-col gap-2 rounded-md border p-4 text-sm"
-              >
+              <li key={o.id}>
+                <Card className="transition-colors hover:bg-accent/30">
+                  <CardContent className="flex flex-col gap-2 p-4 text-sm">
                 <div className="flex items-baseline justify-between gap-4">
                   <h2 className="font-medium leading-snug">{o.title}</h2>
                   <div className="flex shrink-0 items-center gap-2">
@@ -459,15 +466,12 @@ export default async function OpportunitiesPage({
                       const summary = revisionSummary.get(o.id);
                       if (!summary) return null;
                       const isDeadline = summary.hasDeadlineChange;
-                      const cls = isDeadline
-                        ? "rounded-full border border-red-600 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-                        : "rounded-full border px-2 py-0.5 text-xs text-muted-foreground";
                       const label = isDeadline
                         ? `Deadline changed · ${summary.count}`
                         : `Amended · ${summary.count}`;
                       return (
-                        <span
-                          className={cls}
+                        <Badge
+                          variant={isDeadline ? "destructive" : "outline"}
                           title={
                             isDeadline
                               ? "Deadline has been amended since first ingest"
@@ -475,12 +479,12 @@ export default async function OpportunitiesPage({
                           }
                         >
                           {label}
-                        </span>
+                        </Badge>
                       );
                     })()}
-                    <span className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                    <Badge variant="secondary">
                       {SOURCE_LABEL[o.source_key] ?? o.source_key}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
 
@@ -566,6 +570,8 @@ export default async function OpportunitiesPage({
                     </a>
                   )}
                 </div>
+                  </CardContent>
+                </Card>
               </li>
             );
           })}
