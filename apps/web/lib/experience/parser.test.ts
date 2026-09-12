@@ -91,4 +91,26 @@ describe("parseExperienceRows", () => {
     </tbody></table>`;
     expect(parseExperienceRows(html)).toEqual([]);
   });
+
+  it("parses a real e-GP fragment (bare <tr>, mixed bgColor-white + bgColor-Green)", () => {
+    // Captured live 2026-09-12 from a search that was silently returning
+    // zero rows in production. Two root causes fixed:
+    //   1. Response is a bare fragment (no <table>) — cheerio was dropping
+    //      the rows before our selector ran
+    //   2. Ongoing rows use bgColor-Green, not bgColor-white
+    const rows = parseExperienceRows(fixture("real-egp-fragment.html"));
+    expect(rows).toHaveLength(2);
+
+    // Row 1 — bgColor-white, Completed
+    expect(rows[0].workStatus).toBe("Completed");
+    expect(rows[0].contractAwardedTo).toBe("Sunnah Enterprise");
+    expect(rows[0].detailId).toBe("259692");
+    expect(rows[0].contractAmount).toBe(274_000);
+
+    // Row 2 — bgColor-Green, Ongoing
+    expect(rows[1].workStatus).toBe("Ongoing");
+    expect(rows[1].contractAwardedTo).toBe("Sunnah Enterprise");
+    expect(rows[1].detailId).toBe("163187");
+    expect(rows[1].contractAmount).toBe(66906.987);
+  });
 });

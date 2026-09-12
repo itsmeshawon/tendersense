@@ -55,8 +55,19 @@ function parseNumber(raw: string): number {
 export function parseExperienceRows(html: string): ExperienceRecord[] {
   if (!html || html.trim().length === 0) return [];
 
-  const $ = cheerio.load(html);
-  const rows = $("tr.bgColor-white");
+  // Real e-GP responses are HTML fragments — bare <tr> rows with no
+  // surrounding <table>. Cheerio (parse5) drops stray <tr> outside a
+  // <table>, so results silently return zero. Wrapping is safe for
+  // full-document fixtures too — an outer <table> is ignored by cheerio
+  // when the inner document already contains one.
+  const $ = cheerio.load(`<table><tbody>${html}</tbody></table>`);
+
+  // Rows use different bgColor-* classes for status:
+  //   bgColor-white — Completed
+  //   bgColor-Green — Ongoing
+  // Match either. If e-GP adds more status colors, prefer to add them
+  // explicitly rather than a wildcard — status matters for filtering.
+  const rows = $("tr.bgColor-white, tr.bgColor-Green");
   const out: ExperienceRecord[] = [];
 
   rows.each((_, tr) => {
