@@ -144,9 +144,15 @@ describe("upsertSourceRecord", () => {
 });
 
 describe("findOpportunityByExternalId", () => {
-  it("returns { id, content_hash } when found", async () => {
+  it("returns { id, content_hash, deadline_at, title, status } when found", async () => {
     const chain = buildChain({
-      data: { id: "op-1", content_hash: "hash-abc" },
+      data: {
+        id: "op-1",
+        content_hash: "hash-abc",
+        deadline_at: "2026-10-01T00:00:00Z",
+        title: "Sample tender",
+        status: "open",
+      },
       error: null,
     });
     const client = fakeClient(chain);
@@ -154,6 +160,9 @@ describe("findOpportunityByExternalId", () => {
     expect(res).toEqual<ExistingOpportunity>({
       id: "op-1",
       contentHash: "hash-abc",
+      deadlineAt: "2026-10-01T00:00:00Z",
+      title: "Sample tender",
+      status: "open",
     });
   });
 
@@ -213,10 +222,10 @@ describe("nextRevisionNo", () => {
 });
 
 describe("writeRevision", () => {
-  it("inserts a revision row with changed fields snapshot", async () => {
-    const chain = buildChain({ data: null, error: null });
+  it("inserts a revision row with changed fields snapshot and returns id", async () => {
+    const chain = buildChain({ data: { id: "rev-1" }, error: null });
     const client = fakeClient(chain);
-    await writeRevision(client, {
+    const id = await writeRevision(client, {
       opportunityId: "op-1",
       revisionNo: 2,
       previousHash: "old-hash",
@@ -224,6 +233,7 @@ describe("writeRevision", () => {
       changedFields: ["deadline_at", "title"],
       changeSnapshot: { deadline_at: { from: "x", to: "y" } },
     });
+    expect(id).toBe("rev-1");
     expect(chain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         opportunity_id: "op-1",

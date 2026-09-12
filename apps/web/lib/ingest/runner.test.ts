@@ -19,6 +19,11 @@ const persistenceMocks = vi.hoisted(() => ({
 
 vi.mock("./persistence", () => persistenceMocks);
 
+const fanoutMocks = vi.hoisted(() => ({
+  fanoutRevisionNotifications: vi.fn(),
+}));
+vi.mock("../notifications/fanout", () => fanoutMocks);
+
 import { runSync, type RunResult } from "./runner";
 
 // ---- helpers ----
@@ -78,10 +83,14 @@ describe("runSync", () => {
     persistenceMocks.upsertSourceRecord.mockResolvedValue(undefined);
     persistenceMocks.findOpportunityByExternalId.mockResolvedValue(null);
     persistenceMocks.upsertOpportunity.mockResolvedValue("op-generated");
-    persistenceMocks.writeRevision.mockResolvedValue(undefined);
+    persistenceMocks.writeRevision.mockResolvedValue("rev-1");
     persistenceMocks.nextRevisionNo.mockResolvedValue(1);
     persistenceMocks.endSyncRun.mockResolvedValue(undefined);
     persistenceMocks.updateSourceCursor.mockResolvedValue(undefined);
+    fanoutMocks.fanoutRevisionNotifications.mockReset();
+    fanoutMocks.fanoutRevisionNotifications.mockResolvedValue({
+      workspacesNotified: 0,
+    });
   });
 
   it("marks run success and advances cursor on empty first page", async () => {
@@ -134,6 +143,9 @@ describe("runSync", () => {
     persistenceMocks.findOpportunityByExternalId.mockResolvedValue({
       id: "op-A",
       contentHash: "hash-A",
+      deadlineAt: null,
+      title: "Tender A",
+      status: "open",
     });
 
     const result = await runSync(adapter, fakeClient);
@@ -155,6 +167,9 @@ describe("runSync", () => {
     persistenceMocks.findOpportunityByExternalId.mockResolvedValue({
       id: "op-A",
       contentHash: "hash-old",
+      deadlineAt: "2026-10-01T00:00:00Z",
+      title: "Old title",
+      status: "open",
     });
     persistenceMocks.upsertOpportunity.mockResolvedValue("op-A");
 

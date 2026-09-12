@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationsBell />
           <Link
             href="/opportunities"
             className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent"

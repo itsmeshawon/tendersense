@@ -9,6 +9,7 @@ import {
   upsertSourceRecord,
   writeRevision,
 } from "./persistence";
+import { fanoutRevisionNotifications } from "../notifications/fanout";
 import type {
   NormalizedOpportunity,
   ProcurementSourceAdapter,
@@ -207,19 +208,51 @@ async function persistRecord(
     return;
   }
 
+  const changedFields: string[] = [];
+  if ((existing.deadlineAt ?? null) !== (normalized.deadlineAt ?? null)) {
+    changedFields.push("deadline_at");
+  }
+  if (existing.title !== normalized.title) {
+    changedFields.push("title");
+  }
+  if (existing.status !== normalized.status) {
+    changedFields.push("status");
+  }
+
   const revisionNo = await nextRevisionNo(supabase, opportunityId);
-  await writeRevision(supabase, {
+  const revisionId = await writeRevision(supabase, {
     opportunityId,
     revisionNo,
     previousHash: existing.contentHash,
     newHash: normalized.contentHash,
-    // For MVP the changed_fields list is left empty — computing the
-    // diff needs the previous row's full state. `change_snapshot` holds
-    // the new state for now, so we can compute the diff later without
-    // losing information.
-    changedFields: [],
+    changedFields,
     changeSnapshot: { new: normalized },
   });
+
+  // Best-effort fanout to matching monitoring profiles. Errors are
+  // logged inside fanoutRevisionNotifications; the revision write
+  // already succeeded, so we do not fail the record here.
+  try {
+    await fanoutRevisionNotifications(supabase, {
+      revisionId,
+      opportunity: {
+        id: opportunityId,
+        source_key: normalized.sourceKey,
+        country_code: normalized.countryCode ?? null,
+        procurement_method: normalized.procurementMethod ?? null,
+        sector: normalized.sector ?? null,
+        title: normalized.title,
+        description: normalized.description ?? null,
+        reference_no: normalized.referenceNo ?? null,
+      },
+      changedFields,
+    });
+  } catch (err) {
+    console.warn(
+      "[runner] fanout threw unexpectedly:",
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   callbacks.onUpdated();
 }
