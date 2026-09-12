@@ -6,6 +6,12 @@ import { getOpportunityById } from "@/lib/opportunities/repository";
 import { listRevisionsForOpportunity } from "@/lib/revisions/repository";
 import { listMatchesByIds } from "@/lib/matching/repository";
 import { listMyWorkspaces } from "@/lib/workspaces/service";
+import {
+  getLatestAssessment,
+  listEvaluationsForRequirements,
+  listRequirements,
+} from "@/lib/assessment/repository";
+import { getUsage, type WorkspacePlan } from "@/lib/assessment/quota";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { Button } from "@/components/ui/button";
 import { OpportunityDetailTabs } from "./detail-tabs";
@@ -47,14 +53,33 @@ export default async function OpportunityDetailPage({
   const activeWorkspaceId = requestedWs ?? workspaces[0]?.id;
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
 
-  // In parallel: match + revisions
-  const [matches, revisions] = await Promise.all([
+  // In parallel: match + revisions + latest assessment
+  const [matches, revisions, assessment] = await Promise.all([
     activeWorkspaceId
       ? listMatchesByIds(supabase, activeWorkspaceId, [opp.id])
       : Promise.resolve([]),
     listRevisionsForOpportunity(supabase, opp.id),
+    activeWorkspaceId
+      ? getLatestAssessment(supabase, activeWorkspaceId, opp.id)
+      : Promise.resolve(null),
   ]);
   const match = matches[0] ?? null;
+
+  const requirements = assessment
+    ? await listRequirements(supabase, assessment.id)
+    : [];
+  const evaluations = requirements.length
+    ? await listEvaluationsForRequirements(
+        supabase,
+        requirements.map((r) => r.id),
+      )
+    : [];
+
+  const workspacePlan: WorkspacePlan =
+    (activeWorkspace?.plan as WorkspacePlan | undefined) ?? "free";
+  const usage = activeWorkspaceId
+    ? await getUsage(supabase, activeWorkspaceId, workspacePlan)
+    : null;
 
   const backHref = activeWorkspaceId
     ? `/opportunities?workspace=${activeWorkspaceId}`
@@ -98,6 +123,11 @@ export default async function OpportunityDetailPage({
         opportunity={opp}
         match={match}
         revisions={revisions}
+        assessment={assessment}
+        requirements={requirements}
+        evaluations={evaluations}
+        workspaceId={activeWorkspaceId ?? null}
+        usage={usage}
       />
     </main>
   );
