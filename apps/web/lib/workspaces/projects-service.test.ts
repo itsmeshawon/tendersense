@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExperienceRecord } from "../experience/types";
 
 const insertRepo = vi.fn();
+const upsertCapsMock = vi.fn();
+const recomputeMock = vi.fn();
 
 vi.mock("./projects-repository", () => ({
   insertProjects: (...args: unknown[]) => insertRepo(...args),
@@ -13,6 +15,18 @@ vi.mock("next/headers", () => ({
 
 vi.mock("../supabase/server", () => ({
   createServerSupabaseClient: async () => ({ __fake: true }),
+}));
+
+vi.mock("../supabase/service", () => ({
+  createServiceRoleClient: () => ({ __fake: true }),
+}));
+
+vi.mock("../matching/repository", () => ({
+  upsertWorkspaceCapabilities: (...args: unknown[]) => upsertCapsMock(...args),
+}));
+
+vi.mock("../matching/recompute", () => ({
+  recomputeForWorkspace: (...args: unknown[]) => recomputeMock(...args),
 }));
 
 import {
@@ -75,6 +89,8 @@ describe("experienceRecordToProjectInsert", () => {
 describe("importExperienceRecords", () => {
   beforeEach(() => {
     insertRepo.mockReset();
+    upsertCapsMock.mockReset().mockResolvedValue(undefined);
+    recomputeMock.mockReset().mockResolvedValue({ matched: 0 });
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54331";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon";
   });
@@ -103,5 +119,36 @@ describe("importExperienceRecords", () => {
     await expect(importExperienceRecords("w-1", [rec])).rejects.toThrow(
       /rls denied/,
     );
+  });
+
+  it("auto-derives capabilities from imported projects (Phase 3 §2b)", async () => {
+    insertRepo.mockResolvedValue(1);
+    // Title deliberately hits 2+ signal words in the ERP bucket ("erp"
+    // and "sap") so bucketing produces a suggestion.
+    const erpProject: ExperienceRecord = {
+      ...rec,
+      title: "SAP ERP implementation with financial modules for X ministry",
+    };
+    await importExperienceRecords("w-1", [erpProject]);
+    expect(upsertCapsMock).toHaveBeenCalledTimes(1);
+    const [, workspaceId, rows] = upsertCapsMock.mock.calls[0];
+    expect(workspaceId).toBe("w-1");
+    expect(rows.length).toBeGreaterThan(0);
+    // Each auto-derived row carries source='auto_derived' + confidence
+    for (const r of rows) {
+      expect(r.source).toBe("auto_derived");
+      expect(r.confidence).toBeGreaterThan(0);
+    }
+    // Recompute called after auto-derive so /opportunities reflects
+    // the new capabilities on next visit.
+    expect(recomputeMock).toHaveBeenCalledWith(expect.anything(), "w-1");
+  });
+
+  it("skips auto-derive when nothing buckets to ≥ 2 signal words", async () => {
+    insertRepo.mockResolvedValue(1);
+    const bland: ExperienceRecord = { ...rec, title: "Gauze supply" };
+    await importExperienceRecords("w-1", [bland]);
+    expect(upsertCapsMock).not.toHaveBeenCalled();
+    expect(recomputeMock).not.toHaveBeenCalled();
   });
 });
