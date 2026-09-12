@@ -10,8 +10,11 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const adapter = createWorldBankAdapter({ fetchImpl: fetch, pageSize: 100 });
-  const result = await runSync(adapter, supabase, { maxPages: 2 });
+  // pageSize 50 keeps per-run count manageable while the new adapter
+  // (search.worldbank.org) is fresh in prod. maxPages 5 = up to 250
+  // most-recent notices per cron pass — well inside the 15-min timeout.
+  const adapter = createWorldBankAdapter({ fetchImpl: fetch, pageSize: 50 });
+  const result = await runSync(adapter, supabase, { maxPages: 5 });
 
   console.log("[sync-worldbank]", result);
   if (result.status === "failed") process.exit(1);

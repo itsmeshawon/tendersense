@@ -20,7 +20,7 @@ describe("createWorldBankAdapter — sourceKey + healthCheck", () => {
     expect(adapter.sourceKey).toBe("world_bank");
   });
 
-  it("healthCheck returns ok=true when API responds 200 with {count,data}", async () => {
+  it("healthCheck returns ok=true when API responds 200 with procnotices", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(jsonResponse(fixture("worldbank-empty.json")));
@@ -47,23 +47,20 @@ describe("createWorldBankAdapter — fetchPage", () => {
     fetchImpl = vi.fn<typeof fetch>();
   });
 
-  it("issues a GET to the datacatalog URL with default top=1000 skip=0", async () => {
+  it("issues a GET to search.worldbank.org with noticedate desc sort", async () => {
     fetchImpl.mockResolvedValue(jsonResponse(fixture("worldbank-page.json")));
     const adapter = createWorldBankAdapter({ fetchImpl });
     await adapter.fetchPage();
     const [url, init] = fetchImpl.mock.calls[0];
-    expect(String(url)).toContain(
-      "datacatalogapi.worldbank.org/dexapps/fone/api/apiservice",
-    );
-    expect(String(url)).toContain("datasetId=DS00979");
-    expect(String(url)).toContain("resourceId=RS00909");
-    expect(String(url)).toContain("type=json");
-    expect(String(url)).toContain("top=1000");
-    expect(String(url)).toContain("skip=0");
+    expect(String(url)).toContain("search.worldbank.org/api/v2/procnotices");
+    expect(String(url)).toContain("format=json");
+    expect(String(url)).toContain("srt=noticedate");
+    expect(String(url)).toContain("order=desc");
+    expect(String(url)).toContain("os=0");
     expect(init?.method ?? "GET").toBe("GET");
   });
 
-  it("respects the cursor's skip offset and returns records + nextCursor when the page is full", async () => {
+  it("respects the cursor's os offset and returns records + nextCursor when the page is full", async () => {
     fetchImpl.mockResolvedValue(jsonResponse(fixture("worldbank-page.json")));
     // pageSize=2 matches the fixture record count, so the returned page is "full"
     // → adapter must set nextCursor and mark isLastPage=false
@@ -71,16 +68,16 @@ describe("createWorldBankAdapter — fetchPage", () => {
       fetchImpl,
       pageSize: 2,
     });
-    const page = await adapter.fetchPage({ skip: 200 });
-    expect(fetchImpl.mock.calls[0][0]).toContain("skip=200");
-    expect(fetchImpl.mock.calls[0][0]).toContain("top=2");
+    const page = await adapter.fetchPage({ os: 200 });
+    expect(fetchImpl.mock.calls[0][0]).toContain("os=200");
+    expect(fetchImpl.mock.calls[0][0]).toContain("rows=2");
     expect(page.records).toHaveLength(2);
     expect(page.isLastPage).toBe(false);
-    expect(page.nextCursor).toEqual({ skip: 202 });
+    expect(page.nextCursor).toEqual({ os: 202 });
   });
 
-  it("marks the page last when data length is less than pageSize", async () => {
-    // pageSize=1000 default, fixture returns 2 rows
+  it("marks the page last when procnotices length is less than pageSize", async () => {
+    // default pageSize > fixture (2 rows)
     fetchImpl.mockResolvedValue(jsonResponse(fixture("worldbank-page.json")));
     const adapter = createWorldBankAdapter({ fetchImpl });
     const page = await adapter.fetchPage();
@@ -88,7 +85,7 @@ describe("createWorldBankAdapter — fetchPage", () => {
     expect(page.nextCursor).toBeUndefined();
   });
 
-  it("handles empty data array as last page", async () => {
+  it("handles empty procnotices array as last page", async () => {
     fetchImpl.mockResolvedValue(jsonResponse(fixture("worldbank-empty.json")));
     const adapter = createWorldBankAdapter({ fetchImpl });
     const page = await adapter.fetchPage();
@@ -112,32 +109,43 @@ describe("createWorldBankAdapter — fetchPage", () => {
 });
 
 describe("createWorldBankAdapter — normalize", () => {
-  it("maps every documented field to NormalizedOpportunity", async () => {
+  it("maps every documented procnotices field to NormalizedOpportunity", async () => {
     const adapter = createWorldBankAdapter({ fetchImpl: vi.fn() });
-    const raw = JSON.parse(fixture("worldbank-page.json")).data[0];
+    const raw = JSON.parse(fixture("worldbank-page.json")).procnotices[0];
     const normalized = await adapter.normalize(raw);
 
     expect(normalized.sourceKey).toBe("world_bank");
-    // Dedup key primary form
-    expect(normalized.externalId).toBe("WORLD_BANK:OP00274125");
+    expect(normalized.externalId).toBe("WORLD_BANK:OP00468255");
     expect(normalized.sourceUrl).toBe(
-      "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00274125",
+      "https://projects.worldbank.org/en/projects-operations/procurement-detail/OP00468255",
     );
     expect(normalized.title).toBe(
-      "Consulting Services for Digital Health Records System",
+      "Consulting services for the design and implementation of an enterprise resource planning system across ministries",
     );
-    expect(normalized.noticeType).toBe("Request for Proposals");
-    expect(normalized.procurementCategory).toBe("Consulting Services");
-    expect(normalized.procurementMethod).toBe("QCBS");
+    expect(normalized.noticeType).toBe("Contract Award");
+    expect(normalized.procurementCategory).toBe("CS");
+    expect(normalized.procurementMethod).toBe("Quality And Cost-Based Selection");
     expect(normalized.countryCode).toBe("BD");
     expect(normalized.countryName).toBe("Bangladesh");
-    expect(normalized.region).toBe("South Asia");
-    expect(normalized.projectId).toBe("P177942");
-    expect(normalized.sector).toEqual(["Health"]);
-    expect(normalized.publicationAt).toBe("2026-09-01T00:00:00.000Z");
-    expect(normalized.deadlineAt).toBe("2026-10-15T23:59:00.000Z");
-    expect(normalized.status).toBe("open");
+    expect(normalized.projectId).toBe("P123456");
+    expect(normalized.referenceNo).toBe("BD-BDGM-987654-CS-QCBS");
+    // noticedate "11-Sep-2026" → ISO
+    expect(normalized.publicationAt).toBe("2026-09-11T00:00:00Z");
+    expect(normalized.deadlineAt).toBe("2026-10-20T00:00:00Z");
+    expect(normalized.rawLanguage).toBe("en");
+    expect(normalized.tags).toEqual(["CS"]);
+    expect(normalized.description).toContain("Bangladesh");
+    expect(normalized.description).not.toContain("<");
     expect(normalized.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("derives country_code from country_name when project_ctry_code is missing", async () => {
+    const adapter = createWorldBankAdapter({ fetchImpl: vi.fn() });
+    const raw = JSON.parse(fixture("worldbank-page.json")).procnotices[1];
+    const normalized = await adapter.normalize(raw);
+    // Nepal in the fixture has no project_ctry_code — should still resolve to "NP"
+    expect(normalized.countryName).toBe("Nepal");
+    expect(normalized.countryCode).toBe("NP");
   });
 
   it("uses fallback dedup hash when id is missing", async () => {
@@ -147,24 +155,45 @@ describe("createWorldBankAdapter — normalize", () => {
       bid_description: "Some notice",
       project_id: "P123",
       notice_type: "REOI",
-      publication_date: "2026-09-01T00:00:00.000Z",
+      noticedate: "01-Sep-2026",
     };
     const normalized = await adapter.normalize(raw);
-    // Falls back to sha256(project_id + notice_type + publication_date + bid_description)
     expect(normalized.externalId).toMatch(/^WORLD_BANK:sha256:[a-f0-9]{64}$/);
   });
 
-  it("marks status as 'closed' when deadline_date is in the past", async () => {
+  it("marks status as 'closed' when submission_deadline_date is in the past", async () => {
     const adapter = createWorldBankAdapter({ fetchImpl: vi.fn() });
     const raw = {
       id: "OP-past",
       bid_description: "old notice",
-      deadline_date: "2020-01-01T00:00:00.000Z",
-      publication_date: "2019-01-01T00:00:00.000Z",
-      url: "https://example.com",
+      submission_deadline_date: "2020-01-01T00:00:00Z",
+      noticedate: "01-Jan-2019",
     };
     const normalized = await adapter.normalize(raw);
     expect(normalized.status).toBe("closed");
+  });
+
+  it("marks status as 'awarded' when notice_type is Contract Award", async () => {
+    const adapter = createWorldBankAdapter({ fetchImpl: vi.fn() });
+    const raw = {
+      id: "OP-award",
+      bid_description: "an award notice",
+      notice_type: "Contract Award",
+      notice_status: "Published",
+    };
+    const normalized = await adapter.normalize(raw);
+    expect(normalized.status).toBe("awarded");
+  });
+
+  it("marks status as 'cancelled' when notice_status = Cancelled", async () => {
+    const adapter = createWorldBankAdapter({ fetchImpl: vi.fn() });
+    const raw = {
+      id: "OP-cancel",
+      bid_description: "a cancelled notice",
+      notice_status: "Cancelled",
+    };
+    const normalized = await adapter.normalize(raw);
+    expect(normalized.status).toBe("cancelled");
   });
 
   it("tolerates missing optional fields without throwing", async () => {
@@ -172,11 +201,10 @@ describe("createWorldBankAdapter — normalize", () => {
     const raw = {
       id: "OP-min",
       bid_description: "minimal",
-      url: "https://example.com/x",
     };
     const normalized = await adapter.normalize(raw);
     expect(normalized.title).toBe("minimal");
-    expect(normalized.sector).toBeUndefined();
     expect(normalized.status).toBe("unknown"); // no deadline → unknown
+    expect(normalized.description).toBeUndefined();
   });
 });
