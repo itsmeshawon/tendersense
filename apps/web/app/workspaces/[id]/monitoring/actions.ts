@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   createMonitoringProfile,
   deleteMonitoringProfile,
@@ -64,7 +65,10 @@ export async function createProfileAction(
     // Fire-and-log: rescore last-90d opportunities against the new
     // profile so /opportunities shows grades on next visit.
     try {
-      await recomputeForWorkspace(supabase, workspaceId);
+      // Recompute bypasses RLS via service-role — the user's session
+      // has select-only on opportunity_matches by design.
+      const admin = createServiceRoleClient();
+      await recomputeForWorkspace(admin, workspaceId);
     } catch (recomputeErr) {
       console.warn(
         "[monitoring] recompute after create failed:",
@@ -95,7 +99,8 @@ export async function toggleProfileActiveAction(
   await setMonitoringProfileActive(supabase, profileId, isActive);
   revalidatePath(`/workspaces/${workspaceId}/monitoring`);
   try {
-    await recomputeForWorkspace(supabase, workspaceId);
+    const admin = createServiceRoleClient();
+    await recomputeForWorkspace(admin, workspaceId);
   } catch (err) {
     console.warn(
       "[monitoring] recompute after toggle failed:",
@@ -115,7 +120,8 @@ export async function deleteProfileAction(
   await deleteMonitoringProfile(supabase, profileId);
   revalidatePath(`/workspaces/${workspaceId}/monitoring`);
   try {
-    await recomputeForWorkspace(supabase, workspaceId);
+    const admin = createServiceRoleClient();
+    await recomputeForWorkspace(admin, workspaceId);
   } catch (err) {
     console.warn(
       "[monitoring] recompute after delete failed:",
