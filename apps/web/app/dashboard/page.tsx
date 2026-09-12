@@ -7,6 +7,7 @@ import { listRecentRevisions } from "@/lib/revisions/repository";
 import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listRecommendedMatches } from "@/lib/matching/repository";
+import { getUsage, type WorkspacePlan } from "@/lib/assessment/quota";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, SectionHeader } from "@/components/PageHeader";
@@ -52,9 +53,18 @@ export default async function DashboardPage({
   const requested = typeof sp.workspace === "string" ? sp.workspace : undefined;
   const primary =
     (requested && workspaces.find((w) => w.id === requested)) || workspaces[0];
+  const plan: WorkspacePlan = (primary.plan as WorkspacePlan) ?? "free";
   const supabase = await createServerSupabaseClient();
 
-  const [recentRevisions, upcoming, profiles, recommended] = await Promise.all([
+  const [
+    recentRevisions,
+    upcoming,
+    profiles,
+    recommended,
+    totalMatchesRes,
+    aGradeRes,
+    usage,
+  ] = await Promise.all([
     listRecentRevisions(supabase, 7, 10),
     listOpportunities(supabase, {
       status: "open",
@@ -64,16 +74,59 @@ export default async function DashboardPage({
     }),
     listMonitoringProfiles(supabase, primary.id),
     listRecommendedMatches(supabase, primary.id, 5),
+    supabase
+      .from("opportunity_matches")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", primary.id),
+    supabase
+      .from("opportunity_matches")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", primary.id)
+      .eq("grade", "A"),
+    getUsage(supabase, primary.id, plan),
   ]);
 
   const activeProfile = profiles.find((p) => p.is_active);
+  const monitoredCount = totalMatchesRes.count ?? 0;
+  const aGradeCount = aGradeRes.count ?? 0;
+
+  const stats: Array<{ value: string; label: string }> = [
+    { value: monitoredCount.toString(), label: "monitored" },
+    {
+      value: usage.unlimited ? "∞" : `${usage.used}/${usage.limit}`,
+      label: "assessments this month",
+    },
+    { value: aGradeCount.toString(), label: "A-grade" },
+  ];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-8">
       <PageHeader
         title={`Good day — ${primary.name}`}
-        description={`Your ${primary.plan === "pro" ? "Pro" : "Free"} workspace, at a glance.`}
+        description={
+          <>
+            {plan === "pro" ? "Pro" : "Free"} workspace
+            {activeProfile ? (
+              <>
+                {" · monitoring "}
+                <span className="text-foreground">{activeProfile.name}</span>
+              </>
+            ) : null}
+          </>
+        }
       />
+
+      {/* Stats strip — actionable numbers. */}
+      <dl className="grid grid-cols-3 divide-x divide-border/60 rounded-lg border border-border/70 bg-card">
+        {stats.map((s) => (
+          <div key={s.label} className="px-5 py-4">
+            <dt className="text-xs text-muted-foreground">{s.label}</dt>
+            <dd className="mt-0.5 font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight text-foreground">
+              {s.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
       {/* Hero — Recommended for you gets the visual weight. */}
       <section className="rounded-xl border border-border/70 bg-card">
@@ -144,114 +197,121 @@ export default async function DashboardPage({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <section>
-          <SectionHeader
-            title="Recent amendments"
-            description="Last 7 days"
-            accessory={
-              <Link
-                href="/opportunities"
-                className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                All opportunities →
-              </Link>
-            }
-          />
-          <Card className="mt-3">
-            <CardContent className="p-4">
-              {recentRevisions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No amendments in the last 7 days.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-border/60">
-                  {recentRevisions.map((r) => {
-                    const deadlineChange = r.changed_fields.includes(
-                      "deadline_at",
-                    );
-                    return (
-                      <li
-                        key={r.id}
-                        className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate">{r.opportunity?.title ?? "—"}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {r.opportunity?.source_key} · Rev {r.revision_no} ·{" "}
-                            {fmt(r.detected_at)}
-                          </p>
-                        </div>
-                        <Badge
-                          variant={deadlineChange ? "destructive" : "outline"}
+      {/* Closing this week — full width, prioritized. Deadlines are the
+          most actionable signal after the recommendations. */}
+      <section>
+        <SectionHeader
+          title="Closing this week"
+          description="Open tenders with deadlines in the next 14 days"
+          accessory={
+            <Link
+              href={`/workspaces/${primary.id}/monitoring`}
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {activeProfile
+                ? `Profile: ${activeProfile.name} →`
+                : "Set up a profile →"}
+            </Link>
+          }
+        />
+        <Card className="mt-3">
+          <CardContent className="p-4">
+            {upcoming.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing closes in the next 14 days.
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border/60">
+                {upcoming.map((o) => {
+                  const days = daysUntil(o.deadline_at);
+                  return (
+                    <li
+                      key={o.id}
+                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/opportunities/${o.id}?workspace=${primary.id}`}
+                          className="block truncate font-medium hover:underline"
                         >
-                          {deadlineChange ? "Deadline changed" : "Amended"}
-                        </Badge>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+                          {o.title}
+                        </Link>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {o.source_key} ·{" "}
+                          {o.country_name ?? o.country_code ?? "—"}
+                        </p>
+                      </div>
+                      <span
+                        className={
+                          days !== null && days < 7
+                            ? "shrink-0 text-xs font-medium text-red-600 dark:text-red-400"
+                            : "shrink-0 text-xs text-muted-foreground"
+                        }
+                      >
+                        {fmt(o.deadline_at)}
+                        {days !== null ? ` (${days}d)` : ""}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </section>
 
-        <section>
-          <SectionHeader
-            title="Upcoming deadlines"
-            description="Next 14 days"
-            accessory={
-              <Link
-                href={`/workspaces/${primary.id}/monitoring`}
-                className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                {activeProfile
-                  ? `Profile: ${activeProfile.name} →`
-                  : "Set up a profile →"}
-              </Link>
-            }
-          />
-          <Card className="mt-3">
-            <CardContent className="p-4">
-              {upcoming.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nothing closes in the next 14 days.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-border/60">
-                  {upcoming.map((o) => {
-                    const days = daysUntil(o.deadline_at);
-                    return (
-                      <li
-                        key={o.id}
-                        className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+      {/* Recent tender updates — context, not action. Full width but
+          visually quieter than the sections above. */}
+      <section>
+        <SectionHeader
+          title="Recent tender updates"
+          description="Amendments and deadline changes across the pool in the last 7 days"
+          accessory={
+            <Link
+              href="/opportunities"
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              All opportunities →
+            </Link>
+          }
+        />
+        <Card className="mt-3">
+          <CardContent className="p-4">
+            {recentRevisions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No amendments in the last 7 days.
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border/60">
+                {recentRevisions.map((r) => {
+                  const deadlineChange = r.changed_fields.includes(
+                    "deadline_at",
+                  );
+                  return (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate">{r.opportunity?.title ?? "—"}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {r.opportunity?.source_key} · Rev {r.revision_no} ·{" "}
+                          {fmt(r.detected_at)}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={deadlineChange ? "destructive" : "outline"}
                       >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate">{o.title}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {o.source_key} ·{" "}
-                            {o.country_name ?? o.country_code ?? "—"}
-                          </p>
-                        </div>
-                        <span
-                          className={
-                            days !== null && days < 7
-                              ? "shrink-0 text-xs font-medium text-red-600 dark:text-red-400"
-                              : "shrink-0 text-xs text-muted-foreground"
-                          }
-                        >
-                          {fmt(o.deadline_at)}
-                          {days !== null ? ` (${days}d)` : ""}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+                        {deadlineChange ? "Deadline changed" : "Amended"}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </section>
     </main>
   );
 }
