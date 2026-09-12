@@ -830,3 +830,128 @@ By user during session: 0018 + 0019.
 - Follow-up: batch supabase writes in persistence.ts + upsertMatch — cuts round-trips for both ingest cron and workspace recompute.
 - Grade vocabulary sanity check with BRAC IT before v0.4.0-phase3 ships.
 - BRAC IT name mismatch on e-GP (pilot demo blocker).
+
+- **2026-09-12 14:31** — auto-wrap: modified Project_Status.md [auto-wrap]
+
+- **2026-09-12 14:33** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 14:34** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 14:40** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 14:55** — auto-wrap: modified actions.ts, page.tsx, add-capability-form.tsx +4 more [auto-wrap]
+
+- **2026-09-12 15:14** — auto-wrap: modified repository.ts, recompute.ts, recompute.test.ts +3 more [auto-wrap]
+
+- **2026-09-12 15:23** — auto-wrap: modified 0012-search-text-fts-approach.md, 0013-amendment-badge-severity.md, 0014-noa-app-deferral.md +7 more [auto-wrap]
+
+- **2026-09-12 15:29** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:46** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:49** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:51** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:52** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:57** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 15:59** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 16:02** — auto-wrap: modified worldbank.ts [auto-wrap]
+
+- **2026-09-12 16:05** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 16:07** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 16:24** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 16:27** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 16:38** — auto-wrap: modified page.tsx, button.tsx [auto-wrap]
+
+- **2026-09-12 16:46** — auto-wrap: modified page.tsx, page.tsx, page.tsx +4 more [auto-wrap]
+
+- **2026-09-12 16:54** — auto-wrap: modified worldbank.ts, worldbank-page.json, worldbank-empty.json +3 more [auto-wrap]
+
+- **2026-09-12 17:06** — auto-wrap: modified repository.ts, repository.ts, page.tsx +2 more [auto-wrap]
+
+- **2026-09-12 17:13** — auto-wrap: modified repository.ts, page.tsx, page.tsx [auto-wrap]
+
+- **2026-09-12 17:22** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 17:33** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 17:44** — auto-wrap: modified layout.tsx, globals.css [auto-wrap]
+
+- **2026-09-12 17:51** — auto-wrap: modified layout.tsx, globals.css [auto-wrap]
+
+- **2026-09-12 17:54** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 17:56** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 17:57** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 17:59** — auto-wrap: session ended [auto-wrap]
+
+- **2026-09-12 18:00** — auto-wrap: session ended [auto-wrap]
+
+## Session 23 — 2026-09-12 (spanning into 2026-09-13)
+
+**Phase:** Post-Phase-3 polish — demo readiness + design system + real BRAC IT persona
+
+### PRs shipped (10 total)
+
+- `#48` capabilities tab + auto-derive on eExperience import (Peak 3 unblock)
+- `#49` three UX fixes: batch recompute + multi-select capabilities + preserve `?workspace=` on filter form
+- `#50` ADRs 0012-0019 + `docs/grade-calibration.md` + `docs/phase-3-finalization-checklist.md`
+- **Tag `v0.4.0-phase3`** pushed
+- `#51` shadcn Session 1: 14 primitives installed; `/workspaces` migrated as proof
+- `#52` shadcn Session 2: cutover on `/opportunities` · `/dashboard` · `/login` · `/notifications` · `/workspaces/[id]`
+- `#53` **WB adapter fix** — switched from `datacatalogapi.worldbank.org` (2005-2017 archive) to `search.worldbank.org/api/v2/procnotices` with `srt=noticedate&order=desc`. Real current tenders now flowing.
+- `#54` Opportunity Detail page `/opportunities/[id]` with Overview / Match / Timeline / Source tabs — SoT §6 biggest gap closed + §114 item #6 satisfied
+- `#55` Home Recommended-for-you + Workspace profile-at-a-glance (3 cards linking to subroutes)
+- `#56` **TenderSense brand identity** — teal primary (`oklch 0.58 0.13 200`), Manrope headings, cool off-white background, chart palette rotated
+- `#57` Font resolution fix — Times fallback issue on prod; added proper fallback chains to `--font-sans/mono/heading` + explicit `font-family` on html/body in base layer
+
+### Data / infrastructure
+
+- **BRAC IT demo persona rebuilt** from real data pulled from `tendersense.itsraihan.me/api/company-profile` (Raihan's parallel variant):
+  - 8 capabilities (mapped from his 49 core-offerings to our 10-key taxonomy)
+  - 15 highest-value real BRAC IT projects (sbiCloud V2/V3, Rupantor, BRAC MF Performance Application, Dhaka Wasa SSO, Fixed Asset, Calculus PM, BRAC API Service Data)
+  - Monitoring profile keywords tuned to BRAC IT's actual vocabulary (ERP, cloud, banking, microfinance, DevOps, cybersecurity, SSO, IAM, AI, analytics, data, platform, system, consultancy, managed services)
+  - Tightened excluded_keywords: `wire`, `wiring`, `gas cylinder`, `sewage`, `bleaching`, `pesticide`, `bricks`, `stone`, `construction`, `civil works`, `gauze`
+- **Grade distribution finalized**: `A:0 · B:2 · C:81 · D:172 · not_eligible:72` across 327 opportunities. Reads as a curated shortlist, not padded demo data. Path A chosen (accept honest distribution over inflating A/B counts).
+
+### Notable findings from Raihan's variant
+
+- Uses a 4-tier scale (`S/A/B/C` instead of our `A/B/C/D`)
+- Separates **Eligibility (PASS/FAIL)** from **Match Grade** per profile-plan §2
+- Has a **Recommendation** dimension (BID / VERIFY / HOLD / SKIP)
+- Much richer taxonomy: 15 service lines + 49 core offerings vs our 10 capability keys
+- These are Phase 4 (Assessment) conversations — flagged in the plan-file recommendation but not built
+
+### Verified on prod
+
+- 327 opportunities in pool (up from 70), majority from live WB adapter now that it's fetching current tenders instead of the 2005-2017 archive
+- Grade UI with popover working; workspace picker preserving context on filter form
+- BRAC IT profile page shows 8 capabilities, 15 real projects, 1 active monitoring profile
+- Brand-teal + Manrope headings live on `/dashboard`, `/opportunities`, etc.
+
+### Position vs Source of Truth
+
+- Phase 1: **100%** ✓ (v0.2.0-phase1)
+- Phase 2: **100%** ✓ (v0.3.0-phase2)
+- Phase 3: **100%** ✓ (v0.4.0-phase3)
+- MVP overall (§114 relevant): **~75%** — remaining is Phase 4 (Assessment + credentials + evidence + qualification per profile-plan v0.1) + Phase 6 (email digest + reports).
+
+### Open threads carried into session 24
+
+- Font fix (#57) landed — needs visual confirmation on prod
+- 10 seeded `WORLD_BANK:DEMO_*` rows in the pool — can be deleted (real WB adapter is now fetching current tenders)
+- Phase 4 planning — draft `proposals/active/phase-4-assessment/plan.md` grounded in profile-plan v0.1 + Raihan-variant learnings (S/A/B/C grades, PASS/FAIL eligibility, BID/VERIFY/HOLD/SKIP recommendations)
+- Remaining shadcn cutover: `/monitoring`, `/capabilities`, `/saved-searches`, `/workspaces/[id]/onboarding`, `/workspaces/new` (all form-heavy client components)
+- Sector inference on BD adapters (e-GP + BPPA) — sector signal currently inapplicable on ~80% of BD pool
+- BRAC IT name mismatch on e-GP (pilot demo blocker for Peak 1)
+- Grade calibration session with BRAC IT bid team (ADR 0019)

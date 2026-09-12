@@ -10,10 +10,10 @@ collaborators:
 plan_approved: true
 plan_approved_at: 2026-09-11
 gate_block_count: 0
-last_session: 2026-09-12
-last_wrap: 2026-09-12
-session_count: 22
-current_phase: "Phase 3 — Matching (~57% — schema + scoring library + recompute + grade UI live on prod). Remaining: capabilities tab + calibration + review + tag v0.4.0-phase3."
+last_session: 2026-09-13
+last_wrap: 2026-09-13
+session_count: 23
+current_phase: "Post-Phase-3 polish COMPLETE — v0.4.0-phase3 shipped; shadcn design system + brand identity + Opportunity Detail page + real BRAC IT persona all live on prod. Next: Phase 4 planning (Assessment)."
 phase_1_plan_approved: true
 phase_1_plan_approved_at: 2026-09-11
 phase_2_plan_approved: true
@@ -31,7 +31,7 @@ active_plans:
 pilot: "BRAC IT Services"
 github: "https://github.com/itsmeshawon/tendersense (private)"
 hosted_supabase: "tendersense (project ref tatkdyjukxzibvaqpoau, ap-south-1)"
-next_action: "Session 23 — Phase 3 PR #5: capabilities tab at /workspaces/[id]/profile + auto-derive from imported eExperience projects on Peak 1 (plan v2 §2b cold-start). Expected impact on BRAC IT prod: current all-D grade distribution broadens once auto-derived capabilities land, because their real past-contract keywords will start hitting BD tender language. Then PR #6 (calibration doc — needs bid-team session) and PR #7 (review + tag v0.4.0-phase3)."
+next_action: "Session 24 — draft proposals/active/phase-4-assessment/plan.md. Ground it in profile-plan v0.1 (raw/) + Raihan-variant learnings (S/A/B/C grade scale, separate PASS/FAIL Eligibility signal, BID/VERIFY/HOLD/SKIP Recommendation dimension). Deliverables likely: credentials + financial_capacity + workforce tables; two-stage scoring (Fit + Qualification per profile-plan §2); LLM-based requirement extraction from opportunity descriptions; quota + assessment tables. Do NOT touch code before plan is approved (MewKing tier)."
 open_questions:
   - "PII stance for named procuring-entity officials (encoded in ADR 0006 §8 + lib/ingest/pii.ts; awaiting formal sign-off)"
   - "**BRAC IT name on e-GP eExperience** — pilot demo Peak 1 assumes typing 'BRAC IT' returns their contracts. Live recon 2026-09-12 showed BRAC IT returns zero results; Beximco returned one. Confirm with BRAC IT which legal name they register under on e-GP before scheduling the pilot demo. See docs/eexperience-reconnaissance-checklist.md § 'Unexpected finding'"
