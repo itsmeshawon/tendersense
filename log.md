@@ -1001,3 +1001,45 @@ Landed as a single squash-merged PR **#61** (`9ff87e6`), sequencing PRs #4 throu
 - Pattern-library expansion — driven by gap notes captured during the pilot walk-through.
 - BRAC IT name mismatch on e-GP (Peak 1 demo blocker, from Session 23).
 - Grade calibration session with BRAC IT bid team (folded into pilot review).
+
+
+## Session 25 — 2026-09-13 · Phase 4 shipped as `v0.5.0-phase4`
+
+**Tier:** MewKing · **Plan:** `proposals/active/phase-4-assessment/plan.md` — **COMPLETE**
+**Phase:** Phase 4 → shipped
+
+### What shipped
+
+- **Tag:** `v0.5.0-phase4` pushed at `cc5279a`.
+- **Hosted SCORING_VERSION=2 sweep** via `POST /api/admin/recompute-all` — 8 workspaces, 2,536 rows re-scored in 27.9s. `select scoring_version, count(*) from opportunity_matches` returns exactly one row: `2, 2536`.
+- **BRAC IT profile populated end-to-end** on the surviving workspace (`brac-it-b6015d`, id `828f51d2-…`): country_code=BD, 1 active monitoring profile, 8 capabilities, 15 projects, 1 valid credential, 2 fiscal years of financials, 600 employees on workforce, 1 named expert. Duplicate BRAC IT workspace (`brac-it-b0cbd8`) deleted.
+- **Plan bumped to Pro** for the pilot session so the 5/month quota doesn't cap calibration.
+- **PR #62** — Financials nav card on the workspace hub (PR #60 shipped the route but not the hub card).
+- **PR #63** — fixed a Server→Client boundary crash on `/credentials` and `/financials` pages. Both pages passed formatter *functions* as props into `"use client"` row components; empty state didn't hit the map, so PR #60 shipped green. As soon as a real row rendered, Next serialized the boundary, choked on the function, and returned opaque error digests (`4104132629`, `1328594869`). Fix: format on the server, pass strings across.
+- **First real assessment run on prod** — tender `6e493ca9` (WB e-waste MIS, score 77/B). Verdict felt right; engine works end-to-end.
+
+### Debugging worth remembering
+
+- **`"use server"` files can only export async functions.** Bit us early with the `QuotaExceededError` class (fixed at branch-CI time in `1b18cd9`).
+- **Server→client component props must be serializable.** Bit us again on the profile pages — formatter functions crashed only when a row existed. Empty states hide this bug; always test with data before shipping.
+- **Vercel error digests are opaque by design** (`4104132629`, `1328594869`). The real stack lives in runtime logs. If a page suddenly stops working after users add data, this pattern is the first suspect.
+- **`tendersense.app` → `www.tendersense.app` is a 308 redirect** at Vercel's domain layer. `curl` without `-L` sees only "Redirecting..." and stops. Hit `www.` directly for API endpoints.
+
+### Not done (deliberately deferred)
+
+- **Bid-team calibration walk-through with BRAC IT.** Per ADR 0019 this was always designed as a post-tag follow-up sprint. Tag ships without it.
+- Evidence document upload + PDF text extraction (Phase 4.5 per plan §2g).
+- Pattern-library expansion (waits for bid-team pattern-gap notes).
+
+### Open threads carried forward
+
+- BRAC IT legal name on e-GP eExperience (Peak 1 pilot demo blocker) — recon still shows zero results for "BRAC IT"; awaiting confirmation of registered legal name.
+- Monitoring profile `sources` field is single-select; users expect multi-select. Non-blocking for pilot; UX polish for post-tag.
+- `not_eligible` value still in `opportunity_matches.grade` check-constraint (transitional per migration 0028) — drop in a future migration once no code emits it.
+- LLM auto-fill button (deferred to Phase 5, contingent on pilot demand).
+
+### Position vs Source of Truth
+
+- Phase 4 (Assessment): **shipped**
+- MVP overall (§113 phases 0–6): **~80%** (Phase 5 = notifications/digests/collaboration; Phase 6 = polish/pilot launch)
+- Next phase direction is the open question — options are (a) bid-team calibration + pattern-library sprint, or (b) start Phase 5 scoping.
