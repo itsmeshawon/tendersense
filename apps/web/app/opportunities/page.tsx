@@ -430,7 +430,7 @@ export default async function OpportunitiesPage({
             return (
               <li key={o.id}>
                 <Card className="transition-colors hover:bg-accent/30">
-                  <CardContent className="px-4 py-3 text-sm">
+                  <CardContent className="px-4 py-2 text-sm">
                     <div className="flex items-start gap-6">
                       {/* Left: title, metadata, chips, link */}
                       <div className="min-w-0 flex-1 flex flex-col gap-1.5">
@@ -463,10 +463,9 @@ export default async function OpportunitiesPage({
                           ) : null}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                          <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-                            {SOURCE_LABEL[o.source_key] ?? o.source_key}
-                          </span>
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="font-medium text-accent-foreground">{SOURCE_LABEL[o.source_key] ?? o.source_key}</span>
+                          <span>·</span>
                           <span>{o.country_name ?? o.country_code ?? "—"}</span>
                           {remaining !== null ? (
                             <span className={deadlineToneClass(remaining)}>

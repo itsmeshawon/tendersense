@@ -136,9 +136,9 @@ export default async function DashboardPage({
         ))}
       </dl>
 
-      {/* Hero — Recommended for you gets the visual weight. */}
-      <section className="rounded-xl border border-border/70 bg-card">
-        <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border/60 px-5 py-4">
+      {/* Recommended for you */}
+      <section>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h2 className="font-[family-name:var(--font-heading)] text-lg font-semibold tracking-tight">
               Recommended for you
@@ -154,77 +154,79 @@ export default async function DashboardPage({
             See all →
           </Link>
         </div>
-        <div className="px-5 py-4">
-          {recommended.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No A or B fits yet. Adjust your{" "}
-              <Link
-                href={`/workspaces/${primary.id}/monitoring`}
-                className="text-foreground underline underline-offset-4"
-              >
-                monitoring profile
-              </Link>{" "}
-              or{" "}
-              <Link
-                href={`/workspaces/${primary.id}/capabilities`}
-                className="text-foreground underline underline-offset-4"
-              >
-                capabilities
-              </Link>
-              — grades recompute automatically.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {recommended.map((r) => {
-                const topReason = r.reasons?.[0] ?? null;
-                const topConcern = r.concerns?.[0] ?? null;
-                const opp = r.opportunity;
-                return (
-                  <li key={r.id} className="rounded-lg border border-border/60 px-4 py-3 text-sm transition-colors hover:bg-accent/30">
-                    <div className="flex items-start gap-4">
-                      <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-                        <Link
-                          href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
-                          className="font-semibold leading-snug hover:underline"
-                        >
-                          {opp?.title ?? "—"}
-                        </Link>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                          <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-                            {SOURCE_LABEL[opp?.source_key ?? ""] ?? opp?.source_key ?? "—"}
-                          </span>
-                          <span>{opp?.country_name ?? "—"}</span>
-                        </div>
-                        {(topReason || topConcern) ? (
-                          <div className="flex flex-wrap gap-1.5">
-                            {topReason ? (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
-                                ✓ {topReason.evidence.length > 40 ? topReason.evidence.slice(0, 40) + "…" : topReason.evidence}
-                              </span>
-                            ) : null}
-                            {topConcern ? (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
-                                ⚠ {topConcern.evidence.length > 40 ? topConcern.evidence.slice(0, 40) + "…" : topConcern.evidence}
-                              </span>
-                            ) : null}
+        {recommended.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No A or B fits yet. Adjust your{" "}
+            <Link
+              href={`/workspaces/${primary.id}/monitoring`}
+              className="text-foreground underline underline-offset-4"
+            >
+              monitoring profile
+            </Link>{" "}
+            or{" "}
+            <Link
+              href={`/workspaces/${primary.id}/capabilities`}
+              className="text-foreground underline underline-offset-4"
+            >
+              capabilities
+            </Link>
+            — grades recompute automatically.
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-3">
+            {recommended.map((r) => {
+              const topReason = r.reasons?.[0] ?? null;
+              const topConcern = r.concerns?.[0] ?? null;
+              const opp = r.opportunity;
+              return (
+                <li key={r.id}>
+                  <Card className="transition-colors hover:bg-accent/30">
+                    <CardContent className="px-4 py-2 text-sm">
+                      <div className="flex items-start gap-6">
+                        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                          <Link
+                            href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
+                            className="font-semibold text-base leading-snug hover:underline"
+                          >
+                            {opp?.title ?? "—"}
+                          </Link>
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="font-medium text-accent-foreground">
+                              {SOURCE_LABEL[opp?.source_key ?? ""] ?? opp?.source_key ?? "—"}
+                            </span>
+                            <span>·</span>
+                            <span>{opp?.country_name ?? "—"}</span>
                           </div>
-                        ) : null}
+                          {(topReason || topConcern) ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {topReason ? (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
+                                  ✓ {topReason.evidence.length > 40 ? topReason.evidence.slice(0, 40) + "…" : topReason.evidence}
+                                </span>
+                              ) : null}
+                              {topConcern ? (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
+                                  ⚠ {topConcern.evidence.length > 40 ? topConcern.evidence.slice(0, 40) + "…" : topConcern.evidence}
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="shrink-0 flex flex-col items-end gap-1.5">
+                          <GradeChip match={r} />
+                          <EligibilityChip value={r.eligibility} />
+                        </div>
                       </div>
-                      <div className="shrink-0 flex flex-col items-end gap-1">
-                        <GradeChip match={r} />
-                        <EligibilityChip value={r.eligibility} />
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* Closing this week — full width, prioritized. Deadlines are the
-          most actionable signal after the recommendations. */}
+      {/* Closing this week */}
       <section>
         <SectionHeader
           title="Closing this week"
@@ -240,54 +242,57 @@ export default async function DashboardPage({
             </Link>
           }
         />
-        <Card className="mt-3">
-          <CardContent className="p-4">
-            {upcoming.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing closes in the next 14 days.
-              </p>
-            ) : (
-              <ul className="flex flex-col divide-y divide-border/60">
-                {upcoming.map((o) => {
-                  const days = daysUntil(o.deadline_at);
-                  return (
-                    <li
-                      key={o.id}
-                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/opportunities/${o.id}?workspace=${primary.id}`}
-                          className="block truncate font-medium hover:underline"
-                        >
-                          {o.title}
-                        </Link>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {o.source_key} ·{" "}
-                          {o.country_name ?? o.country_code ?? "—"}
-                        </p>
+        {upcoming.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Nothing closes in the next 14 days.
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-3">
+            {upcoming.map((o) => {
+              const days = daysUntil(o.deadline_at);
+              return (
+                <li key={o.id}>
+                  <Card className="transition-colors hover:bg-accent/30">
+                    <CardContent className="px-4 py-2 text-sm">
+                      <div className="flex items-start gap-6">
+                        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                          <Link
+                            href={`/opportunities/${o.id}?workspace=${primary.id}`}
+                            className="font-semibold text-base leading-snug hover:underline"
+                          >
+                            {o.title}
+                          </Link>
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="font-medium text-accent-foreground">
+                              {SOURCE_LABEL[o.source_key] ?? o.source_key}
+                            </span>
+                            <span>·</span>
+                            <span>{o.country_name ?? o.country_code ?? "—"}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right text-xs text-muted-foreground">
+                          <span
+                            className={
+                              days !== null && days < 7
+                                ? "font-medium text-red-600 dark:text-red-400"
+                                : ""
+                            }
+                          >
+                            {fmt(o.deadline_at)}
+                            {days !== null ? ` (${days}d)` : ""}
+                          </span>
+                        </div>
                       </div>
-                      <span
-                        className={
-                          days !== null && days < 7
-                            ? "shrink-0 text-xs font-medium text-red-600 dark:text-red-400"
-                            : "shrink-0 text-xs text-muted-foreground"
-                        }
-                      >
-                        {fmt(o.deadline_at)}
-                        {days !== null ? ` (${days}d)` : ""}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* Recent tender updates — context, not action. Full width but
-          visually quieter than the sections above. */}
+      {/* Recent tender updates */}
       <section>
         <SectionHeader
           title="Recent tender updates"
@@ -301,42 +306,49 @@ export default async function DashboardPage({
             </Link>
           }
         />
-        <Card className="mt-3">
-          <CardContent className="p-4">
-            {recentRevisions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No amendments in the last 7 days.
-              </p>
-            ) : (
-              <ul className="flex flex-col divide-y divide-border/60">
-                {recentRevisions.map((r) => {
-                  const deadlineChange = r.changed_fields.includes(
-                    "deadline_at",
-                  );
-                  return (
-                    <li
-                      key={r.id}
-                      className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate">{r.opportunity?.title ?? "—"}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {r.opportunity?.source_key} · Rev {r.revision_no} ·{" "}
-                          {fmt(r.detected_at)}
-                        </p>
+        {recentRevisions.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No amendments in the last 7 days.
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-3">
+            {recentRevisions.map((r) => {
+              const deadlineChange = r.changed_fields.includes("deadline_at");
+              return (
+                <li key={r.id}>
+                  <Card className="transition-colors hover:bg-accent/30">
+                    <CardContent className="px-4 py-2 text-sm">
+                      <div className="flex items-start gap-6">
+                        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                          <Link
+                            href={`/opportunities/${r.opportunity?.id}?workspace=${primary.id}`}
+                            className="font-semibold text-base leading-snug hover:underline"
+                          >
+                            {r.opportunity?.title ?? "—"}
+                          </Link>
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="font-medium text-accent-foreground">
+                              {SOURCE_LABEL[r.opportunity?.source_key ?? ""] ?? r.opportunity?.source_key ?? "—"}
+                            </span>
+                            <span>·</span>
+                            <span>Rev {r.revision_no}</span>
+                            <span>·</span>
+                            <span>{fmt(r.detected_at)}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <Badge variant={deadlineChange ? "destructive" : "outline"}>
+                            {deadlineChange ? "Deadline changed" : "Amended"}
+                          </Badge>
+                        </div>
                       </div>
-                      <Badge
-                        variant={deadlineChange ? "destructive" : "outline"}
-                      >
-                        {deadlineChange ? "Deadline changed" : "Amended"}
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </main>
   );
