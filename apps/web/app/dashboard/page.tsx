@@ -15,6 +15,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, SectionHeader } from "@/components/PageHeader";
 
+const SOURCE_LABEL: Record<string, string> = {
+  world_bank: "World Bank",
+  bd_egp: "Bangladesh e-GP",
+  bd_bppa: "Bangladesh BPPA",
+};
+
 const DHAKA_DATE = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dhaka",
   day: "2-digit",
@@ -168,27 +174,50 @@ export default async function DashboardPage({
               — grades recompute automatically.
             </p>
           ) : (
-            <ul className="flex flex-col divide-y divide-border/60">
-              {recommended.map((r) => (
-                <li key={r.id} className="flex items-center gap-4 py-2.5 first:pt-0 last:pb-0">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
-                      className="block truncate font-medium hover:underline"
-                    >
-                      {r.opportunity?.title ?? "—"}
-                    </Link>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {r.opportunity?.source_key} ·{" "}
-                      {r.opportunity?.country_name ?? "—"}
-                    </p>
-                  </div>
-                  <div className="shrink-0 flex flex-col items-end gap-1">
-                    <GradeChip match={r} />
-                    <EligibilityChip value={r.eligibility} />
-                  </div>
-                </li>
-              ))}
+            <ul className="flex flex-col gap-2">
+              {recommended.map((r) => {
+                const topReason = r.reasons?.[0] ?? null;
+                const topConcern = r.concerns?.[0] ?? null;
+                const opp = r.opportunity;
+                return (
+                  <li key={r.id} className="rounded-lg border border-border/60 px-4 py-3 text-sm transition-colors hover:bg-accent/30">
+                    <div className="flex items-start gap-4">
+                      <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                        <Link
+                          href={`/opportunities/${r.opportunity_id}?workspace=${primary.id}`}
+                          className="font-semibold leading-snug hover:underline"
+                        >
+                          {opp?.title ?? "—"}
+                        </Link>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+                            {SOURCE_LABEL[opp?.source_key ?? ""] ?? opp?.source_key ?? "—"}
+                          </span>
+                          <span>{opp?.country_name ?? "—"}</span>
+                        </div>
+                        {(topReason || topConcern) ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {topReason ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
+                                ✓ {topReason.evidence.length > 40 ? topReason.evidence.slice(0, 40) + "…" : topReason.evidence}
+                              </span>
+                            ) : null}
+                            {topConcern ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
+                                ⚠ {topConcern.evidence.length > 40 ? topConcern.evidence.slice(0, 40) + "…" : topConcern.evidence}
+                              </span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="shrink-0 flex flex-col items-end gap-1">
+                        <GradeChip match={r} />
+                        <EligibilityChip value={r.eligibility} />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

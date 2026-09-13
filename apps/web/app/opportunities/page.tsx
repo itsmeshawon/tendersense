@@ -61,14 +61,6 @@ function deadlineToneClass(days: number | null): string {
   return "text-muted-foreground";
 }
 
-function barColorFor(grade: string): string {
-  switch (grade) {
-    case "A": return "bg-green-500";
-    case "B": return "bg-blue-500";
-    case "C": return "bg-orange-400";
-    default: return "bg-muted-foreground/20";
-  }
-}
 
 const SOURCE_LABEL: Record<string, string> = {
   world_bank: "World Bank",
@@ -433,18 +425,15 @@ export default async function OpportunitiesPage({
             const remaining = daysUntil(o.deadline_at);
             const match = matchByOpp.get(o.id) ?? null;
             const revSummary = revisionSummary.get(o.id);
-            const hasScore =
-              match &&
-              match.score != null &&
-              match.grade !== "not_eligible" &&
-              match.grade !== "need_more_info";
+            const topReason = match?.reasons[0] ?? null;
+            const topConcern = match?.concerns[0] ?? null;
             return (
               <li key={o.id}>
                 <Card className="transition-colors hover:bg-accent/30">
-                  <CardContent className="p-4 text-sm">
+                  <CardContent className="px-4 py-3 text-sm">
                     <div className="flex items-start gap-6">
-                      {/* Left: title, metadata, bar, chips, link */}
-                      <div className="min-w-0 flex-1 flex flex-col gap-2">
+                      {/* Left: title, metadata, chips, link */}
+                      <div className="min-w-0 flex-1 flex flex-col gap-1.5">
                         <div className="flex items-start justify-between gap-2">
                           <h2 className="font-semibold text-base leading-snug">
                             <Link
@@ -488,27 +477,18 @@ export default async function OpportunitiesPage({
                           ) : null}
                         </div>
 
-                        {hasScore ? (
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={`h-full rounded-full ${barColorFor(match.grade)}`}
-                              style={{ width: `${match.score}%` }}
-                            />
-                          </div>
-                        ) : null}
-
-                        {match && (match.reasons.length > 0 || match.concerns.length > 0) ? (
+                        {(topReason || topConcern) ? (
                           <div className="flex flex-wrap gap-1.5">
-                            {match.reasons.slice(0, 4).map((r, i) => (
-                              <span key={i} className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
-                                ✓ {r.evidence}
+                            {topReason ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
+                                ✓ {topReason.evidence.length > 40 ? topReason.evidence.slice(0, 40) + "…" : topReason.evidence}
                               </span>
-                            ))}
-                            {match.concerns.slice(0, 2).map((c, i) => (
-                              <span key={i} className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
-                                ⚠ {c.evidence}
+                            ) : null}
+                            {topConcern ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
+                                ⚠ {topConcern.evidence.length > 40 ? topConcern.evidence.slice(0, 40) + "…" : topConcern.evidence}
                               </span>
-                            ))}
+                            ) : null}
                           </div>
                         ) : null}
 
