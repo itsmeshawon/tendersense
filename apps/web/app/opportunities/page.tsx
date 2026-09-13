@@ -6,6 +6,8 @@ import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listMatchesByIds } from "@/lib/matching/repository";
+import { GradeChip } from "@/components/GradeChip";
+import { EligibilityChip } from "@/components/EligibilityChip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,33 +61,12 @@ function deadlineToneClass(days: number | null): string {
   return "text-muted-foreground";
 }
 
-function gradeLabelFor(grade: string): string {
-  switch (grade) {
-    case "A": return "Strong Match";
-    case "B": return "Good Match";
-    case "C": return "Potential Match";
-    case "D": return "Weak Match";
-    case "not_eligible": return "Not Eligible";
-    case "need_more_info": return "Need More Info";
-    default: return "";
-  }
-}
-
 function barColorFor(grade: string): string {
   switch (grade) {
     case "A": return "bg-green-500";
     case "B": return "bg-blue-500";
     case "C": return "bg-orange-400";
     default: return "bg-muted-foreground/20";
-  }
-}
-
-function scoreColorFor(grade: string): string {
-  switch (grade) {
-    case "A": return "text-green-600 dark:text-green-400";
-    case "B": return "text-blue-600 dark:text-blue-400";
-    case "C": return "text-orange-500 dark:text-orange-400";
-    default: return "text-muted-foreground";
   }
 }
 
@@ -493,8 +474,8 @@ export default async function OpportunitiesPage({
                           ) : null}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/70">
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
                             {SOURCE_LABEL[o.source_key] ?? o.source_key}
                           </span>
                           <span>{o.country_name ?? o.country_code ?? "—"}</span>
@@ -517,14 +498,14 @@ export default async function OpportunitiesPage({
                         ) : null}
 
                         {match && (match.reasons.length > 0 || match.concerns.length > 0) ? (
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                          <div className="flex flex-wrap gap-1.5">
                             {match.reasons.slice(0, 4).map((r, i) => (
-                              <span key={i} className="text-green-700 dark:text-green-400">
+                              <span key={i} className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400">
                                 ✓ {r.evidence}
                               </span>
                             ))}
                             {match.concerns.slice(0, 2).map((c, i) => (
-                              <span key={i} className="text-amber-600 dark:text-amber-400">
+                              <span key={i} className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400">
                                 ⚠ {c.evidence}
                               </span>
                             ))}
@@ -577,14 +558,10 @@ export default async function OpportunitiesPage({
                         </div>
                       </div>
 
-                      {defaultWorkspaceId && match ? (
-                        <div className="shrink-0 w-24 text-right">
-                          <p className={`text-3xl font-bold tabular-nums leading-none ${scoreColorFor(match.grade)}`}>
-                            {hasScore ? `${match.score}%` : "—"}
-                          </p>
-                          <p className={`mt-1 text-[9px] font-bold uppercase tracking-widest ${scoreColorFor(match.grade)}`}>
-                            {gradeLabelFor(match.grade)}
-                          </p>
+                      {defaultWorkspaceId ? (
+                        <div className="shrink-0 flex flex-col items-end gap-1.5">
+                          <GradeChip match={match} />
+                          <EligibilityChip value={match?.eligibility} />
                         </div>
                       ) : null}
                     </div>
@@ -596,11 +573,8 @@ export default async function OpportunitiesPage({
         </ul>
       )}
 
-      <footer className="text-xs text-muted-foreground">
-        TenderSense summarizes public procurement information. The official
-        procurement source remains authoritative. Verify deadlines,
-        eligibility, and submission requirements on the original source before
-        acting.
+      <footer className="text-xs text-muted-foreground/60">
+        TenderSense summarizes public procurement information. Verify deadlines and requirements on the original source before acting.
       </footer>
     </main>
   );

@@ -9,6 +9,8 @@ import { listOpportunities } from "@/lib/opportunities/repository";
 import { listMonitoringProfiles } from "@/lib/monitoring/repository";
 import { listRecommendedMatches } from "@/lib/matching/repository";
 import { getUsage, type WorkspacePlan } from "@/lib/assessment/quota";
+import { GradeChip } from "@/components/GradeChip";
+import { EligibilityChip } from "@/components/EligibilityChip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, SectionHeader } from "@/components/PageHeader";
@@ -181,15 +183,10 @@ export default async function DashboardPage({
                       {r.opportunity?.country_name ?? "—"}
                     </p>
                   </div>
-                  <Badge
-                    className={
-                      r.grade === "A"
-                        ? "border-green-600 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
-                        : "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                    }
-                  >
-                    {r.grade} · {r.score}
-                  </Badge>
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <GradeChip match={r} />
+                    <EligibilityChip value={r.eligibility} />
+                  </div>
                 </li>
               ))}
             </ul>

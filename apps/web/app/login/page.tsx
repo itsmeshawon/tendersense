@@ -55,15 +55,15 @@ export default function LoginPage() {
           </p>
           <ul className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">
             <li className="flex items-baseline gap-3">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              <span className="shrink-0 text-primary">✓</span>
               A/B/C/D fit grade, per your monitoring profile
             </li>
             <li className="flex items-baseline gap-3">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              <span className="shrink-0 text-primary">✓</span>
               Rule-based assessment against your credentials, financials, and past projects
             </li>
             <li className="flex items-baseline gap-3">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              <span className="shrink-0 text-primary">✓</span>
               Amendment tracking with deadline-change alerts
             </li>
           </ul>
