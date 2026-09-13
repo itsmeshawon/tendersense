@@ -6,8 +6,6 @@ import { listMyWorkspaces } from "@/lib/workspaces/service";
 import { getRevisionSummaryForOpportunities } from "@/lib/revisions/repository";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listMatchesByIds } from "@/lib/matching/repository";
-import { GradeChip } from "@/components/GradeChip";
-import { EligibilityChip } from "@/components/EligibilityChip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +57,36 @@ function deadlineToneClass(days: number | null): string {
   if (days < 7) return "text-red-600 dark:text-red-400 font-medium";
   if (days < 14) return "text-yellow-700 dark:text-yellow-400";
   return "text-muted-foreground";
+}
+
+function gradeLabelFor(grade: string): string {
+  switch (grade) {
+    case "A": return "Strong Match";
+    case "B": return "Good Match";
+    case "C": return "Potential Match";
+    case "D": return "Weak Match";
+    case "not_eligible": return "Not Eligible";
+    case "need_more_info": return "Need More Info";
+    default: return "";
+  }
+}
+
+function barColorFor(grade: string): string {
+  switch (grade) {
+    case "A": return "bg-green-500";
+    case "B": return "bg-blue-500";
+    case "C": return "bg-orange-400";
+    default: return "bg-muted-foreground/20";
+  }
+}
+
+function scoreColorFor(grade: string): string {
+  switch (grade) {
+    case "A": return "text-green-600 dark:text-green-400";
+    case "B": return "text-blue-600 dark:text-blue-400";
+    case "C": return "text-orange-500 dark:text-orange-400";
+    default: return "text-muted-foreground";
+  }
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -422,131 +450,144 @@ export default async function OpportunitiesPage({
         <ul className="flex flex-col gap-3">
           {orderedOpportunities.map((o) => {
             const remaining = daysUntil(o.deadline_at);
+            const match = matchByOpp.get(o.id) ?? null;
+            const revSummary = revisionSummary.get(o.id);
+            const hasScore =
+              match &&
+              match.score != null &&
+              match.grade !== "not_eligible" &&
+              match.grade !== "need_more_info";
             return (
               <li key={o.id}>
                 <Card className="transition-colors hover:bg-accent/30">
-                  <CardContent className="flex flex-col gap-2 p-4 text-sm">
-                <div className="flex items-baseline justify-between gap-4">
-                  <h2 className="font-medium leading-snug">
-                    <Link
-                      href={
-                        defaultWorkspaceId
-                          ? `/opportunities/${o.id}?workspace=${defaultWorkspaceId}`
-                          : `/opportunities/${o.id}`
-                      }
-                      className="hover:underline"
-                    >
-                      {o.title}
-                    </Link>
-                  </h2>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {defaultWorkspaceId ? (
-                      <>
-                        <GradeChip match={matchByOpp.get(o.id) ?? null} />
-                        <EligibilityChip
-                          value={matchByOpp.get(o.id)?.eligibility}
-                        />
-                      </>
-                    ) : null}
-                    {(() => {
-                      const summary = revisionSummary.get(o.id);
-                      if (!summary) return null;
-                      const isDeadline = summary.hasDeadlineChange;
-                      const label = isDeadline
-                        ? `Deadline changed · ${summary.count}`
-                        : `Amended · ${summary.count}`;
-                      return (
-                        <Badge
-                          variant={isDeadline ? "destructive" : "outline"}
-                          title={
-                            isDeadline
-                              ? "Deadline has been amended since first ingest"
-                              : "This tender has been amended since first ingest"
-                          }
-                        >
-                          {label}
-                        </Badge>
-                      );
-                    })()}
-                  </div>
-                </div>
+                  <CardContent className="p-4 text-sm">
+                    <div className="flex items-start gap-6">
+                      {/* Left: title, metadata, bar, chips, link */}
+                      <div className="min-w-0 flex-1 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h2 className="font-semibold text-base leading-snug">
+                            <Link
+                              href={
+                                defaultWorkspaceId
+                                  ? `/opportunities/${o.id}?workspace=${defaultWorkspaceId}`
+                                  : `/opportunities/${o.id}`
+                              }
+                              className="hover:underline"
+                            >
+                              {o.title}
+                            </Link>
+                          </h2>
+                          {revSummary ? (
+                            <Badge
+                              variant={revSummary.hasDeadlineChange ? "destructive" : "outline"}
+                              title={
+                                revSummary.hasDeadlineChange
+                                  ? "Deadline has been amended since first ingest"
+                                  : "This tender has been amended since first ingest"
+                              }
+                            >
+                              {revSummary.hasDeadlineChange
+                                ? `Deadline changed · ${revSummary.count}`
+                                : `Amended · ${revSummary.count}`}
+                            </Badge>
+                          ) : null}
+                        </div>
 
-                {/* Metadata line — source label pulled out of a Badge so the
-                    verdict chips carry the visual weight, not source. */}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <span>{SOURCE_LABEL[o.source_key] ?? o.source_key}</span>
-                  <span className="text-muted-foreground/50">·</span>
-                  <span>{o.country_name ?? o.country_code ?? "—"}</span>
-                  {o.ministry_name || o.agency_name || o.procuring_entity_name || o.issuer_name ? (
-                    <>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span className="truncate">
-                        {o.ministry_name ??
-                          o.agency_name ??
-                          o.procuring_entity_name ??
-                          o.issuer_name}
-                      </span>
-                    </>
-                  ) : null}
-                  {o.deadline_at ? (
-                    <>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span className={deadlineToneClass(remaining)}>
-                        Closes {formatDate(o.deadline_at)}
-                        {remaining !== null
-                          ? remaining >= 0
-                            ? ` (${remaining}d)`
-                            : ` (${-remaining}d past)`
-                          : ""}
-                      </span>
-                    </>
-                  ) : null}
-                </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/70">
+                            {SOURCE_LABEL[o.source_key] ?? o.source_key}
+                          </span>
+                          <span>{o.country_name ?? o.country_code ?? "—"}</span>
+                          {remaining !== null ? (
+                            <span className={deadlineToneClass(remaining)}>
+                              {remaining >= 0
+                                ? `${remaining} days left`
+                                : `${-remaining}d past deadline`}
+                            </span>
+                          ) : null}
+                        </div>
 
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  {o.reference_no ? (
-                    <span>
-                      Ref{" "}
-                      <span className="font-mono text-foreground">
-                        {o.reference_no}
-                      </span>
-                    </span>
-                  ) : null}
-                  {o.source_key === "bd_egp" &&
-                  typeof (o.source_metadata as { egpId?: string } | null)
-                    ?.egpId === "string" ? (
-                    <form
-                      action="https://www.eprocure.gov.bd/resources/common/ViewTender.jsp"
-                      method="POST"
-                      target="_blank"
-                      className="inline"
-                    >
-                      <input
-                        type="hidden"
-                        name="id"
-                        value={
-                          (o.source_metadata as { egpId: string }).egpId
-                        }
-                      />
-                      <input type="hidden" name="h" value="t" />
-                      <button
-                        type="submit"
-                        className="underline hover:text-foreground"
-                      >
-                        Open tender on e-GP →
-                      </button>
-                    </form>
-                  ) : (
-                    <a
-                      href={o.source_url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="underline hover:text-foreground"
-                    >
-                      View original notice
-                    </a>
-                  )}
-                </div>
+                        {hasScore ? (
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className={`h-full rounded-full ${barColorFor(match.grade)}`}
+                              style={{ width: `${match.score}%` }}
+                            />
+                          </div>
+                        ) : null}
+
+                        {match && (match.reasons.length > 0 || match.concerns.length > 0) ? (
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                            {match.reasons.slice(0, 4).map((r, i) => (
+                              <span key={i} className="text-green-700 dark:text-green-400">
+                                ✓ {r.evidence}
+                              </span>
+                            ))}
+                            {match.concerns.slice(0, 2).map((c, i) => (
+                              <span key={i} className="text-amber-600 dark:text-amber-400">
+                                ⚠ {c.evidence}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                          {o.reference_no ? (
+                            <span>
+                              Ref{" "}
+                              <span className="font-mono text-foreground">
+                                {o.reference_no}
+                              </span>
+                            </span>
+                          ) : null}
+                          {o.source_key === "bd_egp" &&
+                          typeof (o.source_metadata as { egpId?: string } | null)
+                            ?.egpId === "string" ? (
+                            <form
+                              action="https://www.eprocure.gov.bd/resources/common/ViewTender.jsp"
+                              method="POST"
+                              target="_blank"
+                              className="inline"
+                            >
+                              <input
+                                type="hidden"
+                                name="id"
+                                value={
+                                  (o.source_metadata as { egpId: string }).egpId
+                                }
+                              />
+                              <input type="hidden" name="h" value="t" />
+                              <button
+                                type="submit"
+                                className="underline hover:text-foreground"
+                              >
+                                Open tender on e-GP →
+                              </button>
+                            </form>
+                          ) : (
+                            <a
+                              href={o.source_url}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className="underline hover:text-foreground"
+                            >
+                              View original notice
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {defaultWorkspaceId && match ? (
+                        <div className="shrink-0 w-24 text-right">
+                          <p className={`text-3xl font-bold tabular-nums leading-none ${scoreColorFor(match.grade)}`}>
+                            {hasScore ? `${match.score}%` : "—"}
+                          </p>
+                          <p className={`mt-1 text-[9px] font-bold uppercase tracking-widest ${scoreColorFor(match.grade)}`}>
+                            {gradeLabelFor(match.grade)}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
                   </CardContent>
                 </Card>
               </li>
